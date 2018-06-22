@@ -2,7 +2,7 @@
 
 Install pyWeatherQAQC by cloning its [GitHub repository](https://github.com/DRI-WSWUP/pymetric). The script is self-contained and is run locally, so the directory can be placed wherever you want it.  
 
-### Python Version
+### Python
 
 pyWeatherQAQC is being developed for python 3.6, however it may work on python 2.7 with additional dependencies. Please see the dependencies section for more information.
 
@@ -28,7 +28,7 @@ The script is dependent on the following python packages:
 
 Most of the required dependencies are included as part of the default [Anaconda](https://www.anaconda.com/download/) installation.
 
-In addition to containing most of the required packages, Anaconda's environments feature allow for the creation of a dedicated environment to run this script. If you are using this script prior to running [pyMETRIC](https://github.com/DRI-WSWUP/pymetric), see the directions below for running this script on that environment.
+In addition to containing most of the required packages, Anaconda's environments allow for the creation of a dedicated environment to run this script. If you are using this script prior to running [pyMETRIC](https://github.com/DRI-WSWUP/pymetric), see the directions below for running this script on that environment.
 
 For more help with using environments, please see the [Anaconda User Guide](https://conda.io/docs/user-guide/tasks/manage-environments.html).
 
@@ -51,7 +51,7 @@ The refet module is installed using pip:
 The script is now ready to use. Remember to activate the environment (activate pyweatherqaqc) before running the script.
 
 #### pyMETRIC Environment Setup
-These directions assume you have already followed the [installation instructions for pyMETRIC](https://github.com/DRI-WSWUP/pymetric/blob/master/docs/INSTALL.md).
+These directions assume you have already followed the installation instructions for pyMETRIC.
 
 Activate your pyMETRIC environment:
 ```

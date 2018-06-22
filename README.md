@@ -2,15 +2,15 @@
 
 ### Summary
 pyWeatherQAQC is a constantly-expanding python-based script that enables the user to:
-1. Graphically visualize historical daily summary data from weather stations
+1. Graphically visualize historical daily summary weather data from stations
 2. Perform manual QA/QC on that data, with the option to specifically target intervals of problematic data
 3. Calculate reference evapotranspiration using the ASCE-EWRI equation (see references).
 4. Outputs all corrected and calculated data into a standardized layout, regardless of input data provided, to make downstream data processing or collation easier.
 
-The script saves copies of all generated graphs and generates a log file that details what corrections were performed for later reference.
+The script saves copies of all generated graphs and generates a log file that details what corrections were done for later reference.
 
 ### Installation
-For detailed instructions on installing python, this script, or its required dependencies, and for setting up a dedicated environment, please see the [installation instructions](docs/INSTALL.md).
+For detailed instructions on installing python, this script, required dependencies, and setting up a dedicated environment, please see the [installation instructions](docs/INSTALL.md).
 
 ### Data Setup
 For instructions and an example on on setting up the data file and configuring the .ini file the script uses, please see the [data preparation instructions](docs/SETUP.md).
@@ -48,10 +48,11 @@ While the goal of the script is to improve the quality of data collected by remo
 The script will currently tackle the following problems with daily data:
 
 * Removes impossible values or unreasonable values (such as negative wind speed)
-* Resamples data should sections of the time series be missing (such as when data jumps from 1/5/2007 straight to 8/17/2014)
-* Deletes multiple instances of a single day's data (the first instance within the record is preserved)
+* Resamples data should sections of the time series be missing (such as when data jumps from 1/5/2007 straight to 8/17/2017)
+* Deletes multiple instances of a single day's data (the first instance is preserved)
 
 If the input data has a problem not listed above, then the script will most likely not produce a usable result.
+
 
 References
 ----------
