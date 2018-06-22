@@ -2,7 +2,7 @@
 
 ### Summary
 pyWeatherQAQC is a constantly-expanding python-based script that enables the user to:
-1. Graphically visualize historical daily summary weather data from stations
+1. Graphically visualize historical daily summary data from weather stations
 2. Perform manual QA/QC on that data, with the option to specifically target intervals of problematic data
 3. Calculate reference evapotranspiration using the ASCE-EWRI equation (see references).
 4. Outputs all corrected and calculated data into a standardized layout, regardless of input data provided, to make downstream data processing or collation easier.
