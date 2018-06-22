@@ -1,6 +1,6 @@
 ### Installation
 
-Install pyWeatherQAQC by cloning its [GitHub repository](https://github.com/DRI-WSWUP/pymetric). The script is self-contained and is run locally, so the directory can be placed wherever you want it.  
+Install pyWeatherQAQC by cloning its [GitHub repository](https://github.com/DRI-WSWUP/pyWeatherQAQC). The script is self-contained and is run locally, so the directory can be placed wherever you want it.  
 
 ### Python
 
