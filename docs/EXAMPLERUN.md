@@ -11,7 +11,7 @@ Once your data file and config.ini file are setup according to the [data prepara
 4. The script will start correcting the data, which it does by prompting you through the terminal window. Follow the prompts to correct the data, which will involve you selecting a variable, correcting it, and then returning to select another, until you're finished.
 5. Most corrections can be applied to the full history of data, but if you need to target corrections (such as a single year's Rs data being junk), you can create an interval for just that data. Remember that you can hover over a data point on the bokeh graph to find out what its index is.
 6. The recommended order for correcting is TMax+TMin, your humidity variables **(which would be TMin+TDew if you were only given TDew)**, Wind Speed and Precipitation (only if needed), then finally Solar Radiation.
-7. Once the corrections are done, exit the script to save the data.
+7. Once the corrections are done, exit the script using the prompts to save the data.
 
 The script will generate the following outputs:
 * Step 1 will generate a composite graph before corrections: "[filename]_pre_correction_output.html"
