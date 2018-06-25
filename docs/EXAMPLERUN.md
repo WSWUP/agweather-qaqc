@@ -13,7 +13,11 @@ Once your data file and config.ini file are setup according to the [data prepara
 6. The recommended order for correcting is TMax+TMin, your humidity variables **(which would be TMin+TDew if you were only given TDew)**, Wind Speed and Precipitation (only if needed), then finally Solar Radiation.
 7. Once the corrections are done, exit the script using the prompts to save the data.
 
+### Outputs
 The script will generate the following outputs:
+
+![](https://i.imgur.com/uMlFt4f.png)
+
 * Step 1 will generate a composite graph before corrections: "[filename]_pre_correction_output.html"
 * Steps 4+5+6 will generate correction plots for individual variables: "[filename]_[variables]_correction_graph.html"
 * Step 7 will generate a composite graph after corrections: "[filename]_complete_corrections_graph.html"
