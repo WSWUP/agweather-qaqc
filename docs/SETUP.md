@@ -8,6 +8,6 @@ Assuming you have cloned the github directory, your folder should contain the fo
 * The "docs" directory containing the different instruction pages for operation (NOT required for running the script).
 * The "qaqc_modules" directory containing the different functions used by the main script.
 * config.ini - The configuration file used by the script to find variables in the data file.
-* QAQC_Master.py - The actual script you will call to process weather data.
+* QAQC_Master.py - The actual script you will call to process weather data. Your icon may not match what is pictured here.
 * README.md - The readme file for the Github Repository (NOT required for running the script).
 * A .csv data file containing the weather data to process. If you cloned the repository, then ---FROM HERE
