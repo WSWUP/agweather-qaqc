@@ -4,7 +4,7 @@ This script is run locally from within its directory, so looks for the configura
 ### Folder Structure
 Assuming you have cloned the github directory, your folder should contain the following items:
 
-![folder_organization](docs/images/folder_organization.png)
+![folder_organization](../master/docs/images/folder_organization.png)
 * The "docs" directory containing the different instruction pages for operation (NOT required for running the script).
 * The "qaqc_modules" directory containing the different functions used by the main script.
 * config.ini - The configuration file used by the script to find variables in the data file.
