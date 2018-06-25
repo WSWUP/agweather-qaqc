@@ -15,6 +15,10 @@ For detailed instructions on installing python, this script, required dependenci
 ### Data Setup
 For instructions and an example on on setting up the data file and configuring the .ini file the script uses, please see the [data preparation instructions](docs/SETUP.md).
 
+### Example Run
+
+For an example workflow on correcting some data, see this [example workflow using the provided data](docs/EXAMPLERUN.md).
+
 ### Script Usage
 
 The script expects to be called locally using the command prompt with the config, data, and module files organized according to the [data preparation instructions](docs/SETUP.md).
