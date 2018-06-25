@@ -2,7 +2,7 @@
 This script is run locally from within its directory, so it looks for the configuration file, its modules, and the data file all within its directory. The majority of difficulties you may encounter come from improper configurations with the .ini file or the folder structure.
 
 ### Example Run
-If you are trying to run this script right after cloning the respository, then you're already configured to run the example data set. You can hop over to the [example run instructions](docs/EXAMPLERUN.md), check it out, and come back here for when you want to configure your own data set.
+If you are trying to run this script right after cloning the respository, then you're already configured to run the example data set. You can hop over to the [example run instructions](EXAMPLERUN.md), check it out, and come back here for when you want to configure your own data set.
 
 ### Folder Structure
 Assuming you have cloned the github directory, your folder should contain the following items:
