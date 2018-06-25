@@ -26,7 +26,7 @@ The script will generate the following outputs:
 * If you set up a dedicated python environment for the script, are you currently in that environment?
 * **If you're experiencing an error that is causing the script to crash,** it is most likely due to an incorrect setup in your data and .ini files. Is there a random "DATA END" string at the end of your file? Are your columns and units properly identified?
 * **If you're seeing an error or warning that does NOT cause the script to crash,** you can usually ignore it. It is most often the script warning you that some data is missing.
-* If you're confused on what method to use or value to select, each prompt has a reccommendation on what to do. Look for either the option marked **(Reccommended)** or the value suggested by the prompt for a guide.
+* If you're confused on what method to use or value to select, each prompt has a recommendation on what to do. Look for either the option marked **(Recommended)** or the value suggested by the prompt for a guide.
 * Each time you correct a variable, you're given the option to do another iteration, start over, or exit without saving your corrections, so if you make a mistake you're able to fix it.
 * If you come across data that you feel is so bad it's past the point of correction, just select an interval around those values and throw them out. 
 * The only correction precipitation or wind speed should ever need is the removal of bad values.
