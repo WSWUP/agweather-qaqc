@@ -2,15 +2,39 @@ from __future__ import division
 import warnings
 import numpy as np
 
+
 # Calculate Rso and Thornton Running Rs
+def tr_monte_carlo(month, tmax, tmin, rs):
+    num_lines = rs.shape[0]  # length of data
+    mc_iterations = 10000    # total number of monte carlo iterations to do
+
+    b_zero = np.array(0.031 + (0.031 * 0.2) * np.random.randn(mc_iterations, 1))
+    b_one = np.array(0.201 + (0.201 * 0.2) * np.random.randn(mc_iterations, 1))
+    b_two = np.array(-0.185 + (-0.185 * 0.2) * np.random.randn(mc_iterations, 1))
+
+    # b_coefficient = np.zeros(num_lines)
+    # rs_tr = np.zeros(num_lines)
+    # mc_tr_matrix = np.zeros(mc_iterations, num_lines)
+    # mc_tr_monthly_matrix = np.zeros(mc_iterations, 12)
+    # mc_correlation = np.zeros(mc_iterations)
+    # mc_rmse = np.zeros(mc_iterations)
+    # mc_prct_bias = np.zeros(mc_iterations)
+    # mc_logten_vector = np.zeros(mc_iterations)
+
+    # b_coefficient = np.array(b_zero + b_one * exp(b_two))
+    # TODO finish the tr optimization function
+    pass
+
+
+
 def emprso_w_tr(lat, press, ea, jul, delta_t, tm_tm):
     from math import sin, pi, exp, acos, tan, cos
     # lat - station latitude in decimal degrees
     # press - pressure at station in kPa
     # ea - actual vapor pressure in kPa
     # jul - day of year
-    # delta_t - mean monthly tmax_tmin difference
-    # tm_tm - tmax_tmin difference
+    # delta_t - mean monthly delta_t difference
+    # tm_tm - delta_t difference
 
     # sda - solar declination angle
     # gsc - solar constant, units mJm^-2h^-1
