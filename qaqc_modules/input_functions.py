@@ -152,7 +152,7 @@ def convert_units(config_file_path, data, var_type):
         elif rs_lang_flag == 0 and rs_mj_flag == 1 and rs_kw_hr_flag == 0:  # Units MJ/m2
             converted_data = np.array(data * 11.574)
         elif rs_lang_flag == 0 and rs_mj_flag == 0 and rs_kw_hr_flag == 1:  # Units kw-hr
-            converted_data = np.array((data * 1000) / 24) # EQ from rapidtables.com TODO: Find a better source for this
+            converted_data = np.array((data * 1000) / 24)  # TODO: Find a better source for this equation
         elif rs_lang_flag == 0 and rs_mj_flag == 0 and rs_kw_hr_flag == 0:  # Units w/m2
             pass
         else:
@@ -301,13 +301,13 @@ def obtain_data(config_file_path):
     station_lat = config_file['METADATA'].getfloat('station_latitude')  # Expected in decimal degrees
     station_elev = config_file['METADATA'].getfloat('station_elevation')  # Expected in meters
     anemom_height = config_file['METADATA'].getfloat('anemometer_height')  # Expected in meters
-    fill_value = config_file['METADATA'].getfloat('output_fill_value')  # Value for missing data in output file
+    fill_value = config_file['METADATA']['output_fill_value']  # Value for missing data in output file
     missing_data_value = config_file['METADATA']['missing_data_value']  # Value used to signify missing data in file
     lines_of_header = config_file['METADATA'].getint('lines_of_file_header')  # Lines of header in file to skip
     lines_of_footer = config_file['METADATA'].getint('lines_of_file_footer')  # Lines of footer in file to skip
 
     script_mode = config_file['MODES'].getboolean('script_mode')  # Option to either correct or view uncorrected data
-    gen_bokeh = config_file['MODES'].getboolean('script_mode')  # Option to generate bokeh plots or not
+    gen_bokeh = config_file['MODES'].getboolean('generate_plots')  # Option to generate bokeh plots or not
 
     station_text = file_path.split('.csv')  # Splitting file extension off of file name
     station_name = station_text[0]  # Name of file that will be attached to all of the outputs
@@ -421,9 +421,9 @@ def obtain_data(config_file_path):
                            index=datetime_df)
 
     # Create dataframe of column indices for weather variable, to track which ones were provided vs calculated
-    col_df = pd.Dataframe({'tmax': tmax_col, 'tmin': tmin_col, 'tavg': tavg_col, 'tdew': tdew_col, 'ea': ea_col,
-                           'rhmax': rhmax_col, 'rhmin': rhmin_col, 'rhavg': rhavg_col, 'rs': rs_col, 'ws': ws_col,
-                           'precip': precip_col})
+    col_df = pd.Series({'tmax': tmax_col, 'tmin': tmin_col, 'tavg': tavg_col, 'tdew': tdew_col, 'ea': ea_col,
+                        'rhmax': rhmax_col, 'rhmin': rhmin_col, 'rhavg': rhavg_col, 'rs': rs_col, 'ws': ws_col,
+                        'precip': precip_col})
 
     # Check for the existence of duplicate indexes
     # if found, since it cannot be determined which value is true, we default to first instance and remove all following
@@ -437,4 +437,5 @@ def obtain_data(config_file_path):
     data_df.month = date_reindex.month
     data_df.day = date_reindex.day
 
-    return data_df, col_df, station_name, station_lat, station_elev, anemom_height, fill_value, script_mode, gen_bokeh
+    return data_df, col_df, station_name, log_file, station_lat, station_elev, anemom_height, fill_value, \
+           script_mode, gen_bokeh
