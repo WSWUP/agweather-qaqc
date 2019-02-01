@@ -235,7 +235,8 @@ def process_variable(config_file_path, raw_data, log_path, var_type):
             var_type : string of text used to signify what variable has been requested.
 
         Returns:
-            extracted_data : pandas dataframe of entire dataset, with the variables being organized into columns
+            filtered_var : 1D numpy array of variable that has been extracted, converted, and filtered
+            var_col : column of pulled variable, used to track what is provided and what is calculated
     """
     var_config = cp.ConfigParser()
     var_config.read(config_file_path)
@@ -272,7 +273,7 @@ def process_variable(config_file_path, raw_data, log_path, var_type):
     converted_var = convert_units(config_file_path, original_var, var_type)  # converts data to appropriate units
     filtered_var = daily_realistic_limits(converted_var, log_path, var_type)  # returns data filtered of bad values
 
-    return filtered_var
+    return filtered_var, var_col
 
 
 def obtain_data(config_file_path):
@@ -293,16 +294,20 @@ def obtain_data(config_file_path):
     print('\nSystem: Opening config file: %s' % config_file_path)
 
     #########################
-    # METADATA parameters
+    # METADATA and MODE parameters
     # Reads in metadata and opens data file to extract raw data
 
     file_path = config_file['METADATA']['data_file_path']
-    station_latitude = config_file['METADATA'].getfloat('station_latitude')  # Expected in decimal degrees
-    station_elevation = config_file['METADATA'].getfloat('station_elevation')  # Expected in meters
+    station_lat = config_file['METADATA'].getfloat('station_latitude')  # Expected in decimal degrees
+    station_elev = config_file['METADATA'].getfloat('station_elevation')  # Expected in meters
     anemom_height = config_file['METADATA'].getfloat('anemometer_height')  # Expected in meters
+    fill_value = config_file['METADATA'].getfloat('output_fill_value')  # Value for missing data in output file
     missing_data_value = config_file['METADATA']['missing_data_value']  # Value used to signify missing data in file
     lines_of_header = config_file['METADATA'].getint('lines_of_file_header')  # Lines of header in file to skip
     lines_of_footer = config_file['METADATA'].getint('lines_of_file_footer')  # Lines of footer in file to skip
+
+    script_mode = config_file['MODES'].getboolean('script_mode')  # Option to either correct or view uncorrected data
+    gen_bokeh = config_file['MODES'].getboolean('script_mode')  # Option to generate bokeh plots or not
 
     station_text = file_path.split('.csv')  # Splitting file extension off of file name
     station_name = station_text[0]  # Name of file that will be attached to all of the outputs
@@ -380,20 +385,56 @@ def obtain_data(config_file_path):
     # Variable processing
     # Imports all weather variables, converts them into the correct units, and filters them to remove impossible values
 
-    tmax = process_variable(config_file_path, raw_data, log_file, 'maximum temperature')
-    tmin = process_variable(config_file_path, raw_data, log_file, 'minimum temperature')
-    tavg = process_variable(config_file_path, raw_data, log_file, 'average temperature')
-    tdew = process_variable(config_file_path, raw_data, log_file, 'dewpoint temperature')
-    ea = process_variable(config_file_path, raw_data, log_file, 'vapor pressure')
-    rhmax = process_variable(config_file_path, raw_data, log_file, 'maximum relative humidity')
-    rhmin = process_variable(config_file_path, raw_data, log_file, 'minimum relative humidity')
-    rhavg = process_variable(config_file_path, raw_data, log_file, 'average relative humidity')
-    rs = process_variable(config_file_path, raw_data, log_file, 'solar radiation')
-    ws = process_variable(config_file_path, raw_data, log_file, 'wind speed')
-    precip = process_variable(config_file_path, raw_data, log_file, 'precipitation')
+    (data_tmax, tmax_col) = process_variable(config_file_path, raw_data, log_file, 'maximum temperature')
+    (data_tmin, tmin_col) = process_variable(config_file_path, raw_data, log_file, 'minimum temperature')
+    (data_tavg, tavg_col) = process_variable(config_file_path, raw_data, log_file, 'average temperature')
+    (data_tdew, tdew_col) = process_variable(config_file_path, raw_data, log_file, 'dewpoint temperature')
+    (data_ea, ea_col) = process_variable(config_file_path, raw_data, log_file, 'vapor pressure')
+    (data_rhmax, rhmax_col) = process_variable(config_file_path, raw_data, log_file, 'maximum relative humidity')
+    (data_rhmin, rhmin_col) = process_variable(config_file_path, raw_data, log_file, 'minimum relative humidity')
+    (data_rhavg, rhavg_col) = process_variable(config_file_path, raw_data, log_file, 'average relative humidity')
+    (data_rs, rs_col) = process_variable(config_file_path, raw_data, log_file, 'solar radiation')
+    (data_ws, ws_col) = process_variable(config_file_path, raw_data, log_file, 'wind speed')
+    (data_precip, precip_col) = process_variable(config_file_path, raw_data, log_file, 'precipitation')
 
-    # TODO: package vars into pandas dataframe and refactor it, also package metadata into return statement
     # TODO: Track down this warning: C:\Anaconda3\lib\site-packages\numpy\core\_methods.py:32: RuntimeWarning:
     #  invalid value encountered in reduce return umr_minimum(a, axis, None, out, keepdims, initial)
 
-    return 1
+    #########################
+    # Dataframe Construction
+    # In this section we convert the individual numpy arrays into a pandas dataframe to accomplish several goals:
+    # 1. Make use of the pandas reindexing function to cover literal gaps in the dataset (not just missing values)
+    # 2. Resample data to remove any duplicate records (same day appears twice in dataset, first instance is kept)
+    # 3. Cleanly pass extracted data to the main script function
+
+    # Create Datetime dataframe for reindexing
+    datetime_df = pd.DataFrame({'year': data_year, 'month': data_month, 'day': data_day})
+    datetime_df = pd.to_datetime(datetime_df[['month', 'day', 'year']])
+    # Create a series of all dates in time series
+    date_reindex = pd.date_range(datetime_df.iloc[0], datetime_df.iloc[-1])
+
+    # Create dataframe of data
+    data_df = pd.DataFrame({'date': datetime_df, 'year': data_year, 'month': data_month,
+                            'day': data_day, 'tavg': data_tavg, 'tmax': data_tmax, 'tmin': data_tmin,
+                            'tdew': data_tdew, 'ea': data_ea, 'rhavg': data_rhavg, 'rhmax': data_rhmax,
+                            'rhmin': data_rhmin, 'rs': data_rs, 'ws': data_ws, 'precip': data_precip},
+                           index=datetime_df)
+
+    # Create dataframe of column indices for weather variable, to track which ones were provided vs calculated
+    col_df = pd.Dataframe({'tmax': tmax_col, 'tmin': tmin_col, 'tavg': tavg_col, 'tdew': tdew_col, 'ea': ea_col,
+                           'rhmax': rhmax_col, 'rhmin': rhmin_col, 'rhavg': rhavg_col, 'rs': rs_col, 'ws': ws_col,
+                           'precip': precip_col})
+
+    # Check for the existence of duplicate indexes
+    # if found, since it cannot be determined which value is true, we default to first instance and remove all following
+    data_df = data_df[~data_df.index.duplicated(keep='first')]
+
+    # Reindex data with filled date series in case there are gaps in the data
+    data_df = data_df.reindex(date_reindex, fill_value=np.nan)
+
+    # Now replace M/D/Y columns with reindexed dates so there are no missing days
+    data_df.year = date_reindex.year
+    data_df.month = date_reindex.month
+    data_df.day = date_reindex.day
+
+    return data_df, col_df, station_name, station_lat, station_elev, anemom_height, fill_value, script_mode, gen_bokeh
