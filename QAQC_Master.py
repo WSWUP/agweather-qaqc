@@ -1,27 +1,25 @@
-from bokeh.plotting import *
-from bokeh.layouts import *
-import configparser
+from bokeh.layouts import gridplot
+from bokeh.plotting import output_file, reset_output, save
 import datetime as dt
-import logging as log
 import numpy as np
 import pandas as pd
-from qaqc_modules import data_functions, input_functions
-from qaqc_modules.correction import *
-from refet import calcs
+from qaqc_modules import data_functions, input_functions, plotting_functions, qaqc_functions
+from refet.calcs import _wind_height_adjust
 
 #########################
 # Initial setup
 # TODO: finish implementing log file within this script
+# TODO: add fill function for all missing temp data and adjust fill vars accordingly
+# TODO: change uniform to normal
+# TODO: functionalize qaqc_functions and add comment text
+# TODO: investigate changing bokehs to functions
+# TODO: this script cannot handle only tavg, its only setup for max/min
 # TODO: contemplate just keeping everything as a pandas dataframe
 # TODO: Add optimization for TR_Rs to each place it appears (2)
 #  rs_tr reg is saved as both orig and opt in output file at the minute
 # TODO: look into where "reset_output()" should
 # TODO: put fill functions from scratch file back into this, figure out where
 # TODO: simply fill tracking section with a function
-# TODO: this depreciation warning: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from
-#  'collections.abc' is deprecated, and in 3.8 it will stop working
-#  return (isinstance(value, (collections.Container, collections.Sized, collections.Iterable))
-#  FIRST TRY UPDATING TO SEE IF THAT SOLVES
 
 print("\nSystem: Starting data correction script.")
 config_path = 'config.ini'  # Hardcoded for now, eventually will create function to pull config path from excel file
@@ -79,7 +77,7 @@ data_doy = np.array(list(map(int, data_doy)))  # Converts list of string values 
                        data_tmax, data_tmin, data_ea, data_ws, data_rs)
 
 # Calculates thornton running solar radiation with original B coefficient values
-(rs_tr, mm_rs_tr) = data_functions.calc_rs_tr(data_month, rso, delta_t, mm_delta_t)
+(rs_tr, mm_rs_tr) = data_functions.calc_org_rs_tr(data_month, rso, delta_t, mm_delta_t)
 
 #########################
 # Back up original data
@@ -136,68 +134,97 @@ while script_mode == 1:
             print('\nPlease enter a valid option.')
             user = int(input('Specify which variable you would like to correct: '))
 
+    ##########
     # Correcting individual variables based on user choice
     # Correcting Max/Min Temperature data
     if user == 1:
-        (data_tmax, data_tmin) = correction(station_name, log_file, data_tmax, 'TMax', data_tmin,
-                                            'TMin', dt_array, data_month, data_year, 1)
+        (data_tmax, data_tmin) = qaqc_functions.correction(station_name, log_file, data_tmax, 'TMax', data_tmin,
+                                                           'TMin', dt_array, data_month, data_year, 1)
     # Correcting Min/Dew Temperature data
     elif user == 2:
-        (data_tmin, data_tdew) = correction(station_name, log_file, data_tmin, 'TMin', data_tdew,
-                                            'TDew', dt_array, data_month, data_year, 1)
+        (data_tmin, data_tdew) = qaqc_functions.correction(station_name, log_file, data_tmin, 'TMin', data_tdew,
+                                                           'TDew', dt_array, data_month, data_year, 1)
     # Correcting Windspeed
     elif user == 3:
-        (data_ws, data_null) = correction(station_name, log_file, data_ws, 'Ws', data_null,
-                                          'NONE', dt_array, data_month, data_year, 4)
+        (data_ws, data_null) = qaqc_functions.correction(station_name, log_file, data_ws, 'Ws', data_null,
+                                                         'NONE', dt_array, data_month, data_year, 4)
     # Correcting Solar radiation
     elif user == 4:
-        (data_rs, data_null) = correction(station_name, log_file, data_rs, 'Rs', rso,
-                                          'Rso', dt_array, data_month, data_year, 3)
+        (data_rs, data_null) = qaqc_functions.correction(station_name, log_file, data_rs, 'Rs', rso,
+                                                         'Rso', dt_array, data_month, data_year, 3)
     # Correcting Humidity Variable
     elif user == 5:
         # Variables passed depends on what variables were provided
         if column_df.ea != -1:
             # Vapor Pressure exists
-            (data_ea, data_null) = correction(station_name, log_file, data_ea, 'Vapor Pressure', data_null, 'NONE',
-                                              dt_array, data_month, data_year, 4)
+            (data_ea, data_null) = qaqc_functions.correction(station_name, log_file, data_ea, 'Vapor Pressure',
+                                                             data_null, 'NONE', dt_array, data_month, data_year, 4)
 
         elif column_df.ea == -1 and column_df.rhmax != -1 and column_df.rhmin != -1:
             # No vapor pressure but have rhmax and min
-            (data_rhmax, data_rhmin) = correction(station_name, log_file, data_rhmax, 'RHMax', data_rhmin,
-                                                  'RHMin', dt_array, data_month, data_year, 2)
+            (data_rhmax, data_rhmin) = qaqc_functions.correction(station_name, log_file, data_rhmax, 'RHMax',
+                                                                 data_rhmin, 'RHMin', dt_array, data_month,
+                                                                 data_year, 2)
 
         elif column_df.ea == -1 and column_df.rhmax == -1 and column_df.rhmin == -1 and column_df.rhavg != -1:
             # Only have RHavg
-            (data_rhavg, data_null) = correction(station_name, log_file, data_rhavg, 'RHAvg', data_null, 'NONE',
-                                                 dt_array, data_month, data_year, 4)
+            (data_rhavg, data_null) = qaqc_functions.correction(station_name, log_file, data_rhavg, 'RHAvg',
+                                                                data_null, 'NONE', dt_array, data_month, data_year, 4)
         else:
             # If an unsupported combination of humidity variables is present, raise a value error.
             raise ValueError('Humidity correction section encountered an unexpected combination of humidity inputs.')
 
     # Correcting Precipitation
     elif user == 6:
-        (data_precip, data_null) = correction(station_name, log_file, data_precip, 'Precip', data_null, 'NONE',
-                                              dt_array, data_month, data_year, 4)
+        (data_precip, data_null) = qaqc_functions.correction(station_name, log_file, data_precip, 'Precip', data_null,
+                                                             'NONE', dt_array, data_month, data_year, 4)
     else:
         # user quits, exit out of loop
         print('\n System: Now finishing up corrections.')
         break  # Break here because all recalculations were done at the end of the last loop iteration
 
+    ##########
     # Now that a variable has been corrected, recalculate all relevant secondary variables
-    # Order of recalculation and code is the same as when they were calculated before correction
 
-    # Figure out which humidity variables are provided and recalculate Ea and TDew if needed
-    # This function is safe to use after correcting because it tracks what variable was provided by the data file
-    # and recalculates appropriately. It doesn't overwrite provided variables with calculated versions.
-    # Ex. if only TDew is provided, it recalculates ea while returning original provided tdew
-    (data_ea, data_tdew) = data_functions.calc_humidity_variables(data_tmax, data_tmin, data_tavg, data_ea,
-                                                                  column_df.ea, data_tdew, column_df.tdew, data_rhmax,
-                                                                  column_df.rhmax, data_rhmin, column_df.rhmin,
-                                                                  data_rhavg, column_df.rhavg)
+    if user == 1 or user == 2 or user == 5:
+        # Figure out which humidity variables are provided and recalculate Ea and TDew if needed
+        # This function is safe to use after correcting because it tracks what variable was provided by the data file
+        # and recalculates appropriately. It doesn't overwrite provided variables with calculated versions.
+        # Ex. if only TDew is provided, it recalculates ea while returning original provided tdew
+        (data_ea, data_tdew) = data_functions.calc_humidity_variables(data_tmax, data_tmin, data_tavg, data_ea,
+                                                                      column_df.ea, data_tdew, column_df.tdew,
+                                                                      data_rhmax, column_df.rhmax, data_rhmin,
+                                                                      column_df.rhmin, data_rhavg, column_df.rhavg)
 
-    # Recalculates secondary temperature values and mean monthly counterparts
-    (delta_t, mm_delta_t, k_not, mm_k_not, mm_tmin, mm_tdew) = data_functions. \
-        calc_temperature_variables(data_month, data_tmax, data_tmin, data_tdew)
+        # Recalculates secondary temperature values and mean monthly counterparts
+        (delta_t, mm_delta_t, k_not, mm_k_not, mm_tmin, mm_tdew) = data_functions. \
+            calc_temperature_variables(data_month, data_tmax, data_tmin, data_tdew)
+
+        #####
+        # Fill in any missing tdew data with tmin - k0 curve.
+        # Once TDew is filled, if that filled index is also empty for ea, then we use filled tdew to calculate ea
+        # If ea is provided and NOT empty at that index we do nothing to avoid overwriting actual data with filled data
+        # and the now filled TDew sections are used to calculate ea for those filled indices.
+        # Nothing occurs if this fill code is run a second time because vars are already filled unless
+        # correction methods throw out data.
+        for i in range(data_length):
+            if np.isnan(data_tdew[i]):
+                data_tdew[i] = data_tmin[i] - mm_k_not[data_month[i] - 1]
+                fill_tdew[i] = data_tdew[i]
+
+                # TODO: Confirm on when Ea should be filled, before or after ea is actually corrected
+                if column_df.ea == -1 or (column_df.ea != -1 and not np.isnan(data_ea[i])):
+                    # Either Ea not provided, OR Ea is provided and this index is empty and can be filled
+                    data_ea[i] = (0.6108 * np.exp((17.27 * data_tdew[i]) / (data_tdew[i] + 237.3)))
+                    fill_ea[i] = data_ea[i]
+                else:
+                    # Ea is provided and the index is not empty, do nothing to avoid overwriting actual data
+                    pass
+            else:
+                # If TDew isn't empty then nothing is required to be done.
+                pass
+    else:
+        pass
 
     # Recalculates rso and grass/alfalfa reference evapotranspiration from refet package
     (rso, mm_rs, eto, etr, mm_eto, mm_etr) = data_functions. \
@@ -205,7 +232,9 @@ while script_mode == 1:
                            data_tmax, data_tmin, data_ea, data_ws, data_rs)
 
     # Recalculates thornton running solar radiation with original B coefficient values
-    (rs_tr, mm_rs_tr) = data_functions.calc_rs_tr(data_month, rso, delta_t, mm_delta_t)
+    (rs_tr, mm_rs_tr) = data_functions.calc_org_rs_tr(data_month, rso, delta_t, mm_delta_t)
+
+    # TODO: once rs_Tr optimization is working, include one final et recalc after correction loop to capture filled rs
 
 #########################
 # Generate bokeh composite plot
@@ -213,6 +242,10 @@ while script_mode == 1:
 # If user opts to not correct data (sets script_mode = 0), then this plots data before correction
 # If user does correct data, then this plots data after correction
 print("\nSystem: Now creating composite bokeh graph.")
+
+# TODO: This warning -  DeprecationWarning: Using or importing the ABCs from 'collections' instead of from
+#   'collections.abc' is deprecated, and in 3.8 it will stop working - is caused by code within bokeh package,
+#   and is being worked on as of 2/2/19, keep track of it and update when they fix it.
 if generate_bokeh:  # Flag to create graphs or not
 
     x_size = 500
@@ -226,141 +259,69 @@ if generate_bokeh:  # Flag to create graphs or not
         # Incorrect setup of script mode variable, raise an error
         raise ValueError('Incorrect parameters: script mode is not set to a valid option.')
 
-    # Create bokeh figure out of individual subplots
-    s1 = figure(
-        width=x_size, height=y_size, x_axis_type="datetime",
-        x_axis_label='Timestep', y_axis_label='Celsius', title="Tmax and Tmin",
-        tools='pan, box_zoom, undo, reset, hover, save'
-    )
-    s1.line(dt_array, data_tmax, line_color="red", legend="Data TMax")
-    s1.line(dt_array, data_tmin, line_color="blue", legend="Data TMin")
-    s1.legend.location = "bottom_left"
+    # Temperature Maximum and Minimum Plot
+    plot_tmax_tmin = plotting_functions.create_plot(x_size, y_size, dt_array, data_tmax, 'TMax', 'red', data_tmin,
+                                                    'TMin', 'blue', 'Celsius')
+    # Temperature Minimum and Dewpoint Plot
+    plot_tmin_tdew = plotting_functions.create_plot(x_size, y_size, dt_array, data_tmin, 'TMin', 'blue', data_tdew,
+                                                    'TDew', 'black', 'Celsius', plot_tmax_tmin)
 
-    s2 = figure(
-        x_range=s1.x_range,
-        width=x_size, height=y_size, x_axis_type="datetime",
-        x_axis_label='Timestep', y_axis_label='Celsius', title="Tmin and Tdew",
-        tools='pan, box_zoom, undo, reset, hover, save'
-    )
-    s2.line(dt_array, data_tmin, line_color="blue", legend="Data TMin")
-    s2.line(dt_array, data_tdew, line_color="black", legend="Data TDew")
-    s2.legend.location = "bottom_left"
-
-    s3 = figure(
-        x_range=s1.x_range,
-        width=x_size, height=y_size, x_axis_type="datetime",
-        x_axis_label='Timestep', y_axis_label='m/s', title="Windspeed",
-        tools='pan, box_zoom, undo, reset, hover, save'
-    )
-    s3.line(dt_array, data_ws, line_color="black", legend="Windspeed")
-    s3.legend.location = "bottom_left"
-
-    # Subplot 4 changes based on what variables are provided
+    # Subplot 3 changes based on what variables are provided
     if column_df.ea != -1:  # Vapor pressure was provided
-        s4 = figure(
-            x_range=s1.x_range,
-            width=x_size, height=y_size, x_axis_type="datetime",
-            x_axis_label='Timestep', y_axis_label='kPa', title="Vapor Pressure",
-            tools='pan, box_zoom, undo, reset, hover, save'
-        )
-        s4.line(dt_array, data_ea, line_color="black", legend="Vapor Pressure")
-        s4.legend.location = "bottom_left"
+        plot_humid = plotting_functions.create_plot(x_size, y_size, dt_array, data_ea, 'Ea', 'black', data_null, 'null',
+                                                    'black', 'kPa', plot_tmax_tmin)
     elif column_df.ea == -1 and column_df.tdew != -1:  # Tdew was provided, show calculated vapor pressure
-        s4 = figure(
-            x_range=s1.x_range,
-            width=x_size, height=y_size, x_axis_type="datetime",
-            x_axis_label='Timestep', y_axis_label='kPa', title="Calculated Vapor Pressure",
-            tools='pan, box_zoom, undo, reset, hover, save'
-        )
-        s4.line(dt_array, data_ea, line_color="black", legend="Vapor Pressure")
-        s4.legend.location = "bottom_left"
+        plot_humid = plotting_functions.create_plot(x_size, y_size, dt_array, data_ea, 'Calculated Ea', 'black',
+                                                    data_null, 'null', 'black', 'kPa', plot_tmax_tmin)
     elif column_df.ea == -1 and column_df.tdew == -1 and column_df.rhmax != -1 and column_df.rhmin != -1:  # RH max/min
-        s4 = figure(
-            x_range=s1.x_range,
-            width=x_size, height=y_size, x_axis_type="datetime",
-            x_axis_label='Timestep', y_axis_label='%', title="RH Max and Min",
-            tools='pan, box_zoom, undo, reset, hover, save'
-        )
-        s4.line(dt_array, data_rhmax, line_color="black", legend="RH Max")
-        s4.line(dt_array, data_rhmin, line_color="blue", legend="RH Min")
-        s4.legend.location = "bottom_left"
+        plot_humid = plotting_functions.create_plot(x_size, y_size, dt_array, data_rhmax, 'RHMax', 'blue', data_rhmin,
+                                                    'RHMin', 'red', 'Percentage (%)', plot_tmax_tmin)
     elif column_df.ea == -1 and column_df.tdew == -1 and column_df.rhmax == -1 and column_df.rhavg != -1:  # RHavg only
-        s4 = figure(
-            x_range=s1.x_range,
-            width=x_size, height=y_size, x_axis_type="datetime",
-            x_axis_label='Timestep', y_axis_label='%', title="RH Average",
-            tools='pan, box_zoom, undo, reset, hover, save'
-        )
-        s4.line(dt_array, data_rhavg, line_color="black", legend="RH Avg")
-        s4.legend.location = "bottom_left"
+        plot_humid = plotting_functions.create_plot(x_size, y_size, dt_array, data_rhavg, 'RHAvg', 'blue', data_null,
+                                                    'null', 'black', 'Percentage (%)', plot_tmax_tmin)
     else:
         # If an unsupported combination of humidity variables is present, raise a value error.
         raise ValueError('Bokeh figure generation encountered an unexpected combination of humidity inputs.')
 
-    s5 = figure(
-        x_range=s1.x_range,
-        width=x_size, height=y_size, x_axis_type="datetime",
-        x_axis_label='Timestep', y_axis_label='mm', title="Precipitation",
-        tools='pan, box_zoom, undo, reset, hover, save'
-    )
-    s5.line(dt_array, data_precip, line_color="black", legend="Precipitation")
-    s5.legend.location = "bottom_left"
+    # Mean Monthly Temperature Minimum and Dewpoint
+    plot_mm_tmin_tdew = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_tmin, 'MM TMin', 'blue', mm_tdew,
+                                                       'MM TDew', 'black', 'Celsius')
 
-    s6 = figure(
-        x_range=s1.x_range,
-        width=x_size, height=y_size, x_axis_type="datetime",
-        x_axis_label='Timestep', y_axis_label='W/m2', title="Rs and Rso",
-        tools='pan, box_zoom, undo, reset, hover, save'
-    )
-    s6.line(dt_array, data_rs, line_color="blue", legend="Rs")
-    s6.line(dt_array, rso, line_color="black", legend="Rso")
-    s6.legend.location = "bottom_left"
+    # Mean Monthly k0 curve (Tmin-Tdew)
+    plot_mm_k_not = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_k_not, 'k0 Curve', 'black',
+                                                   data_null, 'null', 'black', 'Celsius', plot_mm_tmin_tdew)
 
-    s7 = figure(
-        width=x_size, height=y_size,
-        x_axis_label='Month', y_axis_label='W/m2', title="MM Rs and Rs TR",
-        tools='pan, box_zoom, undo, reset, hover, save'
-    )
-    s7.line(mm_dt_array, mm_rs, line_color="blue", legend="MM Rs")
-    s7.line(mm_dt_array, mm_rs_tr, line_color="black", legend="MM Rs TR")
-    s7.legend.location = "bottom_left"
+    # Solar radiation and clear sky solar radiation
+    plot_rs_rso = plotting_functions.create_plot(x_size, y_size, dt_array, rso, 'Clear-Sky Rs', 'black', data_rs, 'Rs',
+                                                 'red', 'w/m2', plot_tmax_tmin)
 
-    s8 = figure(
-        x_range=s7.x_range,
-        width=x_size, height=y_size,
-        x_axis_label='Month', y_axis_label='Celsius', title="MM Tmin and Tdew",
-        tools='pan, box_zoom, undo, reset, hover, save'
-    )
-    s8.line(mm_dt_array, mm_tmin, line_color="blue", legend="MM Tmin")
-    s8.line(mm_dt_array, mm_tdew, line_color="black", legend="MM Tdew")
-    s8.legend.location = "bottom_left"
+    # Mean Monthly solar radiation and Thornton-Running solar radiation
+    plot_mm_rs_tr = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red', mm_rs_tr,
+                                                   'MM TR Rs', 'blue', 'w/m2', plot_mm_tmin_tdew)
 
-    s9 = figure(
-        x_range=s7.x_range,
-        width=x_size, height=y_size,
-        x_axis_label='Month', y_axis_label='Celsius', title="MM Tmin - Tdew",
-        tools='pan, box_zoom, undo, reset, hover, save'
-    )
-    s9.line(mm_dt_array, mm_k_not, line_color="black", legend="MM Tmin - Tdew")
-    s9.legend.location = "bottom_left"
+    # Windspeed
+    plot_ws = plotting_functions.create_plot(x_size, y_size, dt_array, data_ws, 'Wind Speed', 'black', data_null,
+                                             'null', 'black', 'm/s', plot_tmax_tmin)
+    # Precipitation
+    plot_precip = plotting_functions.create_plot(x_size, y_size, dt_array, data_precip, 'Precipitation', 'black',
+                                                 data_null, 'null', 'black', 'kPa', plot_tmax_tmin)
 
     if column_df.rhmax != -1 and column_df.rhmin != -1 and column_df.ea != -1:
         # If both ea and rhmax/rhmin are provided, generate a supplementary rhmax/min graph and save
-        s10 = figure(
-            x_range=s1.x_range,
-            width=x_size, height=y_size, x_axis_type="datetime",
-            x_axis_label='Timestep', y_axis_label='%', title="RHMax and Min",
-            tools='pan, box_zoom, undo, reset, hover, save'
-        )
-        s10.line(dt_array, data_rhmax, line_color="black", legend="RH Max")
-        s10.line(dt_array, data_rhmin, line_color="blue", legend="RH Min")
-        s10.legend.location = "bottom_left"
+        supplemental_rh_plot = plotting_functions.create_plot(x_size, y_size, dt_array, data_rhmax, 'RHMax', 'blue',
+                                                              data_rhmin, 'RHMin', 'red', 'Percentage (%)',
+                                                              plot_tmax_tmin)
 
-        fig = gridplot([[s1, s2, s3], [s4, s5, s6], [s7, s8, s9], [s10]], toolbar_location="left")
+        fig = gridplot([[plot_tmax_tmin, plot_tmin_tdew, plot_humid],
+                        [plot_mm_tmin_tdew, plot_mm_k_not, supplemental_rh_plot],
+                        [plot_rs_rso, plot_ws, plot_precip],
+                        [plot_mm_rs_tr]], toolbar_location="left")
         save(fig)
     else:
         # If there is no 10th plot to generate, save the regular 9
-        fig = gridplot([[s1, s2, s3], [s4, s5, s6], [s7, s8, s9]], toolbar_location="left")
+        fig = gridplot([[plot_tmax_tmin, plot_tmin_tdew, plot_humid],
+                        [plot_mm_tmin_tdew, plot_mm_k_not, plot_rs_rso],
+                        [plot_ws, plot_precip, plot_mm_rs_tr]], toolbar_location="left")
         save(fig)
 
     print("\nSystem: Composite bokeh graph has been generated.")
@@ -376,7 +337,7 @@ if generate_bokeh:  # Flag to create graphs or not
 print("\nSystem: Saving corrected data to .xslx file.")
 
 # Create any individually-requested output data
-ws_2m = calcs._wind_height_adjust(uz=data_ws, zw=ws_anemometer_height)
+ws_2m = _wind_height_adjust(uz=data_ws, zw=ws_anemometer_height)
 # TODO Fix this once optimization function is present
 orig_rs_tr = rs_tr
 opt_rs_tr = rs_tr
@@ -449,15 +410,6 @@ delta_df = pd.DataFrame({'date': datetime_df, 'year': data_year, 'month': data_m
 fill_df = pd.DataFrame({'date': datetime_df, 'year': data_year, 'month': data_month, 'day': data_day,
                         'TAvg (C)': fill_tavg, 'TMax (C)': fill_tmax, 'TMin (C)': fill_tmin,
                         'TDew (C)': fill_tdew, 'Vapor Pres (kPa)': fill_ea}, index=datetime_df)
-
-# TODO: consider removing?
-# Create column sequence so pandas prints file in correct order
-# header_column_seq = ['date', 'year', 'month', 'day', 'TAvg (C)', 'TMax (C)', 'TMin (C)', 'TDew (C)', 'Vapor Pres (kPa)',
-#                     'RHAvg (%)', 'RHMax (%)', 'RHMin (%)', 'Rs (w/m2)', 'Orig_Rs_TR (w/m2)', 'Opt_Rs_TR (w/m2)',
-#                     'Rso (w/m2)', 'Windspeed (m/s)', 'Precip (mm)', 'ETr (mm)', 'ETo (mm)', 'ws_2m (m/s)']
-#output_df = output_df.reindex(columns=header_column_seq)
-#delta_df = delta_df.reindex(columns=header_column_seq)
-#fill_df = fill_df.reindex(columns=header_column_seq)
 
 # Open up pandas excel writer
 output_writer = pd.ExcelWriter(station_name + "_output" + ".xlsx", engine='xlsxwriter')

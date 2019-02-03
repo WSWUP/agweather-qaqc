@@ -286,7 +286,15 @@ def obtain_data(config_file_path):
 
         Returns:
             extracted_data : pandas dataframe of entire dataset, with the variables being organized into columns
-            station_parameters : 1D numpy array containing station metadata values
+            col_df : pandas series of what variables are stored in what columns, used to track which vars are provided
+            station_name : string of file, including path, that was provided to dataset
+            log_file : string of log file, including path, that was provided to dataset
+            station_lat : station latitude in decimal degrees
+            station_elev : station elevation in meters
+            anemom_height : height of anemometer in meters
+            fill_value : value pulled from config file that indicates missing data in output file
+            script_mode : boolean flag for if user wants to correct data or not
+            gen_bokeh : boolean flag for if user wants to plot graphs or not
     """
     # Open config file
     config_file = cp.ConfigParser()
@@ -397,9 +405,6 @@ def obtain_data(config_file_path):
     (data_ws, ws_col) = process_variable(config_file_path, raw_data, log_file, 'wind speed')
     (data_precip, precip_col) = process_variable(config_file_path, raw_data, log_file, 'precipitation')
 
-    # TODO: Track down this warning: C:\Anaconda3\lib\site-packages\numpy\core\_methods.py:32: RuntimeWarning:
-    #  invalid value encountered in reduce return umr_minimum(a, axis, None, out, keepdims, initial)
-
     #########################
     # Dataframe Construction
     # In this section we convert the individual numpy arrays into a pandas dataframe to accomplish several goals:
@@ -438,4 +443,9 @@ def obtain_data(config_file_path):
     data_df.day = date_reindex.day
 
     return data_df, col_df, station_name, log_file, station_lat, station_elev, anemom_height, fill_value, \
-           script_mode, gen_bokeh
+        script_mode, gen_bokeh
+
+
+# This is never run by itself
+if __name__ == "__main__":
+    print("\nThis module is called as a part of the QAQC script, it does nothing by itself.")

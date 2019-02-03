@@ -1,8 +1,7 @@
-import logging
 from math import pi
 import numpy as np
-import refet
-from refet import calcs
+from refet import Daily
+from refet.calcs import _ra_daily, _rso_daily
 
 
 def calc_temperature_variables(month, tmax, tmin, tdew):
@@ -175,16 +174,16 @@ def calc_rso_and_refet(lat, elev, wind_anemom, doy, month, tmax, tmin, ea, uz, r
 
     # Calculate daily values
     for i in range(data_size):
-        ra[i] = calcs._ra_daily(lat=refet_input_lat, doy=doy[i], method='refet')
-        rso[i] = calcs._rso_daily(ra=ra[i], ea=ea[i], pair=pressure, doy=doy[i], lat=refet_input_lat)
+        ra[i] = _ra_daily(lat=refet_input_lat, doy=doy[i], method='refet')
+        rso[i] = _rso_daily(ra=ra[i], ea=ea[i], pair=pressure, doy=doy[i], lat=refet_input_lat)
 
         # Calculating ETo in mm using refET package
-        eto[i] = refet.Daily(tmin=tmin[i], tmax=tmax[i], ea=ea[i], rs=refet_input_rs[i], uz=uz[i], zw=wind_anemom,
-                             elev=elev, lat=lat, doy=doy[i], method='refet').eto()
+        eto[i] = Daily(tmin=tmin[i], tmax=tmax[i], ea=ea[i], rs=refet_input_rs[i], uz=uz[i], zw=wind_anemom,
+                       elev=elev, lat=lat, doy=doy[i], method='refet').eto()
 
         # Calculating ETr in mm using refET package
-        etr[i] = refet.Daily(tmin=tmin[i], tmax=tmax[i], ea=ea[i], rs=refet_input_rs[i], uz=uz[i], zw=wind_anemom,
-                             elev=elev, lat=lat, doy=doy[i], method='refet').etr()
+        etr[i] = Daily(tmin=tmin[i], tmax=tmax[i], ea=ea[i], rs=refet_input_rs[i], uz=uz[i], zw=wind_anemom,
+                       elev=elev, lat=lat, doy=doy[i], method='refet').etr()
 
     # Calculate mean monthly values
     j = 1
@@ -202,7 +201,7 @@ def calc_rso_and_refet(lat, elev, wind_anemom, doy, month, tmax, tmin, ea, uz, r
     return rso, monthly_rs, eto, etr, monthly_eto, monthly_etr
 
 
-def calc_rs_tr(month, rso, delta_t, mm_delta_t):
+def calc_org_rs_tr(month, rso, delta_t, mm_delta_t):
     """
             Calculates theoretical daily solar radiation according to the Thornton and Running 1999 model.
             Paper can be found here: http://www.engr.scu.edu/~emaurer/chile/vic_taller/papers/thornton_running_1997.pdf
@@ -217,6 +216,7 @@ def calc_rs_tr(month, rso, delta_t, mm_delta_t):
                 org_rs_tr : 1D numpy array of thornton-running solar radiation with original B coefficient values
                 monthly_org_rs_tr : monthly averaged rs_Tr (12 values total) values across all of record
     """
+    # TODO: Expand this to include optimization text
     data_size = month.shape[0]
     org_rs_tr = np.empty(data_size)
     monthly_org_rs_tr = np.empty(12)
@@ -243,3 +243,29 @@ def calc_rs_tr(month, rso, delta_t, mm_delta_t):
 
     return org_rs_tr, monthly_org_rs_tr
 
+
+def tr_monte_carlo(month, tmax, tmin, rs):
+    # TODO: Finish this function including comment block
+    num_lines = rs.shape[0]  # length of data
+    mc_iterations = 10000    # total number of monte carlo iterations to do
+
+    b_zero = np.array(0.031 + (0.031 * 0.2) * np.random.randn(mc_iterations, 1))
+    b_one = np.array(0.201 + (0.201 * 0.2) * np.random.randn(mc_iterations, 1))
+    b_two = np.array(-0.185 + (-0.185 * 0.2) * np.random.randn(mc_iterations, 1))
+
+    # b_coefficient = np.zeros(num_lines)
+    # rs_tr = np.zeros(num_lines)
+    # mc_tr_matrix = np.zeros(mc_iterations, num_lines)
+    # mc_tr_monthly_matrix = np.zeros(mc_iterations, 12)
+    # mc_correlation = np.zeros(mc_iterations)
+    # mc_rmse = np.zeros(mc_iterations)
+    # mc_prct_bias = np.zeros(mc_iterations)
+    # mc_logten_vector = np.zeros(mc_iterations)
+
+    # b_coefficient = np.array(b_zero + b_one * exp(b_two))
+    # TODO finish the tr optimization function
+    pass
+
+# This is never run by itself
+if __name__ == "__main__":
+    print("\nThis module is called as a part of the QAQC script, it does nothing by itself.")
