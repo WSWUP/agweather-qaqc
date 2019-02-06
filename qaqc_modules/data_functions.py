@@ -1,3 +1,4 @@
+import logging as log
 from math import pi
 import numpy as np
 from refet import Daily
@@ -201,35 +202,29 @@ def calc_rso_and_refet(lat, elev, wind_anemom, doy, month, tmax, tmin, ea, uz, r
     return rso, monthly_rs, eto, etr, monthly_eto, monthly_etr
 
 
-def calc_org_rs_tr(month, rso, delta_t, mm_delta_t):
+def calc_rs_tr(month, rso, delta_t, mm_delta_t, b_zero, b_one, b_two):
     """
-            Calculates theoretical daily solar radiation according to the Thornton and Running 1999 model.
-            Paper can be found here: http://www.engr.scu.edu/~emaurer/chile/vic_taller/papers/thornton_running_1997.pdf
+        Calculates theoretical daily solar radiation according to the Thornton and Running 1999 model.
+        Paper can be found here: http://www.engr.scu.edu/~emaurer/chile/vic_taller/papers/thornton_running_1997.pdf
+        Brief summary: Estimates rs based on a b coeff that is unique per each month based on temperature history
+            and daily difference between maximum and minimum temperature and rso
 
-            Parameters:
-                month : 1D numpy array of months within dataset
-                rso : 1D numpy array of clear-sky solar radiation values in w/m2
-                delta_t : 1D numpy array of difference between maximum and minimum temperature values for the time step
-                mm_delta_t : monthly averaged delta_t (12 values total) values across all of record
+        Parameters:
+            month : 1D numpy array of months within dataset
+            rso : 1D numpy array of clear-sky solar radiation values in w/m2
+            delta_t : 1D numpy array of difference between maximum and minimum temperature values for the time step
+            mm_delta_t : monthly averaged delta_t (12 values total) values across all of record
+            b_zero : first B coefficient used in calculation of rs_tr, original value is 0.031
+            b_one : second B coefficient used in calculation of rs_tr, original value is 0.201
+            b_two :third B coefficient used in the calculation of rs_tr, original value is -0.185
 
-            Returns:
-                org_rs_tr : 1D numpy array of thornton-running solar radiation with original B coefficient values
-                monthly_org_rs_tr : monthly averaged rs_Tr (12 values total) values across all of record
+        Returns:
+            rs_tr : 1D numpy array of thornton-running solar radiation
+            mm_rs_tr : monthly averaged rs_tr (12 values total) values across all of record
     """
-    # TODO: Expand this to include optimization text
-    data_size = month.shape[0]
-    org_rs_tr = np.empty(data_size)
-    monthly_org_rs_tr = np.empty(12)
-
-    rso_mj = np.array(rso * 0.0864)  # convert W/m2 to  MJ/m2
-
-    b = np.array(0.031 + 0.201 * np.exp(-0.185 * mm_delta_t))  # twelve values, one for each month
-
-    # Calculate daily values
-    for i in range(data_size):
-        org_rs_tr[i] = rso_mj[i] * (1 - 0.9 * np.exp(-1 * b[month[i] - 1] * delta_t[i] ** 1.5))
-
-    org_rs_tr *= 11.574  # Convert rs_tr from MJ/m2 to w/m2
+    mm_rs_tr = np.empty(12)
+    b_coefficient = np.array(b_zero + b_one * np.exp(b_two * mm_delta_t))
+    rs_tr = np.array(rso * (1 - 0.9 * np.exp(-1 * b_coefficient[month - 1] * delta_t ** 1.5)))
 
     # Create mean monthly values
     j = 1
@@ -237,34 +232,94 @@ def calc_org_rs_tr(month, rso, delta_t, mm_delta_t):
         temp_indexes = [ex for ex, ind in enumerate(month) if ind == j]
         temp_indexes = np.array(temp_indexes, dtype=int)
 
-        monthly_org_rs_tr[k] = np.nanmean(org_rs_tr[temp_indexes])
-
+        mm_rs_tr[k] = np.nanmean(rs_tr[temp_indexes])
         j += 1
 
-    return org_rs_tr, monthly_org_rs_tr
+    return rs_tr, mm_rs_tr
 
 
-def tr_monte_carlo(month, tmax, tmin, rs):
-    # TODO: Finish this function including comment block
-    num_lines = rs.shape[0]  # length of data
-    mc_iterations = 10000    # total number of monte carlo iterations to do
+def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, rs, rso):
+    """
+        This function performs a monte carlo simulation on the b coefficients that go into generating thornton-
+        running solar radiation in an attempt to optimize a model that best fits observed solar radiation data.
+        That best fit model will then be used to fill any missing observations in actual solar radiation for the
+        calculation of reference evapotranspiration. See the function calc_rs_tr for more information.
 
-    b_zero = np.array(0.031 + (0.031 * 0.2) * np.random.randn(mc_iterations, 1))
-    b_one = np.array(0.201 + (0.201 * 0.2) * np.random.randn(mc_iterations, 1))
-    b_two = np.array(-0.185 + (-0.185 * 0.2) * np.random.randn(mc_iterations, 1))
+        Parameters:
+            mc_iterations : number of iterations in monte carlo simulation
+            log_path : path to log file that we will write the b coefficients and other relevant info to
+            month : 1D numpy array of months within dataset
+            rs : 1D numpy array of observed solar radiation values in w/m2
+            rso : 1D numpy array of clear-sky solar radiation values in w/m2
+            delta_t : 1D numpy array of difference between maximum and minimum temperature values for the time step
+            mm_delta_t : monthly averaged delta_t (12 values total) values across all of record
 
-    # b_coefficient = np.zeros(num_lines)
-    # rs_tr = np.zeros(num_lines)
-    # mc_tr_matrix = np.zeros(mc_iterations, num_lines)
-    # mc_tr_monthly_matrix = np.zeros(mc_iterations, 12)
-    # mc_correlation = np.zeros(mc_iterations)
-    # mc_rmse = np.zeros(mc_iterations)
-    # mc_prct_bias = np.zeros(mc_iterations)
-    # mc_logten_vector = np.zeros(mc_iterations)
+        Returns:
+            org_rs_tr : 1D numpy array of thornton-running solar radiation with original B coefficient values
+            mm_org_rs_tr : monthly averaged org_rs_tr (12 values total) values across all of record
+            opt_rs_tr : 1D numpy array of thornton-running solar radiation with optimized B coefficient values
+            mm_opt_rs_tr : monthly averaged opt_rs_tr (12 values total) values across all of record
+    """
+    print("\nSystem: Now performing a Monte Carlo simulation to optimize Thornton Running solar radiation parameters.")
+    print("\nSystem: %s iterations are being run, this may take some time." % mc_iterations)
 
-    # b_coefficient = np.array(b_zero + b_one * exp(b_two))
-    # TODO finish the tr optimization function
-    pass
+    # numpy.random.randn is a normal distribution with mean 0 and variance 1
+    b_zero = np.array(0.031 + (0.031 * 1.0) * np.random.randn(mc_iterations))
+    b_one = np.array(0.201 + (0.201 * 1.0) * np.random.randn(mc_iterations))
+    b_two = np.array(-0.185 + (-0.185 * 1.0) * np.random.randn(mc_iterations))
+
+    mc_rmse = np.zeros(mc_iterations)
+
+    # Calculate rs_tr using original, unoptimized B coefficients
+    (orig_rs_tr, mm_orig_rs_tr) = calc_rs_tr(month, rso, delta_t, mm_delta_t, 0.031, 0.201, -0.185)
+
+    for i in range(mc_iterations):
+        # Run all randomized b coefficients through thornton running calculation
+        (mc_rs_tr, mm_mc_rs_tr) = calc_rs_tr(month, rso, delta_t, mm_delta_t, b_zero[i], b_one[i], b_two[i])
+
+        mc_rmse[i] = np.sqrt(np.nanmean((mc_rs_tr - rs) ** 2))  # Calculate RMSE to track how good those parameters were
+
+        if (i % 100) == 0:  # Update user so they don't think script is frozen.
+            print('\nSystem: processing Thornton-Running iteration: {}'.format(i))
+        else:
+            pass
+
+    # Now that we've iterated through all variations, find the best one
+    min_rmse_index = np.nanargmin(mc_rmse)
+    # Calculate RMSE of original rs_tr B coefficients
+    orig_rmse = np.sqrt(np.nanmean((orig_rs_tr - rs) ** 2))
+
+    if orig_rmse > mc_rmse[min_rmse_index]:
+        # Okay to use optimized values as they have lower rmse than original values
+        print('\nSystem: original coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.format(orig_rmse))
+        print('System: optimized coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.
+              format(mc_rmse[min_rmse_index]))
+
+        # Calculate the optimized rs_tr using the B coefficients that caused the lowest rmse
+        (opt_rs_tr, mm_opt_rs_tr) = calc_rs_tr(month, rso, delta_t, mm_delta_t, b_zero[min_rmse_index],
+                                               b_one[min_rmse_index], b_two[min_rmse_index])
+
+        # Write the b coefficients used to the log file then close it
+        # TODO b vars arent printing out correctly
+        log.basicConfig()
+        corr_log = open(log_path, 'a')
+        corr_log.write('\n\nThornton-Running Solar Radiation Optimization')
+        corr_log.write('\nMonte Carlo simulation with %s iterations produced the coefficients:' % mc_iterations)
+        corr_log.write('\nb_zero = {0:.4f}, b_one = {1:.4f}, b_two = {2:.4f}'.
+                       format(b_zero[min_rmse_index], b_one[min_rmse_index], b_two[min_rmse_index]))
+        corr_log.write('\nOptimized coefficients RMSE against observed solar radiation was: {0:.4f}'.
+                       format(mc_rmse[min_rmse_index]))
+        corr_log.write('\nOriginal coefficients RMSE against observed solar radiation was: {0:.4f} \n\n'
+                       .format(orig_rmse))
+        corr_log.close()
+
+    else:
+        # There's no real reason optimized coefficients should be worse than the original ones, raise an error
+        raise RuntimeError('optimized tr_rs had a larger RMSE than original tr_rs')
+
+    # Return both original and optimized rs_tr
+    return orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr
+
 
 # This is never run by itself
 if __name__ == "__main__":

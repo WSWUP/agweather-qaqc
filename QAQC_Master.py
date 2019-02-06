@@ -20,9 +20,16 @@ from refet.calcs import _wind_height_adjust
 # TODO: look into where "reset_output()" should
 # TODO: put fill functions from scratch file back into this, figure out where
 # TODO: simply fill tracking section with a function
+# TODO: decide if tr_rs should fill before or after solar radiation correction
+# TODO: fill temperature data totally
+# TODO: find a way to fill wind so we have a complete record of et
+# TODO: tracking changes to opt_rs_tr is meaningless because its randomly generated, should i track rs_tr as well?
+#    Maybe solution should be comparing original rs_tr with orignal coefficients vs optimized corrected?
 
 print("\nSystem: Starting data correction script.")
 config_path = 'config.ini'  # Hardcoded for now, eventually will create function to pull config path from excel file
+mc_iterations = 50000  # Hardcoded, consider adding to ini?
+mc_loop = 1
 
 #########################
 # Obtaining initial data
@@ -76,15 +83,11 @@ data_doy = np.array(list(map(int, data_doy)))  # Converts list of string values 
     calc_rso_and_refet(station_lat, station_elev, ws_anemometer_height, data_doy, data_month,
                        data_tmax, data_tmin, data_ea, data_ws, data_rs)
 
-# Calculates thornton running solar radiation with original B coefficient values
-(rs_tr, mm_rs_tr) = data_functions.calc_org_rs_tr(data_month, rso, delta_t, mm_delta_t)
-
 #########################
 # Back up original data
 # Original data will be saved to output file
 # Values are also used to generate delta values of corrected data - original data
 original_df = data_df.copy(deep=True)  # Create an unlinked copy of read-in values dataframe
-original_df['orig_rs_tr'] = rs_tr
 original_df['rso'] = rso
 original_df['etr'] = etr
 original_df['eto'] = eto
@@ -104,8 +107,9 @@ mm_dt_array = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 data_null = np.empty(data_length) * np.nan
 
 # Create arrays that will track which values have been filled (replace missing data) by the script
-fill_tdew = np.zeros(data_length)
 fill_ea = np.zeros(data_length)
+fill_tdew = np.zeros(data_length)
+fill_rs = np.zeros(data_length)
 
 # Begin loop for correcting variables
 while script_mode == 1:
@@ -180,7 +184,7 @@ while script_mode == 1:
                                                              'NONE', dt_array, data_month, data_year, 4)
     else:
         # user quits, exit out of loop
-        print('\n System: Now finishing up corrections.')
+        print('\nSystem: Now finishing up corrections.')
         break  # Break here because all recalculations were done at the end of the last loop iteration
 
     ##########
@@ -231,10 +235,29 @@ while script_mode == 1:
         calc_rso_and_refet(station_lat, station_elev, ws_anemometer_height, data_doy, data_month,
                            data_tmax, data_tmin, data_ea, data_ws, data_rs)
 
-    # Recalculates thornton running solar radiation with original B coefficient values
-    (rs_tr, mm_rs_tr) = data_functions.calc_org_rs_tr(data_month, rso, delta_t, mm_delta_t)
+#########################
+# Final calculations
+# Now that corrections are done, calculate thornton-running solar radiation, use it to fill data_rs
+# Then finally recalculate reference evapotranspiration with the filled data_rs
+# TODO PUT A gate here so this doesnt happen (or at least part of it doesnt) if user doesn't correct data?
+for i in range(mc_loop):
+    (orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr) = data_functions.\
+        calc_org_and_opt_rs_tr(mc_iterations, log_file, data_month, delta_t, mm_delta_t, data_rs, rso)
 
-    # TODO: once rs_Tr optimization is working, include one final et recalc after correction loop to capture filled rs
+# loop to fill data_rs
+for i in range(data_length):
+    if np.isnan(data_rs[i]):
+        data_rs[i] = opt_rs_tr[i]
+        fill_rs[i] = opt_rs_tr[i]
+    else:
+        # If rs isn't empty then nothing is required to be done.
+        pass
+
+# Recalculate eto and etr one final time
+(rso, mm_rs, eto, etr, mm_eto, mm_etr) = data_functions. \
+    calc_rso_and_refet(station_lat, station_elev, ws_anemometer_height, data_doy,
+                       data_month, data_tmax, data_tmin, data_ea, data_ws, data_rs)
+
 
 #########################
 # Generate bokeh composite plot
@@ -295,9 +318,14 @@ if generate_bokeh:  # Flag to create graphs or not
     plot_rs_rso = plotting_functions.create_plot(x_size, y_size, dt_array, rso, 'Clear-Sky Rs', 'black', data_rs, 'Rs',
                                                  'red', 'w/m2', plot_tmax_tmin)
 
-    # Mean Monthly solar radiation and Thornton-Running solar radiation
-    plot_mm_rs_tr = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red', mm_rs_tr,
-                                                   'MM TR Rs', 'blue', 'w/m2', plot_mm_tmin_tdew)
+    # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
+    plot_mm_opt_rs_tr = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red', mm_opt_rs_tr,
+                                                       'Optimized MM TR Rs', 'blue', 'w/m2', plot_mm_tmin_tdew)
+
+    # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
+    plot_mm_orig_rs_tr = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red',
+                                                        mm_orig_rs_tr, 'Original MM TR Rs', 'blue', 'w/m2',
+                                                        plot_mm_tmin_tdew)
 
     # Windspeed
     plot_ws = plotting_functions.create_plot(x_size, y_size, dt_array, data_ws, 'Wind Speed', 'black', data_null,
@@ -315,13 +343,14 @@ if generate_bokeh:  # Flag to create graphs or not
         fig = gridplot([[plot_tmax_tmin, plot_tmin_tdew, plot_humid],
                         [plot_mm_tmin_tdew, plot_mm_k_not, supplemental_rh_plot],
                         [plot_rs_rso, plot_ws, plot_precip],
-                        [plot_mm_rs_tr]], toolbar_location="left")
+                        [plot_mm_opt_rs_tr, plot_mm_orig_rs_tr]], toolbar_location="left")
         save(fig)
     else:
         # If there is no 10th plot to generate, save the regular 9
         fig = gridplot([[plot_tmax_tmin, plot_tmin_tdew, plot_humid],
                         [plot_mm_tmin_tdew, plot_mm_k_not, plot_rs_rso],
-                        [plot_ws, plot_precip, plot_mm_rs_tr]], toolbar_location="left")
+                        [plot_ws, plot_precip, plot_mm_opt_rs_tr]
+                        [plot_mm_orig_rs_tr]], toolbar_location="left")
         save(fig)
 
     print("\nSystem: Composite bokeh graph has been generated.")
@@ -338,9 +367,6 @@ print("\nSystem: Saving corrected data to .xslx file.")
 
 # Create any individually-requested output data
 ws_2m = _wind_height_adjust(uz=data_ws, zw=ws_anemometer_height)
-# TODO Fix this once optimization function is present
-orig_rs_tr = rs_tr
-opt_rs_tr = rs_tr
 
 # Create fill numpy arrays to show when data was filled
 fill_tavg = np.zeros(data_length)
@@ -376,9 +402,7 @@ diff_rhavg = np.array(data_rhavg - original_df.rhavg)
 diff_rhmax = np.array(data_rhmax - original_df.rhmax)
 diff_rhmin = np.array(data_rhmin - original_df.rhmin)
 diff_rs = np.array(data_rs - original_df.rs)
-# TODO Fix this once optimization function is present
-diff_orig_rs_tr = np.array(rs_tr - original_df.orig_rs_tr)
-diff_opt_rs_tr = np.array(rs_tr - original_df.orig_rs_tr)
+diff_rs_tr = np.array(opt_rs_tr - orig_rs_tr)
 diff_rso = np.array(rso - original_df.rso)
 diff_ws = np.array(data_ws - original_df.ws)
 diff_precip = np.array(data_precip - original_df.precip)
@@ -393,18 +417,18 @@ datetime_df = pd.to_datetime(datetime_df[['month', 'day', 'year']])
 output_df = pd.DataFrame({'date': datetime_df, 'year': data_year, 'month': data_month, 'day': data_day,
                           'TAvg (C)': data_tavg, 'TMax (C)': data_tmax, 'TMin (C)': data_tmin, 'TDew (C)': data_tdew,
                           'Vapor Pres (kPa)': data_ea, 'RHAvg (%)': data_rhavg, 'RHMax (%)': data_rhmax,
-                          'RHMin (%)': data_rhmin, 'Rs (w/m2)': data_rs, 'Orig_Rs_TR (w/m2)': orig_rs_tr,
-                          'Opt_Rs_TR (w/m2)': opt_rs_tr, 'Rso (w/m2)': rso, 'Windspeed (m/s)': data_ws,
-                          'Precip (mm)': data_precip, 'ETr (mm)': etr, 'ETo (mm)': eto, 'ws_2m (m/s)': ws_2m},
+                          'RHMin (%)': data_rhmin, 'Rs (w/m2)': data_rs, 'Opt_Rs_TR (w/m2)': opt_rs_tr,
+                          'Rso (w/m2)': rso, 'Windspeed (m/s)': data_ws, 'Precip (mm)': data_precip,
+                          'ETr (mm)': etr, 'ETo (mm)': eto, 'ws_2m (m/s)': ws_2m},
                          index=datetime_df)
 
 # Creating difference dataframe to track amount of correction
 delta_df = pd.DataFrame({'date': datetime_df, 'year': data_year, 'month': data_month, 'day': data_day,
                          'TAvg (C)': diff_tavg, 'TMax (C)': diff_tmax, 'TMin (C)': diff_tmin, 'TDew (C)': diff_tdew,
                          'Vapor Pres (kPa)': diff_ea, 'RHAvg (%)': diff_rhavg, 'RHMax (%)': diff_rhmax,
-                         'RHMin (%)': diff_rhmin, 'Rs (w/m2)': diff_rs, 'Orig_Rs_TR (w/m2)': diff_orig_rs_tr,
-                         'Opt_Rs_TR (w/m2)': diff_opt_rs_tr, 'Rso (w/m2)': diff_rso, 'Windspeed (m/s)': diff_ws,
-                         'Precip (mm)': diff_precip, 'ETr (mm)': diff_etr, 'ETo (mm)': diff_eto}, index=datetime_df)
+                         'RHMin (%)': diff_rhmin, 'Rs (w/m2)': diff_rs, 'Opt - Orig Rs_TR (w/m2)': diff_rs_tr,
+                         'Rso (w/m2)': diff_rso, 'Windspeed (m/s)': diff_ws, 'Precip (mm)': diff_precip,
+                         'ETr (mm)': diff_etr, 'ETo (mm)': diff_eto}, index=datetime_df)
 
 # Creating a fill dataframe that tracks where missing data was filled in
 fill_df = pd.DataFrame({'date': datetime_df, 'year': data_year, 'month': data_month, 'day': data_day,
