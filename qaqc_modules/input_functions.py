@@ -366,11 +366,16 @@ def obtain_data(config_file_path):
         else:
             date_format = "%m/%d/%Y"
 
-        # TODO: test code below with stringdate dataset, probably won't work
-        date_info = np.array(dt.datetime.strptime(data_date, date_format))
-        data_day = np.array(date_info.day)
-        data_month = np.array(date_info.month)
-        data_year = np.array(date_info.year)
+        data_day = np.zeros(raw_rows)
+        data_month = np.zeros(raw_rows)
+        data_year = np.zeros(raw_rows)
+
+        # Have to loop elementwise because dt.datetime doesn't like numpy arrays
+        for i in range(raw_rows):
+            date_info = dt.datetime.strptime(data_date[i], date_format)
+            data_day[i] = date_info.day
+            data_month[i] = date_info.month
+            data_year[i] = date_info.year
 
     elif date_format == 2:
         # Date is pre-split into several columns

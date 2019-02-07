@@ -1,4 +1,4 @@
-from bokeh.plotting import figure, output_file, reset_output, save
+from bokeh.plotting import figure
 
 
 def create_plot(x_size, y_size, dt_array, var_one, var_one_text, var_one_color, var_two, var_two_text, var_two_color,

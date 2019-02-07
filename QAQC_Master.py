@@ -8,28 +8,25 @@ from refet.calcs import _wind_height_adjust
 
 #########################
 # Initial setup
-# TODO: finish implementing log file within this script
 # TODO: add fill function for all missing temp data and adjust fill vars accordingly
 # TODO: change uniform to normal
 # TODO: functionalize qaqc_functions and add comment text
-# TODO: investigate changing bokehs to functions
-# TODO: this script cannot handle only tavg, its only setup for max/min
 # TODO: contemplate just keeping everything as a pandas dataframe
-# TODO: Add optimization for TR_Rs to each place it appears (2)
-#  rs_tr reg is saved as both orig and opt in output file at the minute
-# TODO: look into where "reset_output()" should
 # TODO: put fill functions from scratch file back into this, figure out where
 # TODO: simply fill tracking section with a function
-# TODO: decide if tr_rs should fill before or after solar radiation correction
 # TODO: fill temperature data totally
-# TODO: find a way to fill wind so we have a complete record of et
-# TODO: tracking changes to opt_rs_tr is meaningless because its randomly generated, should i track rs_tr as well?
-#    Maybe solution should be comparing original rs_tr with orignal coefficients vs optimized corrected?
+# TODO: find a way to fill wind so we have a complete record of
+# TODO: Confirm on when Ea should be filled, before or after ea is actually corrected
+# TODO: consider silencing RuntimeWarnings over invalid values (nans)
+# TODO: filling occurs outside of qaqc function so change temperature filling in that script
+# TODO: This warning -  DeprecationWarning: Using or importing the ABCs from 'collections' instead of from
+#   'collections.abc' is deprecated, and in 3.8 it will stop working - is caused by code within bokeh package,
+#   and is being worked on as of 2/2/19, keep track of it and update when they fix it.
+# TODO: just set rs_tr to null on first runthrough to save wasted time
 
 print("\nSystem: Starting data correction script.")
-config_path = 'config.ini'  # Hardcoded for now, eventually will create function to pull config path from excel file
-mc_iterations = 50000  # Hardcoded, consider adding to ini?
-mc_loop = 1
+config_path = 'ea_config.ini'
+mc_iterations = 1000  # Number of iterations for monte carlo simulation of thornton running solar radiation generation
 
 #########################
 # Obtaining initial data
@@ -78,7 +75,6 @@ data_doy = np.array(list(map(int, data_doy)))  # Converts list of string values 
     calc_temperature_variables(data_month, data_tmax, data_tmin, data_tdew)
 
 # Calculates rso and grass/alfalfa reference evapotranspiration from refet package
-# TODO: consider silencing RuntimeWarnings over invalid values (nans)
 (rso, mm_rs, eto, etr, mm_eto, mm_etr) = data_functions.\
     calc_rso_and_refet(station_lat, station_elev, ws_anemometer_height, data_doy, data_month,
                        data_tmax, data_tmin, data_ea, data_ws, data_rs)
@@ -107,6 +103,8 @@ mm_dt_array = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 data_null = np.empty(data_length) * np.nan
 
 # Create arrays that will track which values have been filled (replace missing data) by the script
+fill_tmax = np.zeros(data_length)
+fill_tmin = np.zeros(data_length)
 fill_ea = np.zeros(data_length)
 fill_tdew = np.zeros(data_length)
 fill_rs = np.zeros(data_length)
@@ -128,7 +126,8 @@ while script_mode == 1:
     choice_loop = 1
     while choice_loop:
         if 1 <= user <= 7:
-            if column_df.ea == -1 and column_df.rhmax == -1 and column_df.rhmin == -1 and column_df.rhavg == -1:
+            if user == 5 and \
+                    (column_df.ea == -1 and column_df.rhmax == -1 and column_df.rhmin == -1 and column_df.rhavg == -1):
                 # User selected option to correct humidity when the only var provided is tdew
                 print('\nOnly TDew was provided as a humidity variable, which is corrected under option 2.')
                 user = int(input('Specify which variable you would like to correct: '))
@@ -188,9 +187,38 @@ while script_mode == 1:
         break  # Break here because all recalculations were done at the end of the last loop iteration
 
     ##########
-    # Now that a variable has been corrected, recalculate all relevant secondary variables
-
+    # Now that a variable has been corrected, fill any variables and recalculate all relevant secondary variables
     if user == 1 or user == 2 or user == 5:
+
+        if user == 1:  # User has corrected temperature, so fill all missing values with a normal distribution
+            # Create mean monthly and standard deviation
+            mm_tmax = np.zeros(12)
+            mm_tmin = np.zeros(12)
+            std_tmax = np.zeros(12)
+            std_tmin = np.zeros(12)
+            j = 1
+            for k in range(12):
+                temp_indexes = [ex for ex, ind in enumerate(data_month) if ind == j]
+                temp_indexes = np.array(temp_indexes, dtype=int)
+                mm_tmax[k] = np.nanmean(data_tmax[temp_indexes])
+                std_tmax[k] = np.nanstd(data_tmax[temp_indexes])
+                mm_tmin[k] = np.nanmean(data_tmin[temp_indexes])
+                std_tmin[k] = np.nanstd(data_tmax[temp_indexes])
+                j += 1
+            # Fill missing observations with samples from a normal distribution with monthly mean and variance
+            for i in range(data_length):
+                if np.isnan(data_tmax[i]):
+                    data_tmax[i] = mm_tmax[data_month[i] - 1] + (std_tmax[[data_month[i] - 1]] * np.random.randn())
+                    fill_tmax[i] = data_tmax[i]
+                else:
+                    pass
+                if np.isnan(data_tmin[i]):
+                    data_tmin[i] = mm_tmin[data_month[i] - 1] + (std_tmin[[data_month[i] - 1]] * np.random.randn())
+                    fill_tmin[i] = data_tmin[i]
+                else:
+                    pass
+        else:
+            pass
         # Figure out which humidity variables are provided and recalculate Ea and TDew if needed
         # This function is safe to use after correcting because it tracks what variable was provided by the data file
         # and recalculates appropriately. It doesn't overwrite provided variables with calculated versions.
@@ -216,8 +244,7 @@ while script_mode == 1:
                 data_tdew[i] = data_tmin[i] - mm_k_not[data_month[i] - 1]
                 fill_tdew[i] = data_tdew[i]
 
-                # TODO: Confirm on when Ea should be filled, before or after ea is actually corrected
-                if column_df.ea == -1 or (column_df.ea != -1 and not np.isnan(data_ea[i])):
+                if column_df.ea == -1 or (column_df.ea != -1 and np.isnan(data_ea[i])):
                     # Either Ea not provided, OR Ea is provided and this index is empty and can be filled
                     data_ea[i] = (0.6108 * np.exp((17.27 * data_tdew[i]) / (data_tdew[i] + 237.3)))
                     fill_ea[i] = data_ea[i]
@@ -237,27 +264,28 @@ while script_mode == 1:
 
 #########################
 # Final calculations
-# Now that corrections are done, calculate thornton-running solar radiation, use it to fill data_rs
+# We calculate both original and optimized thornton running solar radiation, and then if we are correcting data
+# we fill in missing observations of solar radiation with optimized thornton running solar
 # Then finally recalculate reference evapotranspiration with the filled data_rs
-# TODO PUT A gate here so this doesnt happen (or at least part of it doesnt) if user doesn't correct data?
-for i in range(mc_loop):
-    (orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr) = data_functions.\
+(orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr) = data_functions.\
         calc_org_and_opt_rs_tr(mc_iterations, log_file, data_month, delta_t, mm_delta_t, data_rs, rso)
 
-# loop to fill data_rs
-for i in range(data_length):
-    if np.isnan(data_rs[i]):
-        data_rs[i] = opt_rs_tr[i]
-        fill_rs[i] = opt_rs_tr[i]
-    else:
-        # If rs isn't empty then nothing is required to be done.
-        pass
+if script_mode == 1:
+    # loop to fill data_rs
+    for i in range(data_length):
+        if np.isnan(data_rs[i]):
+            data_rs[i] = opt_rs_tr[i]
+            fill_rs[i] = opt_rs_tr[i]
+        else:
+            # If rs isn't empty then nothing is required to be done.
+            pass
 
-# Recalculate eto and etr one final time
-(rso, mm_rs, eto, etr, mm_eto, mm_etr) = data_functions. \
-    calc_rso_and_refet(station_lat, station_elev, ws_anemometer_height, data_doy,
-                       data_month, data_tmax, data_tmin, data_ea, data_ws, data_rs)
-
+    # Recalculate eto and etr one final time
+    (rso, mm_rs, eto, etr, mm_eto, mm_etr) = data_functions. \
+        calc_rso_and_refet(station_lat, station_elev, ws_anemometer_height, data_doy,
+                           data_month, data_tmax, data_tmin, data_ea, data_ws, data_rs)
+else:
+    pass
 
 #########################
 # Generate bokeh composite plot
@@ -265,10 +293,6 @@ for i in range(data_length):
 # If user opts to not correct data (sets script_mode = 0), then this plots data before correction
 # If user does correct data, then this plots data after correction
 print("\nSystem: Now creating composite bokeh graph.")
-
-# TODO: This warning -  DeprecationWarning: Using or importing the ABCs from 'collections' instead of from
-#   'collections.abc' is deprecated, and in 3.8 it will stop working - is caused by code within bokeh package,
-#   and is being worked on as of 2/2/19, keep track of it and update when they fix it.
 if generate_bokeh:  # Flag to create graphs or not
 
     x_size = 500
@@ -349,7 +373,7 @@ if generate_bokeh:  # Flag to create graphs or not
         # If there is no 10th plot to generate, save the regular 9
         fig = gridplot([[plot_tmax_tmin, plot_tmin_tdew, plot_humid],
                         [plot_mm_tmin_tdew, plot_mm_k_not, plot_rs_rso],
-                        [plot_ws, plot_precip, plot_mm_opt_rs_tr]
+                        [plot_ws, plot_precip, plot_mm_opt_rs_tr],
                         [plot_mm_orig_rs_tr]], toolbar_location="left")
         save(fig)
 
@@ -367,30 +391,6 @@ print("\nSystem: Saving corrected data to .xslx file.")
 
 # Create any individually-requested output data
 ws_2m = _wind_height_adjust(uz=data_ws, zw=ws_anemometer_height)
-
-# Create fill numpy arrays to show when data was filled
-fill_tavg = np.zeros(data_length)
-fill_tmax = np.zeros(data_length)
-fill_tmin = np.zeros(data_length)
-for i in range(data_length):
-    # TAvg
-    if (original_df.tavg[i] == data_tavg[i]) or (np.isnan(original_df.tavg[i]) and np.isnan(data_tavg[i])):
-        # Nothing is required to be done
-        pass
-    else:
-        fill_tavg[i] = data_tavg[i]
-    # TMax
-    if (original_df.tmax[i] == data_tmax[i]) or (np.isnan(original_df.tmax[i]) and np.isnan(data_tmax[i])):
-        # Nothing is required to be done
-        pass
-    else:
-        fill_tmax[i] = data_tmax[i]
-    # TMin
-    if (original_df.tmin[i] == data_tmin[i]) or (np.isnan(original_df.tmin[i]) and np.isnan(data_tmin[i])):
-        # Nothing is required to be done
-        pass
-    else:
-        fill_tmin[i] = data_tmin[i]
 
 # Create corrected-original delta numpy arrays
 diff_tavg = np.array(data_tavg - original_df.tavg)
@@ -432,8 +432,8 @@ delta_df = pd.DataFrame({'date': datetime_df, 'year': data_year, 'month': data_m
 
 # Creating a fill dataframe that tracks where missing data was filled in
 fill_df = pd.DataFrame({'date': datetime_df, 'year': data_year, 'month': data_month, 'day': data_day,
-                        'TAvg (C)': fill_tavg, 'TMax (C)': fill_tmax, 'TMin (C)': fill_tmin,
-                        'TDew (C)': fill_tdew, 'Vapor Pres (kPa)': fill_ea}, index=datetime_df)
+                        'TMax (C)': fill_tmax, 'TMin (C)': fill_tmin, 'TDew (C)': fill_tdew,
+                        'Vapor Pres (kPa)': fill_ea, 'Rs (w/m2)': fill_rs}, index=datetime_df)
 
 # Open up pandas excel writer
 output_writer = pd.ExcelWriter(station_name + "_output" + ".xlsx", engine='xlsxwriter')

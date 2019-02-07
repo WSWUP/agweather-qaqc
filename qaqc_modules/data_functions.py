@@ -245,6 +245,10 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
         That best fit model will then be used to fill any missing observations in actual solar radiation for the
         calculation of reference evapotranspiration. See the function calc_rs_tr for more information.
 
+        The number of iterations is currently set to 1000, and the bracket size with which to generate random values
+        is 0.5, these factors were chosen after trying different values on several stations and were a good balance of
+        minimizing RMSE and processing speed.
+
         Parameters:
             mc_iterations : number of iterations in monte carlo simulation
             log_path : path to log file that we will write the b coefficients and other relevant info to
@@ -263,10 +267,9 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
     print("\nSystem: Now performing a Monte Carlo simulation to optimize Thornton Running solar radiation parameters.")
     print("\nSystem: %s iterations are being run, this may take some time." % mc_iterations)
 
-    # numpy.random.randn is a normal distribution with mean 0 and variance 1
-    b_zero = np.array(0.031 + (0.031 * 1.0) * np.random.randn(mc_iterations))
-    b_one = np.array(0.201 + (0.201 * 1.0) * np.random.randn(mc_iterations))
-    b_two = np.array(-0.185 + (-0.185 * 1.0) * np.random.randn(mc_iterations))
+    b_zero = np.array(0.031 + (0.031 * 0.5) * np.random.uniform(low=-1, high=1, size=mc_iterations))
+    b_one = np.array(0.201 + (0.201 * 0.5) * np.random.uniform(low=-1, high=1, size=mc_iterations))
+    b_two = np.array(-0.185 + (-0.185 * 0.5) * np.random.uniform(low=-1, high=1, size=mc_iterations))
 
     mc_rmse = np.zeros(mc_iterations)
 
@@ -300,7 +303,6 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
                                                b_one[min_rmse_index], b_two[min_rmse_index])
 
         # Write the b coefficients used to the log file then close it
-        # TODO b vars arent printing out correctly
         log.basicConfig()
         corr_log = open(log_path, 'a')
         corr_log.write('\n\nThornton-Running Solar Radiation Optimization')
