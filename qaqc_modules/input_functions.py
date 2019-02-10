@@ -223,11 +223,61 @@ def daily_realistic_limits(original_data, log_path, var_type):
     return limited_data  # Return the limited data
     
 
+def remove_isolated_observations(original_var):
+    """
+        Iterates through provided variable and tries to find any isolated observation, here defined as any observation
+        that is surrounded by missing observations, and sets them to nan.
+
+        While this is deleting likely valid data, it is an important step because work is validated visually using bokeh
+        plots, which will not display isolated points and we do not want possibly bad values to slip though.
+
+        The actual occurrence of an observation being surrounded by nans should be rare enough that this function has
+        little impact.
+
+        Parameters:
+            original_var : 1D numpy array of original variable data
+
+        Returns:
+            processed_var : 1D numpy array of variable that has been filtered of all isolated observations.
+    """
+
+    data_size = original_var.shape[0]  # number of rows in data
+    processed_var = np.empty(data_size) * np.nan
+
+    for i in range(data_size):
+        if i == 0 or i == (data_size - 1):  # Special handling for first and last index
+            if i == 0:  # First index
+                if np.isnan(original_var[i + 1]):
+                    # Very first observation is followed by a nan, remove it
+                    pass
+                else:
+                    # First observation is not followed by a nan
+                    processed_var[i] = original_var[i]
+            else:  # last index
+                if np.isnan(original_var[i - 1]):
+                    # Very last observation is preceded by a nan, remove it
+                    pass
+                else:
+                    # Last observation is not preceded by a nan
+                    processed_var[i] = original_var[i]
+
+        elif np.isnan(original_var[i - 1]) and np.isnan(original_var[i + 1]) and not np.isnan(original_var[i]):
+            # Observation is surrounded by nans, remove it.
+            pass
+        else:
+            # Either observation is valid and not surrounded by nans or is itself a nan.
+            processed_var[i] = original_var[i]
+
+    return processed_var
+
+
 def process_variable(config_file_path, raw_data, log_path, var_type):
     """
         Combines the functions extract_var, convert_units, and daily_realistic_limits to increase readability. First,
         the function extracts individual variables from the raw data, then converts them into the expected metric units,
-        and finally sends them through a pass through filter to make sure there are no unrealistic values.
+        sends them through a pass through filter to make sure there are no unrealistic values, and finally filters them
+        again to remove all isolated observations that will not display on bokeh plots.
+
         Parameters:
             config_file_path : string of path to config file, should work with absolute or relative path
             raw_data : 2D matrix of raw data pulled from .csv specified in config file
@@ -235,7 +285,7 @@ def process_variable(config_file_path, raw_data, log_path, var_type):
             var_type : string of text used to signify what variable has been requested.
 
         Returns:
-            filtered_var : 1D numpy array of variable that has been extracted, converted, and filtered
+            processed_var : 1D numpy array of variable that has been extracted, converted, and filtered
             var_col : column of pulled variable, used to track what is provided and what is calculated
     """
     var_config = cp.ConfigParser()
@@ -272,8 +322,9 @@ def process_variable(config_file_path, raw_data, log_path, var_type):
     original_var = extract_variable(raw_data, var_col)  # Will either return data or an array of nans of expected size
     converted_var = convert_units(config_file_path, original_var, var_type)  # converts data to appropriate units
     filtered_var = daily_realistic_limits(converted_var, log_path, var_type)  # returns data filtered of bad values
+    processed_var = remove_isolated_observations(filtered_var)  # returns data with no isolated observations
 
-    return filtered_var, var_col
+    return processed_var, var_col
 
 
 def obtain_data(config_file_path):

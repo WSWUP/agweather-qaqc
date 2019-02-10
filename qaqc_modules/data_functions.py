@@ -1,5 +1,4 @@
 import logging as log
-from math import pi
 import numpy as np
 from refet import Daily
 from refet.calcs import _ra_daily, _rso_daily
@@ -171,20 +170,20 @@ def calc_rso_and_refet(lat, elev, wind_anemom, doy, month, tmax, tmin, ea, uz, r
     pressure = 101.3 * (((293 - (0.0065 * elev)) / 293) ** 5.26)  # units kPa, EQ 3 in ASCE RefET manual
     # refet package expects rs in MJ/m2 and latitude in radians
     refet_input_rs = np.array(rs * 0.0864)  # convert W/m2 to  MJ/m2
-    refet_input_lat = lat * (pi / 180.0)  # convert latitude into radians
+    refet_input_lat = lat * (np.pi / 180.0)  # convert latitude into radians
 
     # Calculate daily values
     for i in range(data_size):
-        ra[i] = _ra_daily(lat=refet_input_lat, doy=doy[i], method='refet')
+        ra[i] = _ra_daily(lat=refet_input_lat, doy=doy[i], method='asce')
         rso[i] = _rso_daily(ra=ra[i], ea=ea[i], pair=pressure, doy=doy[i], lat=refet_input_lat)
 
         # Calculating ETo in mm using refET package
         eto[i] = Daily(tmin=tmin[i], tmax=tmax[i], ea=ea[i], rs=refet_input_rs[i], uz=uz[i], zw=wind_anemom,
-                       elev=elev, lat=lat, doy=doy[i], method='refet').eto()
+                       elev=elev, lat=lat, doy=doy[i], method='asce').eto()
 
         # Calculating ETr in mm using refET package
         etr[i] = Daily(tmin=tmin[i], tmax=tmax[i], ea=ea[i], rs=refet_input_rs[i], uz=uz[i], zw=wind_anemom,
-                       elev=elev, lat=lat, doy=doy[i], method='refet').etr()
+                       elev=elev, lat=lat, doy=doy[i], method='asce').etr()
 
     # Calculate mean monthly values
     j = 1
@@ -249,6 +248,9 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
         is 0.5, these factors were chosen after trying different values on several stations and were a good balance of
         minimizing RMSE and processing speed.
 
+        When running the script on the first mode, only 50 iterations are done to save time, it may be that optimized
+        has worse parameters than original in this case, so we just return the original paramaters as the optimized
+
         Parameters:
             mc_iterations : number of iterations in monte carlo simulation
             log_path : path to log file that we will write the b coefficients and other relevant info to
@@ -292,32 +294,38 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
     # Calculate RMSE of original rs_tr B coefficients
     orig_rmse = np.sqrt(np.nanmean((orig_rs_tr - rs) ** 2))
 
-    if orig_rmse > mc_rmse[min_rmse_index]:
-        # Okay to use optimized values as they have lower rmse than original values
-        print('\nSystem: original coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.format(orig_rmse))
-        print('System: optimized coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.
-              format(mc_rmse[min_rmse_index]))
+    print('\nSystem: original coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.format(orig_rmse))
+    print('System: optimized coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.
+          format(mc_rmse[min_rmse_index]))
 
-        # Calculate the optimized rs_tr using the B coefficients that caused the lowest rmse
-        (opt_rs_tr, mm_opt_rs_tr) = calc_rs_tr(month, rso, delta_t, mm_delta_t, b_zero[min_rmse_index],
-                                               b_one[min_rmse_index], b_two[min_rmse_index])
+    # Calculate the optimized rs_tr using the B coefficients that caused the lowest rmse
+    (opt_rs_tr, mm_opt_rs_tr) = calc_rs_tr(month, rso, delta_t, mm_delta_t, b_zero[min_rmse_index],
+                                           b_one[min_rmse_index], b_two[min_rmse_index])
 
-        # Write the b coefficients used to the log file then close it
-        log.basicConfig()
-        corr_log = open(log_path, 'a')
-        corr_log.write('\n\nThornton-Running Solar Radiation Optimization')
-        corr_log.write('\nMonte Carlo simulation with %s iterations produced the coefficients:' % mc_iterations)
-        corr_log.write('\nb_zero = {0:.4f}, b_one = {1:.4f}, b_two = {2:.4f}'.
-                       format(b_zero[min_rmse_index], b_one[min_rmse_index], b_two[min_rmse_index]))
-        corr_log.write('\nOptimized coefficients RMSE against observed solar radiation was: {0:.4f}'.
-                       format(mc_rmse[min_rmse_index]))
-        corr_log.write('\nOriginal coefficients RMSE against observed solar radiation was: {0:.4f} \n\n'
-                       .format(orig_rmse))
-        corr_log.close()
+    # Write the b coefficients used to the log file then close it
+    log.basicConfig()
+    corr_log = open(log_path, 'a')
+    corr_log.write('\n\nThornton-Running Solar Radiation Optimization')
+    corr_log.write('\nMonte Carlo simulation with %s iterations produced the coefficients:' % mc_iterations)
+    corr_log.write('\nb_zero = {0:.4f}, b_one = {1:.4f}, b_two = {2:.4f}'.
+                   format(b_zero[min_rmse_index], b_one[min_rmse_index], b_two[min_rmse_index]))
+    corr_log.write('\nOptimized coefficients RMSE against observed solar radiation was: {0:.4f}'.
+                   format(mc_rmse[min_rmse_index]))
+    corr_log.write('\nOriginal coefficients RMSE against observed solar radiation was: {0:.4f} \n\n'
+                   .format(orig_rmse))
+    corr_log.close()
 
+    if orig_rmse < mc_rmse[min_rmse_index] and mc_iterations == 50:
+        # if original was better than optimized, it is likely because we didn't do enough iterations
+        # which is likely because we're not correcting data, so just return original as optimized
+        opt_rs_tr = orig_rs_tr
+        mm_opt_rs_tr = mm_orig_rs_tr
+    elif orig_rmse < mc_rmse[min_rmse_index] and mc_iterations != 50:
+        # this shouldn't happen, as we should have done enough iterations to beat original values, so raise an error
+        raise ValueError('Thornton running optimization failed to beat original coefficient values.' +
+                         ' Try running again, and if this error persists please report it on github.')
     else:
-        # There's no real reason optimized coefficients should be worse than the original ones, raise an error
-        raise RuntimeError('optimized tr_rs had a larger RMSE than original tr_rs')
+        pass
 
     # Return both original and optimized rs_tr
     return orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr

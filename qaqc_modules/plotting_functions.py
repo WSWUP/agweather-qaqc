@@ -1,10 +1,11 @@
 from bokeh.plotting import figure
+import numpy as np
 
 
-def create_plot(x_size, y_size, dt_array, var_one, var_one_text, var_one_color, var_two, var_two_text, var_two_color,
-                units, link_plot=None):
+def line_plot(x_size, y_size, dt_array, var_one, var_one_text, var_one_color, var_two, var_two_text, var_two_color,
+              units, link_plot=None):
     """
-        Creates a bokeh plot for provided variables and links them if appropriate
+        Creates a bokeh line plot for provided variables and links them if appropriate
 
         Parameters:
             x_size : x-axis size for plot
@@ -56,3 +57,40 @@ def create_plot(x_size, y_size, dt_array, var_one, var_one_text, var_one_color, 
     subplot.legend.location = 'bottom_left'
 
     return subplot
+
+
+def histogram_plot(data, title, color, units):
+    """
+        Creates a histogram and plots it for provided variables against a PDF to see if it is approximately
+        normally distributed
+
+        Parameters:
+            data : 1D numpy array of original data
+            title : string of title for this plot
+            color : string of color to use for histogram bars
+            units : string of units for x axis
+
+        Returns:
+            h_plot : constructed figure with histogram
+    """
+    mean = np.nanmean(data)
+    sigma = np.nanstd(data)
+
+    x = np.linspace((mean + 3.0 * sigma), (mean - 3.0 * sigma), 1000)
+    pdf = 1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(-(x - mean) ** 2 / (2 * sigma ** 2))
+
+    histogram, edges = np.histogram(data, density=True, bins=100)
+
+    h_plot = figure(title=title, tools='', background_fill_color="#fafafa")
+    h_plot.quad(top=histogram, bottom=0, left=edges[:-1], right=edges[1:],
+                fill_color=color, line_color="white", alpha=0.5)
+    h_plot.line(x, pdf, line_color="#ff8888", line_width=4, alpha=0.7, legend="PDF")
+
+    h_plot.y_range.start = 0
+    h_plot.legend.location = "center_right"
+    h_plot.legend.background_fill_color = "#fefefe"
+    h_plot.xaxis.axis_label = units
+    h_plot.yaxis.axis_label = 'Pr(x)'
+    h_plot.grid.grid_line_color = "white"
+
+    return h_plot

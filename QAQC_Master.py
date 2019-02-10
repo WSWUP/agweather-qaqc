@@ -5,33 +5,46 @@ import numpy as np
 import pandas as pd
 from qaqc_modules import data_functions, input_functions, plotting_functions, qaqc_functions
 from refet.calcs import _wind_height_adjust
+import sys
+
+#########################
+# Potential issues
+#
+# Currently silencing invalid value warnings around refet calculations at start and middle of script but NOT the end.
+#
+# Variables are not filled until after they are corrected.
+#
+# When not correcting data, only a low number of TR optimization runs are performed to save time, and it may result in
+#     a worse RMSE than original coefficients. If this occurs it just returns the original rs TR as optimized.
+#     If optimized is worse than original during a full correction run it raises an error.
+#
+# TODO: tackle handling of true divide error in qaqc functions
+# TODO: consolidate code for filling temperature
+# TODO: reorganize qaqc_functions and add comment text
+# TODO: filling occurs outside of qaqc function so change temperature filling in that script
+# TODO: Python 3.7 warning -  DeprecationWarning: Using or importing the ABCs from 'collections' instead of from
+#   'collections.abc' is deprecated, and in 3.8 it will stop working - is caused by code within bokeh package,
+#   and is being worked on as of 2/2/19, keep track of it and update when they fix it.
+# TODO: 'script mode' is ambiguous, refactor to be something like 'correction_flag'
 
 #########################
 # Initial setup
-# TODO: add fill function for all missing temp data and adjust fill vars accordingly
-# TODO: change uniform to normal
-# TODO: functionalize qaqc_functions and add comment text
-# TODO: contemplate just keeping everything as a pandas dataframe
-# TODO: put fill functions from scratch file back into this, figure out where
-# TODO: simply fill tracking section with a function
-# TODO: fill temperature data totally
-# TODO: find a way to fill wind so we have a complete record of
-# TODO: Confirm on when Ea should be filled, before or after ea is actually corrected
-# TODO: consider silencing RuntimeWarnings over invalid values (nans)
-# TODO: filling occurs outside of qaqc function so change temperature filling in that script
-# TODO: This warning -  DeprecationWarning: Using or importing the ABCs from 'collections' instead of from
-#   'collections.abc' is deprecated, and in 3.8 it will stop working - is caused by code within bokeh package,
-#   and is being worked on as of 2/2/19, keep track of it and update when they fix it.
-# TODO: just set rs_tr to null on first runthrough to save wasted time
-
+# Check if user has passed in a config file, or else just grab the default.
 print("\nSystem: Starting data correction script.")
-config_path = 'ea_config.ini'
-mc_iterations = 1000  # Number of iterations for monte carlo simulation of thornton running solar radiation generation
+if len(sys.argv) == 2:
+    config_path = sys.argv[1]
+else:
+    config_path = 'config.ini'
 
 #########################
 # Obtaining initial data
 (data_df, column_df, station_name, log_file, station_lat, station_elev, ws_anemometer_height,
  missing_fill_value, script_mode, generate_bokeh) = input_functions.obtain_data(config_path)
+
+if script_mode == 1:  # correcting data
+    mc_iterations = 1000  # Number of iters for monte carlo simulation of thornton running solar radiation generation
+else:
+    mc_iterations = 50  # if we're not correcting data then only do a few iterations to save time
 
 print("\nSystem: Raw data successfully extracted from station file.")
 
@@ -75,9 +88,11 @@ data_doy = np.array(list(map(int, data_doy)))  # Converts list of string values 
     calc_temperature_variables(data_month, data_tmax, data_tmin, data_tdew)
 
 # Calculates rso and grass/alfalfa reference evapotranspiration from refet package
+np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans in data
 (rso, mm_rs, eto, etr, mm_eto, mm_etr) = data_functions.\
     calc_rso_and_refet(station_lat, station_elev, ws_anemometer_height, data_doy, data_month,
                        data_tmax, data_tmin, data_ea, data_ws, data_rs)
+np.warnings.resetwarnings()  # reset warning filter to default
 
 #########################
 # Back up original data
@@ -87,6 +102,20 @@ original_df = data_df.copy(deep=True)  # Create an unlinked copy of read-in valu
 original_df['rso'] = rso
 original_df['etr'] = etr
 original_df['eto'] = eto
+
+#########################
+# Histograms of original data
+# Generates composite plot of specific variables before correction
+# We fill these variables by sampling a normal distribution, so we use this plot mainly as evidence for that.
+if generate_bokeh:
+    ws_hist = plotting_functions.histogram_plot(data_ws[~np.isnan(data_ws)], 'Windspeed', 'black', 'm/s')
+    tmax_hist = plotting_functions.histogram_plot(data_tmax[~np.isnan(data_tmax)], 'TMax', 'red', 'degrees C')
+    tmin_hist = plotting_functions.histogram_plot(data_tmin[~np.isnan(data_tmin)], 'TMin', 'blue', 'degrees C')
+    k_not_hist = plotting_functions.histogram_plot(k_not[~np.isnan(k_not)], 'Ko', 'black', 'degrees C')
+
+    output_file(station_name + '_histograms.html', title=station_name + ' histograms')
+    save(gridplot([ws_hist, tmax_hist, tmin_hist, k_not_hist], ncols=2, plot_width=400, plot_height=400,
+                  toolbar_location=None))
 
 #########################
 # Correcting Data
@@ -108,6 +137,7 @@ fill_tmin = np.zeros(data_length)
 fill_ea = np.zeros(data_length)
 fill_tdew = np.zeros(data_length)
 fill_rs = np.zeros(data_length)
+fill_ws = np.zeros(data_length)
 
 # Begin loop for correcting variables
 while script_mode == 1:
@@ -208,15 +238,22 @@ while script_mode == 1:
             # Fill missing observations with samples from a normal distribution with monthly mean and variance
             for i in range(data_length):
                 if np.isnan(data_tmax[i]):
-                    data_tmax[i] = mm_tmax[data_month[i] - 1] + (std_tmax[[data_month[i] - 1]] * np.random.randn())
+                    data_tmax[i] = np.random.normal(mm_tmax[data_month[i] - 1], std_tmax[data_month[i] - 1], 1)
                     fill_tmax[i] = data_tmax[i]
                 else:
                     pass
                 if np.isnan(data_tmin[i]):
-                    data_tmin[i] = mm_tmin[data_month[i] - 1] + (std_tmin[[data_month[i] - 1]] * np.random.randn())
+                    data_tmin[i] = np.random.normal(mm_tmin[data_month[i] - 1], std_tmin[data_month[i] - 1], 1)
                     fill_tmin[i] = data_tmin[i]
                 else:
                     pass
+                if (data_tmax[i] <= data_tmin[i]) or (data_tmax[i] - data_tmin[i] <= 3):
+                    # This is not realistic, tmax needs to be warmer than tmin and daily temp isn't constant
+                    # Fill this observation in with  mm observation with the difference of 1/2 of mm delta t
+                    data_tmax[i] = mm_tmax[data_month[i] - 1] + (0.5 * mm_delta_t[data_month[i] - 1])
+                    fill_tmax[i] = data_tmax[i]
+                    data_tmin[i] = mm_tmin[data_month[i] - 1] - (0.5 * mm_delta_t[data_month[i] - 1])
+                    fill_tmin[i] = data_tmin[i]
         else:
             pass
         # Figure out which humidity variables are provided and recalculate Ea and TDew if needed
@@ -232,52 +269,79 @@ while script_mode == 1:
         (delta_t, mm_delta_t, k_not, mm_k_not, mm_tmin, mm_tdew) = data_functions. \
             calc_temperature_variables(data_month, data_tmax, data_tmin, data_tdew)
 
-        #####
-        # Fill in any missing tdew data with tmin - k0 curve.
-        # Once TDew is filled, if that filled index is also empty for ea, then we use filled tdew to calculate ea
-        # If ea is provided and NOT empty at that index we do nothing to avoid overwriting actual data with filled data
-        # and the now filled TDew sections are used to calculate ea for those filled indices.
-        # Nothing occurs if this fill code is run a second time because vars are already filled unless
-        # correction methods throw out data.
-        for i in range(data_length):
-            if np.isnan(data_tdew[i]):
-                data_tdew[i] = data_tmin[i] - mm_k_not[data_month[i] - 1]
-                fill_tdew[i] = data_tdew[i]
+        if user == 2 or user == 5:
+            #####
+            # Fill in any missing tdew data with tmin - k0 curve.
+            # Once TDew is filled, if that filled index is also empty for ea, then we use filled tdew to calculate ea
+            # If ea is provided and NOT empty at that index we do nothing to avoid overwriting actual data with filled
+            # and the now filled TDew sections are used to calculate ea for those filled indices.
+            # Nothing occurs if this fill code is run a second time because vars are already filled unless
+            # correction methods throw out data.
+            for i in range(data_length):
+                if np.isnan(data_tdew[i]):
+                    data_tdew[i] = data_tmin[i] - mm_k_not[data_month[i] - 1]
+                    fill_tdew[i] = data_tdew[i]
 
-                if column_df.ea == -1 or (column_df.ea != -1 and np.isnan(data_ea[i])):
-                    # Either Ea not provided, OR Ea is provided and this index is empty and can be filled
-                    data_ea[i] = (0.6108 * np.exp((17.27 * data_tdew[i]) / (data_tdew[i] + 237.3)))
-                    fill_ea[i] = data_ea[i]
+                    if column_df.ea == -1 or (column_df.ea != -1 and np.isnan(data_ea[i])):
+                        # Either Ea not provided, OR Ea is provided and this index is empty and can be filled
+                        data_ea[i] = (0.6108 * np.exp((17.27 * data_tdew[i]) / (data_tdew[i] + 237.3)))
+                        fill_ea[i] = data_ea[i]
+                    else:
+                        # Ea is provided and the index is not empty, do nothing to avoid overwriting actual data
+                        pass
                 else:
-                    # Ea is provided and the index is not empty, do nothing to avoid overwriting actual data
+                    # If TDew isn't empty then nothing is required to be done.
                     pass
-            else:
-                # If TDew isn't empty then nothing is required to be done.
-                pass
+        else:
+            pass
     else:
         pass
 
     # Recalculates rso and grass/alfalfa reference evapotranspiration from refet package
+    np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans in data
     (rso, mm_rs, eto, etr, mm_eto, mm_etr) = data_functions. \
         calc_rso_and_refet(station_lat, station_elev, ws_anemometer_height, data_doy, data_month,
                            data_tmax, data_tmin, data_ea, data_ws, data_rs)
+    np.warnings.resetwarnings()
 
 #########################
 # Final calculations
 # We calculate both original and optimized thornton running solar radiation, and then if we are correcting data
 # we fill in missing observations of solar radiation with optimized thornton running solar
-# Then finally recalculate reference evapotranspiration with the filled data_rs
-(orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr) = data_functions.\
+# then we fill in missing windspeed data with an exponential random distribution
+# finally recalculate reference evapotranspiration with the filled data_rs and data_ws
+(orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr) = data_functions. \
         calc_org_and_opt_rs_tr(mc_iterations, log_file, data_month, delta_t, mm_delta_t, data_rs, rso)
 
 if script_mode == 1:
-    # loop to fill data_rs
+    mm_ws = np.zeros(12)
+    std_ws = np.zeros(12)
+    j = 1
+    for k in range(12):
+        temp_indexes = [ex for ex, ind in enumerate(data_month) if ind == j]
+        temp_indexes = np.array(temp_indexes, dtype=int)
+        mm_ws[k] = np.nanmean(data_ws[temp_indexes])
+        std_ws[k] = np.nanmean(data_ws[temp_indexes])
+        j += 1
+
     for i in range(data_length):
+        # loop to fill data_rs with rs_tr and data_ws with an exponential function centered on mm_ws for that month
         if np.isnan(data_rs[i]):
             data_rs[i] = opt_rs_tr[i]
             fill_rs[i] = opt_rs_tr[i]
         else:
             # If rs isn't empty then nothing is required to be done.
+            pass
+        if np.isnan(data_ws[i]):
+            data_ws[i] = np.random.normal(mm_ws[data_month[i] - 1], std_ws[data_month[i] - 1], 1)
+
+            if data_ws[i] < 0.2:  # check to see if filled windspeed is lower than reasonable
+                data_ws[i] = 0.2
+            else:
+                pass
+            fill_ws[i] = data_ws[i]
+        else:
+            # If ws isn't empty then nothing is required to be done.
             pass
 
     # Recalculate eto and etr one final time
@@ -307,62 +371,62 @@ if generate_bokeh:  # Flag to create graphs or not
         raise ValueError('Incorrect parameters: script mode is not set to a valid option.')
 
     # Temperature Maximum and Minimum Plot
-    plot_tmax_tmin = plotting_functions.create_plot(x_size, y_size, dt_array, data_tmax, 'TMax', 'red', data_tmin,
-                                                    'TMin', 'blue', 'Celsius')
+    plot_tmax_tmin = plotting_functions.line_plot(x_size, y_size, dt_array, data_tmax, 'TMax', 'red', data_tmin,
+                                                  'TMin', 'blue', 'Celsius')
     # Temperature Minimum and Dewpoint Plot
-    plot_tmin_tdew = plotting_functions.create_plot(x_size, y_size, dt_array, data_tmin, 'TMin', 'blue', data_tdew,
-                                                    'TDew', 'black', 'Celsius', plot_tmax_tmin)
+    plot_tmin_tdew = plotting_functions.line_plot(x_size, y_size, dt_array, data_tmin, 'TMin', 'blue', data_tdew,
+                                                  'TDew', 'black', 'Celsius', plot_tmax_tmin)
 
     # Subplot 3 changes based on what variables are provided
     if column_df.ea != -1:  # Vapor pressure was provided
-        plot_humid = plotting_functions.create_plot(x_size, y_size, dt_array, data_ea, 'Ea', 'black', data_null, 'null',
-                                                    'black', 'kPa', plot_tmax_tmin)
+        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_ea, 'Ea', 'black', data_null, 'null',
+                                                  'black', 'kPa', plot_tmax_tmin)
     elif column_df.ea == -1 and column_df.tdew != -1:  # Tdew was provided, show calculated vapor pressure
-        plot_humid = plotting_functions.create_plot(x_size, y_size, dt_array, data_ea, 'Calculated Ea', 'black',
-                                                    data_null, 'null', 'black', 'kPa', plot_tmax_tmin)
+        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_ea, 'Calculated Ea', 'black',
+                                                  data_null, 'null', 'black', 'kPa', plot_tmax_tmin)
     elif column_df.ea == -1 and column_df.tdew == -1 and column_df.rhmax != -1 and column_df.rhmin != -1:  # RH max/min
-        plot_humid = plotting_functions.create_plot(x_size, y_size, dt_array, data_rhmax, 'RHMax', 'blue', data_rhmin,
-                                                    'RHMin', 'red', 'Percentage (%)', plot_tmax_tmin)
+        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhmax, 'RHMax', 'blue', data_rhmin,
+                                                  'RHMin', 'red', 'Percentage (%)', plot_tmax_tmin)
     elif column_df.ea == -1 and column_df.tdew == -1 and column_df.rhmax == -1 and column_df.rhavg != -1:  # RHavg only
-        plot_humid = plotting_functions.create_plot(x_size, y_size, dt_array, data_rhavg, 'RHAvg', 'blue', data_null,
-                                                    'null', 'black', 'Percentage (%)', plot_tmax_tmin)
+        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhavg, 'RHAvg', 'blue', data_null,
+                                                  'null', 'black', 'Percentage (%)', plot_tmax_tmin)
     else:
         # If an unsupported combination of humidity variables is present, raise a value error.
         raise ValueError('Bokeh figure generation encountered an unexpected combination of humidity inputs.')
 
     # Mean Monthly Temperature Minimum and Dewpoint
-    plot_mm_tmin_tdew = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_tmin, 'MM TMin', 'blue', mm_tdew,
-                                                       'MM TDew', 'black', 'Celsius')
+    plot_mm_tmin_tdew = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_tmin, 'MM TMin', 'blue', mm_tdew,
+                                                     'MM TDew', 'black', 'Celsius')
 
     # Mean Monthly k0 curve (Tmin-Tdew)
-    plot_mm_k_not = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_k_not, 'k0 Curve', 'black',
-                                                   data_null, 'null', 'black', 'Celsius', plot_mm_tmin_tdew)
+    plot_mm_k_not = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_k_not, 'k0 Curve', 'black',
+                                                 data_null, 'null', 'black', 'Celsius', plot_mm_tmin_tdew)
 
     # Solar radiation and clear sky solar radiation
-    plot_rs_rso = plotting_functions.create_plot(x_size, y_size, dt_array, rso, 'Clear-Sky Rs', 'black', data_rs, 'Rs',
-                                                 'red', 'w/m2', plot_tmax_tmin)
-
-    # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
-    plot_mm_opt_rs_tr = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red', mm_opt_rs_tr,
-                                                       'Optimized MM TR Rs', 'blue', 'w/m2', plot_mm_tmin_tdew)
-
-    # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
-    plot_mm_orig_rs_tr = plotting_functions.create_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red',
-                                                        mm_orig_rs_tr, 'Original MM TR Rs', 'blue', 'w/m2',
-                                                        plot_mm_tmin_tdew)
+    plot_rs_rso = plotting_functions.line_plot(x_size, y_size, dt_array, rso, 'Clear-Sky Rs', 'black', data_rs, 'Rs',
+                                               'red', 'w/m2', plot_tmax_tmin)
 
     # Windspeed
-    plot_ws = plotting_functions.create_plot(x_size, y_size, dt_array, data_ws, 'Wind Speed', 'black', data_null,
-                                             'null', 'black', 'm/s', plot_tmax_tmin)
+    plot_ws = plotting_functions.line_plot(x_size, y_size, dt_array, data_ws, 'Wind Speed', 'black', data_null,
+                                           'null', 'black', 'm/s', plot_tmax_tmin)
     # Precipitation
-    plot_precip = plotting_functions.create_plot(x_size, y_size, dt_array, data_precip, 'Precipitation', 'black',
-                                                 data_null, 'null', 'black', 'kPa', plot_tmax_tmin)
+    plot_precip = plotting_functions.line_plot(x_size, y_size, dt_array, data_precip, 'Precipitation', 'black',
+                                               data_null, 'null', 'black', 'kPa', plot_tmax_tmin)
+
+    # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
+    plot_mm_opt_rs_tr = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red', mm_opt_rs_tr,
+                                                     'Optimized MM TR Rs', 'blue', 'w/m2', plot_mm_tmin_tdew)
+
+    # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
+    plot_mm_orig_rs_tr = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red',
+                                                      mm_orig_rs_tr, 'Original MM TR Rs', 'blue', 'w/m2',
+                                                      plot_mm_tmin_tdew)
 
     if column_df.rhmax != -1 and column_df.rhmin != -1 and column_df.ea != -1:
         # If both ea and rhmax/rhmin are provided, generate a supplementary rhmax/min graph and save
-        supplemental_rh_plot = plotting_functions.create_plot(x_size, y_size, dt_array, data_rhmax, 'RHMax', 'blue',
-                                                              data_rhmin, 'RHMin', 'red', 'Percentage (%)',
-                                                              plot_tmax_tmin)
+        supplemental_rh_plot = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhmax, 'RHMax', 'blue',
+                                                            data_rhmin, 'RHMin', 'red', 'Percentage (%)',
+                                                            plot_tmax_tmin)
 
         fig = gridplot([[plot_tmax_tmin, plot_tmin_tdew, plot_humid],
                         [plot_mm_tmin_tdew, plot_mm_k_not, supplemental_rh_plot],
