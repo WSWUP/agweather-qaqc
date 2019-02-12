@@ -25,7 +25,6 @@ import sys
 # TODO: Python 3.7 warning -  DeprecationWarning: Using or importing the ABCs from 'collections' instead of from
 #   'collections.abc' is deprecated, and in 3.8 it will stop working - is caused by code within bokeh package,
 #   and is being worked on as of 2/2/19, keep track of it and update when they fix it.
-# TODO: 'script mode' is ambiguous, refactor to be something like 'correction_flag'
 
 #########################
 # Initial setup
@@ -180,7 +179,7 @@ while script_mode == 1:
     # Correcting Windspeed
     elif user == 3:
         (data_ws, data_null) = qaqc_functions.correction(station_name, log_file, data_ws, 'Ws', data_null,
-                                                         'NONE', dt_array, data_month, data_year, 4)
+                                                         'NULL', dt_array, data_month, data_year, 4)
     # Correcting Solar radiation
     elif user == 4:
         (data_rs, data_null) = qaqc_functions.correction(station_name, log_file, data_rs, 'Rs', rso,
@@ -191,7 +190,7 @@ while script_mode == 1:
         if column_df.ea != -1:
             # Vapor Pressure exists
             (data_ea, data_null) = qaqc_functions.correction(station_name, log_file, data_ea, 'Vapor Pressure',
-                                                             data_null, 'NONE', dt_array, data_month, data_year, 4)
+                                                             data_null, 'NULL', dt_array, data_month, data_year, 4)
 
         elif column_df.ea == -1 and column_df.rhmax != -1 and column_df.rhmin != -1:
             # No vapor pressure but have rhmax and min
@@ -202,7 +201,7 @@ while script_mode == 1:
         elif column_df.ea == -1 and column_df.rhmax == -1 and column_df.rhmin == -1 and column_df.rhavg != -1:
             # Only have RHavg
             (data_rhavg, data_null) = qaqc_functions.correction(station_name, log_file, data_rhavg, 'RHAvg',
-                                                                data_null, 'NONE', dt_array, data_month, data_year, 4)
+                                                                data_null, 'NULL', dt_array, data_month, data_year, 4)
         else:
             # If an unsupported combination of humidity variables is present, raise a value error.
             raise ValueError('Humidity correction section encountered an unexpected combination of humidity inputs.')
@@ -358,7 +357,6 @@ else:
 # If user does correct data, then this plots data after correction
 print("\nSystem: Now creating composite bokeh graph.")
 if generate_bokeh:  # Flag to create graphs or not
-
     x_size = 500
     y_size = 350
 
@@ -371,61 +369,54 @@ if generate_bokeh:  # Flag to create graphs or not
         raise ValueError('Incorrect parameters: script mode is not set to a valid option.')
 
     # Temperature Maximum and Minimum Plot
-    plot_tmax_tmin = plotting_functions.line_plot(x_size, y_size, dt_array, data_tmax, 'TMax', 'red', data_tmin,
-                                                  'TMin', 'blue', 'Celsius')
+    plot_tmax_tmin = plotting_functions.line_plot(x_size, y_size, dt_array, data_tmax, data_tmin, 1, '')
     # Temperature Minimum and Dewpoint Plot
-    plot_tmin_tdew = plotting_functions.line_plot(x_size, y_size, dt_array, data_tmin, 'TMin', 'blue', data_tdew,
-                                                  'TDew', 'black', 'Celsius', plot_tmax_tmin)
+    plot_tmin_tdew = plotting_functions.line_plot(x_size, y_size, dt_array, data_tmin, data_tdew, 2, '', plot_tmax_tmin)
 
     # Subplot 3 changes based on what variables are provided
     if column_df.ea != -1:  # Vapor pressure was provided
-        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_ea, 'Ea', 'black', data_null, 'null',
-                                                  'black', 'kPa', plot_tmax_tmin)
+        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_ea, data_null, 7, 'Provided ',
+                                                  plot_tmax_tmin)
     elif column_df.ea == -1 and column_df.tdew != -1:  # Tdew was provided, show calculated vapor pressure
-        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_ea, 'Calculated Ea', 'black',
-                                                  data_null, 'null', 'black', 'kPa', plot_tmax_tmin)
+        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_ea, data_null, 7, 'Calculated ',
+                                                  plot_tmax_tmin)
     elif column_df.ea == -1 and column_df.tdew == -1 and column_df.rhmax != -1 and column_df.rhmin != -1:  # RH max/min
-        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhmax, 'RHMax', 'blue', data_rhmin,
-                                                  'RHMin', 'red', 'Percentage (%)', plot_tmax_tmin)
+        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhmax, data_rhmin, 8, '',
+                                                  plot_tmax_tmin)
     elif column_df.ea == -1 and column_df.tdew == -1 and column_df.rhmax == -1 and column_df.rhavg != -1:  # RHavg only
-        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhavg, 'RHAvg', 'blue', data_null,
-                                                  'null', 'black', 'Percentage (%)', plot_tmax_tmin)
+        plot_humid = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhavg, data_null, 9, '',
+                                                  plot_tmax_tmin)
     else:
         # If an unsupported combination of humidity variables is present, raise a value error.
         raise ValueError('Bokeh figure generation encountered an unexpected combination of humidity inputs.')
 
     # Mean Monthly Temperature Minimum and Dewpoint
-    plot_mm_tmin_tdew = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_tmin, 'MM TMin', 'blue', mm_tdew,
-                                                     'MM TDew', 'black', 'Celsius')
+    plot_mm_tmin_tdew = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_tmin, mm_tdew, 2, 'MM ')
 
     # Mean Monthly k0 curve (Tmin-Tdew)
-    plot_mm_k_not = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_k_not, 'k0 Curve', 'black',
-                                                 data_null, 'null', 'black', 'Celsius', plot_mm_tmin_tdew)
+    plot_mm_k_not = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_k_not, data_null, 10, '',
+                                                 plot_mm_tmin_tdew)
 
     # Solar radiation and clear sky solar radiation
-    plot_rs_rso = plotting_functions.line_plot(x_size, y_size, dt_array, rso, 'Clear-Sky Rs', 'black', data_rs, 'Rs',
-                                               'red', 'w/m2', plot_tmax_tmin)
+    plot_rs_rso = plotting_functions.line_plot(x_size, y_size, dt_array, data_rs, rso, 5, '', plot_tmax_tmin)
 
     # Windspeed
-    plot_ws = plotting_functions.line_plot(x_size, y_size, dt_array, data_ws, 'Wind Speed', 'black', data_null,
-                                           'null', 'black', 'm/s', plot_tmax_tmin)
+    plot_ws = plotting_functions.line_plot(x_size, y_size, dt_array, data_ws, data_null, 3, '', plot_tmax_tmin)
+
     # Precipitation
-    plot_precip = plotting_functions.line_plot(x_size, y_size, dt_array, data_precip, 'Precipitation', 'black',
-                                               data_null, 'null', 'black', 'kPa', plot_tmax_tmin)
+    plot_precip = plotting_functions.line_plot(x_size, y_size, dt_array, data_precip, data_null, 4, '', plot_tmax_tmin)
 
     # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
-    plot_mm_opt_rs_tr = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red', mm_opt_rs_tr,
-                                                     'Optimized MM TR Rs', 'blue', 'w/m2', plot_mm_tmin_tdew)
+    plot_mm_opt_rs_tr = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_rs, mm_opt_rs_tr, 6,
+                                                     'MM Optimized ', plot_mm_tmin_tdew)
 
     # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
-    plot_mm_orig_rs_tr = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_rs, 'MM Rs', 'red',
-                                                      mm_orig_rs_tr, 'Original MM TR Rs', 'blue', 'w/m2',
-                                                      plot_mm_tmin_tdew)
+    plot_mm_orig_rs_tr = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_rs, mm_orig_rs_tr, 6,
+                                                      'MM Original ', plot_mm_tmin_tdew)
 
     if column_df.rhmax != -1 and column_df.rhmin != -1 and column_df.ea != -1:
         # If both ea and rhmax/rhmin are provided, generate a supplementary rhmax/min graph and save
-        supplemental_rh_plot = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhmax, 'RHMax', 'blue',
-                                                            data_rhmin, 'RHMin', 'red', 'Percentage (%)',
+        supplemental_rh_plot = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhmax, data_rhmin, 8, '',
                                                             plot_tmax_tmin)
 
         fig = gridplot([[plot_tmax_tmin, plot_tmin_tdew, plot_humid],

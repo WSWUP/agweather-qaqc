@@ -1,62 +1,100 @@
-from bokeh.plotting import figure
+from bokeh.layouts import gridplot
+from bokeh.plotting import figure, output_file, reset_output, show
+
 import numpy as np
 
 
-def line_plot(x_size, y_size, dt_array, var_one, var_one_text, var_one_color, var_two, var_two_text, var_two_color,
-              units, link_plot=None):
+def generate_line_plot_features(code, usage=''):
     """
-        Creates a bokeh line plot for provided variables and links them if appropriate
+        Generates plot features depending on what code is passed
 
         Parameters:
-            x_size : x-axis size for plot
-            y_size : y-axis size for plot
-            dt_array : values for x-axis to label timestep, either daily or mean monthly
-            var_one : 1D numpy array of first variable
-            var_one_text : string of var_one name
-            var_one_color : color to be used in plotting var_one
-            var_two : 1D numpy array of second variable
-            var_two_text : string of var_two name
-            var_two_color : color to be used in plotting var_two
-            units : string of units on y-axis
-            *link_plot : either nothing or the plot we want to link x-axis with
+            code : integer code passed by main script that indicates what type of data has been passed
+            usage : string indicating why this plot is being created, it may be blank.
 
         Returns:
-            subplot : constructed figure
+            units : string of units for passed variable
+            title : string for title of plot
+            var_one_name : string of first variable name
+            var_one_color : string of color code to use for plotting variable one
+            var_two_name : string of second variable name
+            var_two_color : string of color code to use for plotting variable two
     """
-    # Create title based on variables passed
-    if var_two_text.lower() == 'null':
-        subplot_title = var_one_text
+
+    if code == 1:  # Temperature max and minimum
+        var_one_name = 'TMax'
+        var_one_color = 'red'
+        var_two_name = 'TMin'
+        var_two_color = 'blue'
+        units = 'degrees Celsius'
+        title = usage + var_one_name + ' and ' + var_two_name
+    elif code == 2:  # Temperature min and dewpoint
+        var_one_name = 'TMin'
+        var_one_color = 'blue'
+        var_two_name = 'TDew'
+        var_two_color = 'black'
+        units = 'degrees Celsius'
+        title = usage + var_one_name + ' and ' + var_two_name
+    elif code == 3:  # Wind Speed
+        var_one_name = 'Wind Speed'
+        var_one_color = 'black'
+        var_two_name = 'null'
+        var_two_color = 'black'
+        units = 'm/s'
+        title = usage + var_one_name
+    elif code == 4:  # Precipitation
+        var_one_name = 'Precipitation'
+        var_one_color = 'black'
+        var_two_name = 'null'
+        var_two_color = 'black'
+        units = 'mm'
+        title = usage + var_one_name
+    elif code == 5:  # Solar Radiation w/ Rso
+        var_one_name = 'Solar Radiation'
+        var_one_color = 'blue'
+        var_two_name = 'Clear-Sky Solar Radiation'
+        var_two_color = 'black'
+        units = 'w/m2'
+        title = usage + var_one_name + ' and ' + var_two_name
+    elif code == 6:  # Solar Radiation w/ Thornton-Running Rs
+        var_one_name = 'Solar Radiation'
+        var_one_color = 'blue'
+        var_two_name = 'Thornton-Running Solar Radiation'
+        var_two_color = 'black'
+        units = 'w/m2'
+        title = usage + var_two_name + ' and ' + var_one_name  # reverse order so titles are clearer
+    elif code == 7:  # Humidity - Ea
+        var_one_name = 'Vapor Pressure'
+        var_one_color = 'black'
+        var_two_name = 'null'
+        var_two_color = 'black'
+        units = 'kPa'
+        title = usage + var_one_name
+    elif code == 8:  # Humidity - RHMax and RHMin
+        var_one_name = 'RHMax'
+        var_one_color = 'blue'
+        var_two_name = 'RHMin'
+        var_two_color = 'red'
+        units = '%'
+        title = usage + var_one_name + ' and ' + var_two_name
+    elif code == 9:  # Humidity - RHAvg
+        var_one_name = 'RHAvg'
+        var_one_color = 'black'
+        var_two_name = 'null'
+        var_two_color = 'black'
+        units = '%'
+        title = usage + var_one_name
+    elif code == 10:  # ko curve
+        var_one_name = 'ko Curve'
+        var_one_color = 'black'
+        var_two_name = 'null'
+        var_two_color = 'black'
+        units = 'degrees Celsius'
+        title = usage + var_one_name
     else:
-        subplot_title = var_one_text + ' and ' + var_two_text
+        raise ValueError('Unsupported code type {} passed to generate_line_plot_features.'.format(code))
 
-    if dt_array.size == 12:  # Mean monthly plot
-        x_label = 'Month'
-        x_axis_type = 'linear'
-    else:  # Anything else
-        x_label = 'Timestep'
-        x_axis_type = 'datetime'
-
-    if link_plot is None:  # No plot to link with
-        subplot = figure(
-            width=x_size, height=y_size, x_axis_type=x_axis_type,
-            x_axis_label=x_label, y_axis_label=units, title=subplot_title,
-            tools='pan, box_zoom, undo, reset, hover, save')
-    else:  # Plot is passed to link x-axis with
-        subplot = figure(
-            x_range=link_plot.x_range,
-            width=x_size, height=y_size, x_axis_type=x_axis_type,
-            x_axis_label=x_label, y_axis_label=units, title=subplot_title,
-            tools='pan, box_zoom, undo, reset, hover, save')
-
-    subplot.line(dt_array, var_one, line_color=var_one_color, legend=var_one_text)
-    if var_two_text.lower() == 'null':
-        pass
-    else:
-        subplot.line(dt_array, var_two, line_color=var_two_color, legend=var_two_text)
-
-    subplot.legend.location = 'bottom_left'
-
-    return subplot
+    return units, title, var_one_name, var_one_color, var_two_name, var_two_color
 
 
 def histogram_plot(data, title, color, units):
@@ -94,3 +132,83 @@ def histogram_plot(data, title, color, units):
     h_plot.grid.grid_line_color = "white"
 
     return h_plot
+
+
+def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot=None):
+    """
+        Creates a bokeh line plot for provided variables and links them if appropriate
+
+        Parameters:
+            x_size : x-axis size for plot
+            y_size : y-axis size for plot
+            dt_array : values for x-axis to label timestep, either daily or mean monthly
+            var_one : 1D numpy array of first variable
+            var_two : 1D numpy array of second variable
+            code : integer indicating what variables were passed
+            usage : additional string indicating why plot is being created
+            *link_plot : either nothing or the plot we want to link x-axis with
+
+        Returns:
+            subplot : constructed figure
+    """
+    (units, title, var_one_name, var_one_color, var_two_name, var_two_color) = generate_line_plot_features(code, usage)
+
+    if dt_array.size == 12:  # Mean monthly plot
+        x_label = 'Month'
+        x_axis_type = 'linear'
+    else:  # Anything else
+        x_label = 'Timestep'
+        x_axis_type = 'datetime'
+
+    if link_plot is None:  # No plot to link with
+        subplot = figure(
+            width=x_size, height=y_size, x_axis_type=x_axis_type,
+            x_axis_label=x_label, y_axis_label=units, title=title,
+            tools='pan, box_zoom, undo, reset, hover, save')
+    else:  # Plot is passed to link x-axis with
+        subplot = figure(
+            x_range=link_plot.x_range,
+            width=x_size, height=y_size, x_axis_type=x_axis_type,
+            x_axis_label=x_label, y_axis_label=units, title=title,
+            tools='pan, box_zoom, undo, reset, hover, save')
+
+    subplot.line(dt_array, var_one, line_color=var_one_color, legend=var_one_name)
+    if var_two_name.lower() == 'null':
+        pass
+    else:
+        subplot.line(dt_array, var_two, line_color=var_two_color, legend=var_two_name)
+
+    subplot.legend.location = 'bottom_left'
+
+    return subplot
+
+
+def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two, corr_var_two, code):
+    x_size = 800
+    y_size = 350
+    reset_output()  # clears bokeh output, prevents ballooning file sizes
+
+    delta_var_one = corr_var_one - var_one
+    delta_var_two = corr_var_two - var_two
+
+    with np.seterr(divide='ignore', invalid='ignore'):  # Silencing all errors when we divide by a nan
+        prct_var_one = (corr_var_one - var_one) / var_one
+        prct_var_two = (corr_var_two - var_two) / var_two
+
+    # Obtain title based on variables passed for file name
+    (units, title, var_one_name, var_one_color, var_two_name, var_two_color) = generate_line_plot_features(code, '')
+    output_file(station + "_" + title + "_correction_plots.html")
+
+    original_plot = line_plot(x_size, y_size, dt_array, var_one, var_two, code, 'Original ', link_plot=None)
+
+    corrected_plot = line_plot(x_size, y_size, dt_array, corr_var_one, corr_var_two, code, 'Corrected ',
+                               link_plot=original_plot)
+
+    delta_plot = line_plot(x_size, y_size, dt_array, delta_var_one, delta_var_two, code, 'Deltas of ',
+                           link_plot=original_plot)
+
+    percent_plot = line_plot(x_size, y_size, dt_array, prct_var_one, prct_var_two, code, '% Diff of ',
+                             link_plot=original_plot)
+
+    corr_fig = gridplot([[original_plot], [corrected_plot], [delta_plot], [percent_plot]], toolbar_location="left")
+    return corr_fig
