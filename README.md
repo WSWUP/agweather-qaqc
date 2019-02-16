@@ -1,5 +1,8 @@
 # pyWeatherQAQC (Daily Weather Data QAQC Script)
 
+## Edit (2/15/2019)
+This script has recently undergone a major overhaul and the readme (and related files) still has to be updated. This newest version still works in the same fashion as the previous version.
+
 ### Summary
 pyWeatherQAQC is a constantly-expanding python-based script that enables the user to:
 1. Graphically visualize historical daily summary weather data from stations
