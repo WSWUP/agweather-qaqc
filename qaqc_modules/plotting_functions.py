@@ -1,5 +1,5 @@
 from bokeh.layouts import gridplot
-from bokeh.plotting import figure, output_file, reset_output, show
+from bokeh.plotting import figure, output_file, reset_output
 
 import numpy as np
 
@@ -94,6 +94,10 @@ def generate_line_plot_features(code, usage=''):
     else:
         raise ValueError('Unsupported code type {} passed to generate_line_plot_features.'.format(code))
 
+    if '%' in usage:
+        units = '% difference'
+    else:
+        pass
     return units, title, var_one_name, var_one_color, var_two_name, var_two_color
 
 
@@ -114,14 +118,14 @@ def histogram_plot(data, title, color, units):
     mean = np.nanmean(data)
     sigma = np.nanstd(data)
 
-    x = np.linspace((mean + 3.0 * sigma), (mean - 3.0 * sigma), 1000)
-    pdf = 1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(-(x - mean) ** 2 / (2 * sigma ** 2))
-
     histogram, edges = np.histogram(data, density=True, bins=100)
 
     h_plot = figure(title=title, tools='', background_fill_color="#fafafa")
     h_plot.quad(top=histogram, bottom=0, left=edges[:-1], right=edges[1:],
                 fill_color=color, line_color="white", alpha=0.5)
+
+    x = np.linspace(float((mean + 3.0 * sigma)), float((mean - 3.0 * sigma)), 1000)
+    pdf = 1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(-(x - mean) ** 2 / (2 * sigma ** 2))
     h_plot.line(x, pdf, line_color="#ff8888", line_width=4, alpha=0.7, legend="PDF")
 
     h_plot.y_range.start = 0
@@ -191,9 +195,9 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
     delta_var_one = corr_var_one - var_one
     delta_var_two = corr_var_two - var_two
 
-    with np.seterr(divide='ignore', invalid='ignore'):  # Silencing all errors when we divide by a nan
-        prct_var_one = (corr_var_one - var_one) / var_one
-        prct_var_two = (corr_var_two - var_two) / var_two
+    with np.errstate(divide='ignore', invalid='ignore'):  # Silencing all errors when we divide by a nan
+        prct_var_one = ((corr_var_one - var_one) / var_one) * 100.0
+        prct_var_two = ((corr_var_two - var_two) / var_two) * 100.0
 
     # Obtain title based on variables passed for file name
     (units, title, var_one_name, var_one_color, var_two_name, var_two_color) = generate_line_plot_features(code, '')
@@ -207,8 +211,13 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
     delta_plot = line_plot(x_size, y_size, dt_array, delta_var_one, delta_var_two, code, 'Deltas of ',
                            link_plot=original_plot)
 
-    percent_plot = line_plot(x_size, y_size, dt_array, prct_var_one, prct_var_two, code, '% Diff of ',
+    percent_plot = line_plot(x_size, y_size, dt_array, prct_var_one, prct_var_two, code, '% Difference of ',
                              link_plot=original_plot)
 
     corr_fig = gridplot([[original_plot], [corrected_plot], [delta_plot], [percent_plot]], toolbar_location="left")
     return corr_fig
+
+
+# This is never run by itself
+if __name__ == "__main__":
+    print("\nThis module is called as a part of the QAQC script, it does nothing by itself.")

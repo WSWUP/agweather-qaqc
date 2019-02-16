@@ -152,7 +152,7 @@ def convert_units(config_file_path, data, var_type):
         elif rs_lang_flag == 0 and rs_mj_flag == 1 and rs_kw_hr_flag == 0:  # Units MJ/m2
             converted_data = np.array(data * 11.574)
         elif rs_lang_flag == 0 and rs_mj_flag == 0 and rs_kw_hr_flag == 1:  # Units kw-hr
-            converted_data = np.array((data * 1000) / 24)  # TODO: Find a better source for this equation
+            converted_data = np.array((data * 1000) / 24)
         elif rs_lang_flag == 0 and rs_mj_flag == 0 and rs_kw_hr_flag == 0:  # Units w/m2
             pass
         else:
@@ -197,13 +197,13 @@ def daily_realistic_limits(original_data, log_path, var_type):
         limited_data[original_data < 0] = clip_value  # Negative precipitation is impossible
         limited_data[original_data >= 610] = clip_value  # 610 mm is 2 ft of rain a day
     elif var_type == 'solar radiation':
-        limited_data[original_data <= 5] = clip_value  # TODO: see if these Rs limits are acceptable
+        limited_data[original_data <= 5] = clip_value
         limited_data[original_data >= 700] = clip_value
     elif var_type == 'vapor pressure':
         limited_data[original_data <= 0] = clip_value  # Negative vapor pressure is impossible
-        limited_data[original_data >= 8] = clip_value  # TODO: see if this Ea limit is acceptable
+        limited_data[original_data >= 8] = clip_value
     elif var_type in ['maximum relative humidity', 'minimum relative humidity', 'average relative humidity']:
-        limited_data[original_data <= 2] = clip_value  # TODO: see if this RH limit is acceptable
+        limited_data[original_data <= 2] = clip_value
         limited_data[original_data >= 100] = clip_value  # Relative humidity above 100% is impossible
     else:
         # If an unsupported variable type is passed, raise a value error to point it out.

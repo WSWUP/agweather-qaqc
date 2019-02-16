@@ -12,17 +12,15 @@ import sys
 #
 # Currently silencing invalid value warnings around refet calculations at start and middle of script but NOT the end.
 #
+# Rs used to be clipped to Rso if it went past it, but that is no longer the case.
+#
 # Variables are not filled until after they are corrected.
 #
 # When not correcting data, only a low number of TR optimization runs are performed to save time, and it may result in
 #     a worse RMSE than original coefficients. If this occurs it just returns the original rs TR as optimized.
 #     If optimized is worse than original during a full correction run it raises an error.
 #
-# TODO: tackle handling of true divide error in qaqc functions
-# TODO: consolidate code for filling temperature
-# TODO: reorganize qaqc_functions and add comment text
-# TODO: filling occurs outside of qaqc function so change temperature filling in that script
-# TODO: Python 3.7 warning -  DeprecationWarning: Using or importing the ABCs from 'collections' instead of from
+# Python 3.7 warning -  DeprecationWarning: Using or importing the ABCs from 'collections' instead of from
 #   'collections.abc' is deprecated, and in 3.8 it will stop working - is caused by code within bokeh package,
 #   and is being worked on as of 2/2/19, keep track of it and update when they fix it.
 
@@ -145,9 +143,9 @@ while script_mode == 1:
           '\n   Enter 1 for TMax and TMin.'
           '\n   Enter 2 for TMin and TDew.'
           '\n   Enter 3 for Windspeed.'
-          '\n   Enter 4 for Rs.'
-          '\n   Enter 5 for Humidity Measurements (Vapor Pressure, RHMax and RHmin, or RHAvg.)'
-          '\n   Enter 6 for Precipitation.'
+          '\n   Enter 4 for Precipitation.'
+          '\n   Enter 5 for Rs.'
+          '\n   Enter 6 for Humidity Measurements (Vapor Pressure, RHMax and RHmin, or RHAvg.)'
           '\n   Enter 7 to stop applying corrections.'
           )
 
@@ -155,7 +153,7 @@ while script_mode == 1:
     choice_loop = 1
     while choice_loop:
         if 1 <= user <= 7:
-            if user == 5 and \
+            if user == 6 and \
                     (column_df.ea == -1 and column_df.rhmax == -1 and column_df.rhmin == -1 and column_df.rhavg == -1):
                 # User selected option to correct humidity when the only var provided is tdew
                 print('\nOnly TDew was provided as a humidity variable, which is corrected under option 2.')
@@ -170,46 +168,44 @@ while script_mode == 1:
     # Correcting individual variables based on user choice
     # Correcting Max/Min Temperature data
     if user == 1:
-        (data_tmax, data_tmin) = qaqc_functions.correction(station_name, log_file, data_tmax, 'TMax', data_tmin,
-                                                           'TMin', dt_array, data_month, data_year, 1)
+        (data_tmax, data_tmin) = qaqc_functions.correction(station_name, log_file, data_tmax, data_tmin, dt_array,
+                                                           data_month, data_year, 1)
     # Correcting Min/Dew Temperature data
     elif user == 2:
-        (data_tmin, data_tdew) = qaqc_functions.correction(station_name, log_file, data_tmin, 'TMin', data_tdew,
-                                                           'TDew', dt_array, data_month, data_year, 1)
+        (data_tmin, data_tdew) = qaqc_functions.correction(station_name, log_file, data_tmin, data_tdew, dt_array,
+                                                           data_month, data_year, 2)
     # Correcting Windspeed
     elif user == 3:
-        (data_ws, data_null) = qaqc_functions.correction(station_name, log_file, data_ws, 'Ws', data_null,
-                                                         'NULL', dt_array, data_month, data_year, 4)
-    # Correcting Solar radiation
+        (data_ws, data_null) = qaqc_functions.correction(station_name, log_file, data_ws, data_null, dt_array,
+                                                         data_month, data_year, 3)
+    # Correcting Precipitation
     elif user == 4:
-        (data_rs, data_null) = qaqc_functions.correction(station_name, log_file, data_rs, 'Rs', rso,
-                                                         'Rso', dt_array, data_month, data_year, 3)
-    # Correcting Humidity Variable
+        (data_precip, data_null) = qaqc_functions.correction(station_name, log_file, data_precip, data_null, dt_array,
+                                                             data_month, data_year, 4)
+    # Correcting Solar radiation
     elif user == 5:
+        (data_rs, data_null) = qaqc_functions.correction(station_name, log_file, data_rs, rso, dt_array,
+                                                         data_month, data_year, 5)
+    # Correcting Humidity Variable
+    elif user == 6:
         # Variables passed depends on what variables were provided
         if column_df.ea != -1:
             # Vapor Pressure exists
-            (data_ea, data_null) = qaqc_functions.correction(station_name, log_file, data_ea, 'Vapor Pressure',
-                                                             data_null, 'NULL', dt_array, data_month, data_year, 4)
+            (data_ea, data_null) = qaqc_functions.correction(station_name, log_file, data_ea, data_null, dt_array,
+                                                             data_month, data_year, 7)
 
         elif column_df.ea == -1 and column_df.rhmax != -1 and column_df.rhmin != -1:
             # No vapor pressure but have rhmax and min
-            (data_rhmax, data_rhmin) = qaqc_functions.correction(station_name, log_file, data_rhmax, 'RHMax',
-                                                                 data_rhmin, 'RHMin', dt_array, data_month,
-                                                                 data_year, 2)
+            (data_rhmax, data_rhmin) = qaqc_functions.correction(station_name, log_file, data_rhmax, data_rhmin,
+                                                                 dt_array, data_month, data_year, 8)
 
         elif column_df.ea == -1 and column_df.rhmax == -1 and column_df.rhmin == -1 and column_df.rhavg != -1:
             # Only have RHavg
-            (data_rhavg, data_null) = qaqc_functions.correction(station_name, log_file, data_rhavg, 'RHAvg',
-                                                                data_null, 'NULL', dt_array, data_month, data_year, 4)
+            (data_rhavg, data_null) = qaqc_functions.correction(station_name, log_file, data_rhavg, data_null,
+                                                                dt_array, data_month, data_year, 9)
         else:
             # If an unsupported combination of humidity variables is present, raise a value error.
             raise ValueError('Humidity correction section encountered an unexpected combination of humidity inputs.')
-
-    # Correcting Precipitation
-    elif user == 6:
-        (data_precip, data_null) = qaqc_functions.correction(station_name, log_file, data_precip, 'Precip', data_null,
-                                                             'NONE', dt_array, data_month, data_year, 4)
     else:
         # user quits, exit out of loop
         print('\nSystem: Now finishing up corrections.')
@@ -499,9 +495,16 @@ fill_df.to_excel(output_writer, sheet_name='Filled Data', na_rep=missing_fill_va
 # Save output file
 output_writer.save()
 
-print("\nSystem: Ending script and closing log file.")
-
 logger = open(log_file, 'a')
-logger.write('The file has been successfully processed and output files saved at %s. \n' % dt.datetime.now().strftime(
+if script_mode == 1:
+    if np.isnan(eto).any() or np.isnan(etr).any():
+        print("\nSystem: After finishing corrections and filling data, ETr and ETo still had missing observations.")
+        logger.write('After finishing corrections and filling data, ETr and ETo still had missing observations. \n')
+    else:
+        logger.write('The output file for this station has a complete record of ETo and ETr observations. \n')
+else:
+    pass
+logger.write('\nThe file has been successfully processed and output files saved at %s.' % dt.datetime.now().strftime(
                                                                                            "%Y-%m-%d %H:%M:%S"))
 logger.close()
+print("\nSystem: Now ending QAQC script.")
