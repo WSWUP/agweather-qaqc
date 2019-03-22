@@ -1,0 +1,30 @@
+###################
+pyWeatherQAQC Setup
+###################
+
+Downloading the Code
+====================
+
+This script is self-contained and is run locally, so the directory can be placed wherever you want it.
+
+You will run the code by directing the command prompt or terminal window to the location of the file **QAQC_Master.py** and running it from there.
+
+Download pyWeatherQAQC by cloning its `Github Repository <https://github.com/WSWUP/pyWeatherQAQC>`_ or by `clicking here. <https://github.com/WSWUP/pyWeatherQAQC/archive/master.zip>`_
+
+
+Installing Dependencies
+=======================
+.. note::
+   If you're using an Anaconda environment, make sure it is set up and activated before proceeding.
+
+Once you've downloaded the code and directed the command prompt/terminal window to the directory containing the file **QAQC_Master.py**, type::
+
+   >pip install -r requirements.txt
+
+This will check for and install all missing dependencies that pyWeatherQAQC needs to run.
+
+**Next**, see :doc:`Setting up the Data <data_setup>` to configure the script to handle your data.
+
+
+
+

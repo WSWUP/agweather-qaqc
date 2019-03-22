@@ -1,0 +1,178 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Setting Up The Data &#8212; pyWeather QAQC 0.2.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example Run" href="example_run.html" />
+    <link rel="prev" title="pyWeatherQAQC Setup" href="qaqc_setup.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="setting-up-the-data">
+<h1>Setting Up The Data<a class="headerlink" href="#setting-up-the-data" title="Permalink to this headline">¶</a></h1>
+<p>In order for the code to work, you need to specify what weather variables are being provided, where in the data file they are located, and what units they are in. Most weather stations on a network have the same format for their data, so this process may only have to be done once for multiple stations.</p>
+<p>All of this is accomplished through the parameters specified in <strong>config.ini</strong>, but before getting into that we’ll talk about directory structure.</p>
+<div class="section" id="directory-structure">
+<h2>Directory Structure<a class="headerlink" href="#directory-structure" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/qaqc_directory.png"><img alt="The contents of the pyWeatherQAQC directory." class="align-center" src="_images/qaqc_directory.png" style="width: 400px; height: 100px;" /></a>
+<p>Assuming you have cloned the github directory, your folder should contain the following items:</p>
+<ul class="simple">
+<li>The “qaqc_modules” directory containing the different functions used by the main script.</li>
+<li>config.ini - The configuration file used by the script to find variables in the data file.</li>
+<li>QAQC_Master.py - The actual script you will call to process weather data. Your icon may not match what is pictured here.</li>
+<li>A .csv data file containing the weather data to process. In this example, it is located within the “example_data” folder.</li>
+</ul>
+<p>When the file <strong>QAQC_Master.py</strong> is run, it looks for the <strong>config.ini</strong> file within the same folder and starts pulling all the relevant information from that file.</p>
+<p>The github repository includes an example data file and a matching config.ini that is already set up to be run. We’ll go over this data in the <a class="reference internal" href="example_run.html"><span class="doc">Example Run.</span></a></p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">pyWeatherQAQC saves all of the output files in the same directory as the input file, so plan accordingly!</p>
+</div>
+</div>
+<div class="section" id="setting-configuration-file">
+<h2>Setting Configuration File<a class="headerlink" href="#setting-configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>The configuration file can be broken down into 3 sections:</p>
+<div class="section" id="metadata">
+<h3>METADATA<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h3>
+<p>The very top section of the config.ini file is where you will specify the metadata of the data file and of the station to the script. This includes things like the station’s geographical location and whether or not the file has a header.</p>
+</div>
+<div class="section" id="modes">
+<h3>MODES<a class="headerlink" href="#modes" title="Permalink to this headline">¶</a></h3>
+<p>The next section of the config.ini file is where you will specify what modes, or options, you want the script to run with. Examples of this would be whether or not you wanted to correct the data, or whether or not you wanted to generate and save plots of the data. This section may change in the future as more options are added.</p>
+<p>All of the settings in this section are either set to “0” (indicating FALSE, or NO) or “1” (indicating TRUE, or YES). For most users, the only option you’ll actually change will be script_mode, depending on if you want to correct data or not.</p>
+</div>
+<div class="section" id="data">
+<h3>DATA<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h3>
+<p>The majority of work in setting up the config.ini file is in this section, where we specify what variables are in which columns of data, and what units those variables are in. The configuration file has explanations for its various prompts, but as an example, we’ll look at specifying the details for solar radiation:</p>
+<a class="reference internal image-reference" href="_images/data_file_example.png"><img alt="A typical dataset from a local weather station." class="align-center" src="_images/data_file_example.png" style="width: 600px; height: 300px;" /></a>
+<p>The example weather station we are using measures daily cumulative solar radiation (Rs), which we would like to examine, possibly correct, and then use for calculating ET. To do so, we need to specify where in the data file our solar radiation data is. Our data is organized as such:</p>
+<p>We can see that Solar radiation data is measured in langleys, and is located in <strong>Column E</strong>, which might lead you to think it’s in the 5th column. <strong>However, in Python, indexes start at 0</strong>, so Column A would be 0, Column B would be 1, and so on. Accounting for that, we would say <strong>Rs data is actually in Column 4.</strong></p>
+<p><strong>Now that we have that information, we can go to the relevant section of the .ini file and fill it in:</strong></p>
+<a class="reference internal image-reference" href="_images/solar_config.png"><img alt="The configuration parameters for solar radiation in the [DATA] section." class="align-center" src="_images/solar_config.png" style="width: 450px; height: 250px;" /></a>
+<p>Fill in rs_col with the appropriate value (in this case, 4), and set the appropriate unit flag (in this case, langleys) from “0” (indicating FALSE) to “1” (indicating TRUE).</p>
+<p>If, hypothetically, the solar radiation data was provided in w/m2, you would indicate that to the script by having all other unit flags be set to 0 (FALSE). The blue box highlights the text that indicates what units are the expected default.</p>
+<p><strong>If we look at the section for temperature data:</strong></p>
+<a class="reference internal image-reference" href="_images/temp_config.png"><img alt="The configuration parameters for solar radiation in the [DATA] section." class="align-center" src="_images/temp_config.png" style="width: 525px; height: 500px;" /></a>
+<p>We can see that the layout is the same, including the text indicating what the default units are.</p>
+<p><strong>A note on humidity data:</strong></p>
+<p>Humidity is commonly measured through either:</p>
+<ul class="simple">
+<li>Actual Vapor Pressure (<strong>Ea</strong>)</li>
+<li>Dewpoint Temperature (<strong>TDew</strong>)</li>
+<li>Maximum and Minimum Relative Humidity (<strong>RHMax</strong> and <strong>RHMin</strong>)</li>
+<li>Average Relative Humidity (<strong>RHAvg</strong>)</li>
+</ul>
+<p>In terms of accuracy, this is a tiered list where the top option (<strong>Ea</strong>) is most desirable, and the bottom option (<strong>RHAvg</strong>) is the least. When configuring humidity measurements, <strong>input all the variables you may have</strong>, and the script will automatically pick the most preferable option.</p>
+<p><strong>For the next step</strong>, see the <a class="reference internal" href="example_run.html"><span class="doc">Example Run.</span></a></p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pyWeather QAQC</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about_project.html">About pyWeatherQAQC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_setup.html">Installing Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qaqc_setup.html">pyWeatherQAQC Setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Setting Up The Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#directory-structure">Directory Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-configuration-file">Setting Configuration File</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="example_run.html">Example Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_issues.html">Common Data Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="correction_process.html">Correction Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="problems.html">Problems?</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="qaqc_setup.html" title="previous chapter">pyWeatherQAQC Setup</a></li>
+      <li>Next: <a href="example_run.html" title="next chapter">Example Run</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Christian Dunkerly.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/data_setup.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

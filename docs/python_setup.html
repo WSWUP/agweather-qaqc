@@ -1,0 +1,147 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Installing Python &#8212; pyWeather QAQC 0.2.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pyWeatherQAQC Setup" href="qaqc_setup.html" />
+    <link rel="prev" title="About pyWeatherQAQC" href="about_project.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="installing-python">
+<h1>Installing Python<a class="headerlink" href="#installing-python" title="Permalink to this headline">¶</a></h1>
+<p>If you’re unfamiliar with Python, it’s recommended that you install Anaconda.</p>
+<p>Anaconda is a free and open-source distribution of Python that, in exchange for a larger download, will simplify your setup experience. It also comes pre-installed with the majority of the package requirements for pyWeatherQAQC.</p>
+<p>Visit the <a class="reference external" href="https://www.anaconda.com/download/">Anaconda website</a> to download the correct Anaconda 3.X version for your operating system, and then follow the prompts to install it.</p>
+<p><strong>Important: make sure you’re installing the 3.X version of Anaconda!</strong></p>
+<p>Once you’re done installing Anaconda, open the command prompt or terminal window and type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">conda</span> <span class="n">info</span>
+</pre></div>
+</div>
+<p>You should see some text regarding the version of Anaconda you’ve installed. If you get an error, you may have made a mistake during the installation.</p>
+<div class="section" id="using-an-environment">
+<h2>Using an Environment<a class="headerlink" href="#using-an-environment" title="Permalink to this headline">¶</a></h2>
+<p>One of the best features of Anaconda is the ease of setting up an environment, which is a dedicated space where you can setup and run code without having to worry about version and installation conflicts with any other code you may have to run.</p>
+<p>If you’re doing any other work with Python code, it’s recommended you take the extra steps to set this up now and save yourself a potential headache later one.</p>
+<p><strong>To create an environment, type</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">pyweatherqaqc</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
+</pre></div>
+</div>
+<p><strong>Once that is done, activate your environment by typing</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">activate</span> <span class="n">pyweatherqaqc</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You will have to activate your environment whenever you close and reopen the command prompt/terminal window.</p>
+</div>
+<p><strong>Now</strong>, see <a class="reference internal" href="qaqc_setup.html"><span class="doc">pyWeatherQAQC Setup</span></a> to get started!</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pyWeather QAQC</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about_project.html">About pyWeatherQAQC</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installing Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-an-environment">Using an Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qaqc_setup.html">pyWeatherQAQC Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_setup.html">Setting Up The Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_run.html">Example Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_issues.html">Common Data Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="correction_process.html">Example explanation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="about_project.html" title="previous chapter">About pyWeatherQAQC</a></li>
+      <li>Next: <a href="qaqc_setup.html" title="next chapter">pyWeatherQAQC Setup</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Christian Dunkerly.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/python_setup.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

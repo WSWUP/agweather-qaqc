@@ -1,0 +1,9 @@
+##################
+Correction Process
+##################
+
+This page contains explanations for why we recommend correcting the data in the way that we do, as well as explaining how we fill in data.
+
+
+.. note::
+   This is currently under construction.
