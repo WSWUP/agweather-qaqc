@@ -228,7 +228,7 @@ def temp_find_outliers(log_writer, var_one, var_one_name, var_two, var_two_name,
 
     k = 1
     while k <= 12:
-        t_index = [ex for ex, ind in enumerate(month) if ind == k]
+        t_index = np.where(month == k + 1)[0]
         t_index = np.array(t_index)
 
         (var_one[t_index], var_one_outlier_count) = modified_z_score_outlier_detection(var_one[t_index])
@@ -278,7 +278,7 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
     corr_rhmin = np.array(rhmin)
 
     for k in range(unique_years.size):
-        t_index = [ex for ex, ind in enumerate(year) if ind == unique_years[k]]
+        t_index = np.where(year == unique_years[k])[0]
         t_index = np.array(t_index)
 
         rh_year = np.array(rhmax[t_index])
