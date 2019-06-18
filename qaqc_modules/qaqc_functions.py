@@ -481,6 +481,9 @@ def rs_period_percentile_corr(log_writer, start, end, rs, rso):
     log_writer.write('%s data points were removed due to their correction factor exceeding a '
                      '50 percent relative increase or decrease. \n' % correction_cutoff_counter)
 
+    print('\n%s data points were removed due to their correction factor exceeding a '
+          '50 percent relative increase or decrease. \n' % correction_cutoff_counter)
+
     return corr_rs, rso
 
 

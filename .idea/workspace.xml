@@ -11,7 +11,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/pyWeatherQAQC$qaqc_single_station.coverage" NAME="qaqc_single_station Coverage Results" MODIFIED="1560833954692" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/pyWeatherQAQC$qaqc_single_station.coverage" NAME="qaqc_single_station Coverage Results" MODIFIED="1560885503219" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pyWeatherQAQC$py_weather_qaqc.coverage" NAME="py_weather_qaqc Coverage Results" MODIFIED="1556654780106" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/qaqc_modules" />
   </component>
   <component name="FileEditorManager">
@@ -25,11 +25,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/qaqc_modules/py_weather_qaqc.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="198">
-              <caret line="428" column="39" lean-forward="true" selection-start-line="428" selection-start-column="39" selection-end-line="428" selection-end-column="39" />
+            <state relative-caret-position="997">
+              <caret line="454" column="5" lean-forward="true" selection-start-line="454" selection-start-column="5" selection-end-line="454" selection-end-column="5" />
               <folding>
                 <element signature="e#0#34#0" expanded="true" />
               </folding>
@@ -40,7 +40,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/qaqc_modules/data_functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1241">
+            <state relative-caret-position="34">
               <caret line="5" selection-start-line="5" selection-end-line="5" />
               <folding>
                 <element signature="e#0#21#0" expanded="true" />
@@ -55,8 +55,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/qaqc_modules/input_functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="193" column="74" lean-forward="true" selection-start-line="193" selection-start-column="74" selection-end-line="193" selection-end-column="74" />
+            <state relative-caret-position="3213">
+              <caret line="193" column="74" selection-start-line="193" selection-start-column="74" selection-end-line="193" selection-end-column="74" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
               </folding>
@@ -67,12 +67,10 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/qaqc_modules/plotting_functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="177">
-              <caret line="159" lean-forward="true" selection-start-line="159" selection-end-line="159" />
+            <state relative-caret-position="2703">
+              <caret line="159" selection-start-line="159" selection-end-line="159" />
               <folding>
                 <element signature="e#0#34#0" expanded="true" />
-                <element signature="e#171#3691#0" />
-                <element signature="e#3745#5057#0" />
               </folding>
             </state>
           </provider>
@@ -83,6 +81,18 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="238">
               <caret line="15" column="49" selection-start-line="15" selection-start-column="49" selection-end-line="15" selection-end-column="49" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/qaqc_modules/qaqc_functions.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="144">
+              <caret line="488" lean-forward="true" selection-start-line="488" selection-end-line="488" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -126,9 +136,9 @@
         <option value="$PROJECT_DIR$/config.ini" />
         <option value="$PROJECT_DIR$/qaqc_single_station.py" />
         <option value="$PROJECT_DIR$/qaqc_modules/input_functions.py" />
-        <option value="$PROJECT_DIR$/qaqc_modules/qaqc_functions.py" />
         <option value="$PROJECT_DIR$/qaqc_modules/plotting_functions.py" />
         <option value="$PROJECT_DIR$/qaqc_modules/py_weather_qaqc.py" />
+        <option value="$PROJECT_DIR$/qaqc_modules/qaqc_functions.py" />
       </list>
     </option>
   </component>
@@ -258,21 +268,22 @@
       <workItem from="1557514913047" duration="760000" />
       <workItem from="1557520743770" duration="2035000" />
       <workItem from="1560824622349" duration="4349000" />
+      <workItem from="1560885225120" duration="918000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="28248000" />
+    <option name="totallyTimeSpent" value="29166000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="848" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.10805369" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.10939597" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32960895" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32960895" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32960895" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.48603353" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -322,6 +333,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/../flux-data-qaqc/fluxdataqaqc/plot.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="371">
+          <caret line="876" lean-forward="true" selection-start-line="873" selection-start-column="8" selection-end-line="890" selection-end-column="18" />
+          <folding>
+            <element signature="e#72#94#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/config.ini">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="68">
@@ -331,7 +352,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/qaqc_modules/data_functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1241">
+        <state relative-caret-position="34">
           <caret line="5" selection-start-line="5" selection-end-line="5" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
@@ -342,12 +363,32 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/qaqc_modules/qaqc_functions.py">
+    <entry file="file://$PROJECT_DIR$/qaqc_modules/input_functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="471" column="35" selection-start-line="471" selection-start-column="35" selection-end-line="471" selection-end-column="35" />
+        <state relative-caret-position="3213">
+          <caret line="193" column="74" selection-start-line="193" selection-start-column="74" selection-end-line="193" selection-end-column="74" />
           <folding>
-            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#0#25#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/qaqc_modules/py_weather_qaqc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="997">
+          <caret line="454" column="5" lean-forward="true" selection-start-line="454" selection-start-column="5" selection-end-line="454" selection-end-column="5" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/qaqc_modules/plotting_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2703">
+          <caret line="159" selection-start-line="159" selection-end-line="159" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -359,44 +400,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/qaqc_modules/input_functions.py">
+    <entry file="file://$PROJECT_DIR$/qaqc_modules/qaqc_functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="193" column="74" lean-forward="true" selection-start-line="193" selection-start-column="74" selection-end-line="193" selection-end-column="74" />
+        <state relative-caret-position="144">
+          <caret line="488" lean-forward="true" selection-start-line="488" selection-end-line="488" />
           <folding>
-            <element signature="e#0#25#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/qaqc_modules/plotting_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="177">
-          <caret line="159" lean-forward="true" selection-start-line="159" selection-end-line="159" />
-          <folding>
-            <element signature="e#0#34#0" expanded="true" />
-            <element signature="e#171#3691#0" />
-            <element signature="e#3745#5057#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../flux-data-qaqc/fluxdataqaqc/plot.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="371">
-          <caret line="876" lean-forward="true" selection-start-line="873" selection-start-column="8" selection-end-line="890" selection-end-column="18" />
-          <folding>
-            <element signature="e#72#94#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/qaqc_modules/py_weather_qaqc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="428" column="39" lean-forward="true" selection-start-line="428" selection-start-column="39" selection-end-line="428" selection-end-column="39" />
-          <folding>
-            <element signature="e#0#34#0" expanded="true" />
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
