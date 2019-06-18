@@ -14,6 +14,5 @@ if __name__ == "__main__":
         config_path = 'config.ini'
 
     station_qaqc = WeatherQAQC(config_path, None)
-    test_change = 1
 
     print("\nSystem: Now ending single station QAQC script.")

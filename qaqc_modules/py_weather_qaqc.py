@@ -3,6 +3,7 @@ from bokeh.plotting import output_file, reset_output, save
 import datetime as dt
 import numpy as np
 import pandas as pd
+from math import ceil
 from qaqc_modules import data_functions, input_functions, plotting_functions, qaqc_functions
 from refet.calcs import _wind_height_adjust
 
@@ -12,11 +13,13 @@ class WeatherQAQC:
     config_path = 'config.ini'
     metadata_path = None
     station_line = None
+    gridplot_columns = 1
 
-    def __init__(self, config_file_path='config.ini', metadata_file_path=None, line_number=None):
+    def __init__(self, config_file_path='config.ini', metadata_file_path=None, line_number=None, column_number=1):
         self.config_path = config_file_path
         self.metadata_path = metadata_file_path
         self.station_line = line_number
+        self.gridplot_columns = column_number
 
     #########################
     # Obtaining initial data
@@ -339,6 +342,7 @@ class WeatherQAQC:
     # If user does correct data, then this plots data after correction
     print("\nSystem: Now creating composite bokeh graph.")
     if generate_bokeh:  # Flag to create graphs or not
+        plot_list = []
         x_size = 500
         y_size = 350
 
@@ -352,9 +356,11 @@ class WeatherQAQC:
 
         # Temperature Maximum and Minimum Plot
         plot_tmax_tmin = plotting_functions.line_plot(x_size, y_size, dt_array, data_tmax, data_tmin, 1, '')
+        plot_list.append(plot_tmax_tmin)
         # Temperature Minimum and Dewpoint Plot
         plot_tmin_tdew = plotting_functions.line_plot(x_size, y_size, dt_array, data_tmin, data_tdew, 2, '',
                                                       plot_tmax_tmin)
+        plot_list.append(plot_tmin_tdew)
 
         # Subplot 3 changes based on what variables are provided
         if column_df.ea != -1:  # Vapor pressure was provided
@@ -373,48 +379,63 @@ class WeatherQAQC:
             # If an unsupported combination of humidity variables is present, raise a value error.
             raise ValueError('Bokeh figure generation encountered an unexpected combination of humidity inputs.')
 
+        plot_list.append(plot_humid)
+
+        # If both ea and rhmax/rhmin are provided, generate a supplementary rhmax/min graph
+        if column_df.rhmax != -1 and column_df.rhmin != -1 and column_df.ea != -1:
+            plot_supplemental_rh = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhmax, data_rhmin, 8, '',
+                                                            plot_tmax_tmin)
+            plot_list.append(plot_supplemental_rh)
+
         # Mean Monthly Temperature Minimum and Dewpoint
         plot_mm_tmin_tdew = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_tmin, mm_tdew, 2, 'MM ')
+        plot_list.append(plot_mm_tmin_tdew)
 
         # Mean Monthly k0 curve (Tmin-Tdew)
         plot_mm_k_not = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_k_not, data_null, 10, '',
                                                      plot_mm_tmin_tdew)
+        plot_list.append(plot_mm_k_not)
 
         # Solar radiation and clear sky solar radiation
         plot_rs_rso = plotting_functions.line_plot(x_size, y_size, dt_array, data_rs, rso, 5, '', plot_tmax_tmin)
+        plot_list.append(plot_rs_rso)
 
         # Windspeed
         plot_ws = plotting_functions.line_plot(x_size, y_size, dt_array, data_ws, data_null, 3, '', plot_tmax_tmin)
+        plot_list.append(plot_ws)
 
         # Precipitation
         plot_precip = plotting_functions.line_plot(x_size, y_size, dt_array, data_precip, data_null, 4,
                                                    '', plot_tmax_tmin)
+        plot_list.append(plot_precip)
 
         # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
         plot_mm_opt_rs_tr = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_rs, mm_opt_rs_tr, 6,
                                                          'MM Optimized ', plot_mm_tmin_tdew)
+        plot_list.append(plot_mm_opt_rs_tr)
 
         # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
         plot_mm_orig_rs_tr = plotting_functions.line_plot(x_size, y_size, mm_dt_array, mm_rs, mm_orig_rs_tr, 6,
                                                           'MM Original ', plot_mm_tmin_tdew)
+        plot_list.append(plot_mm_orig_rs_tr)
 
-        if column_df.rhmax != -1 and column_df.rhmin != -1 and column_df.ea != -1:
-            # If both ea and rhmax/rhmin are provided, generate a supplementary rhmax/min graph and save
-            supplemental_rh_plot = plotting_functions.line_plot(x_size, y_size, dt_array, data_rhmax, data_rhmin, 8, '',
-                                                                plot_tmax_tmin)
 
-            fig = gridplot([[plot_tmax_tmin, plot_tmin_tdew, plot_humid],
-                            [plot_mm_tmin_tdew, plot_mm_k_not, supplemental_rh_plot],
-                            [plot_rs_rso, plot_ws, plot_precip],
-                            [plot_mm_opt_rs_tr, plot_mm_orig_rs_tr]], toolbar_location="left")
-            save(fig)
-        else:
-            # If there is no 10th plot to generate, save the regular 9
-            fig = gridplot([[plot_tmax_tmin, plot_tmin_tdew, plot_humid],
-                            [plot_mm_tmin_tdew, plot_mm_k_not, plot_rs_rso],
-                            [plot_ws, plot_precip, plot_mm_opt_rs_tr],
-                            [plot_mm_orig_rs_tr]], toolbar_location="left")
-            save(fig)
+        # Now construct grid plot out of all of the subplots
+        number_of_plots = len(plot_list)
+        number_of_rows = ceil(number_of_plots / gridplot_columns)
+        # TODO: why does replacing below 1 with gridplot_columns cause an error?
+        grid_of_plots = [([None] * 1) for i in range(number_of_rows)]
+
+        for i in range(number_of_rows):
+            for j in range(gridplot_columns):
+
+                if len(plot_list) > 0:
+                    grid_of_plots[i][j] = plot_list.pop(0)
+                else:
+                    pass
+
+        fig = gridplot(grid_of_plots, toolbar_location='left')
+        save(fig)
 
         print("\nSystem: Composite bokeh graph has been generated.")
 

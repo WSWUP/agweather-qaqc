@@ -192,7 +192,7 @@ def daily_realistic_limits(original_data, log_path, var_type):
         limited_data[original_data >= 60] = clip_value  # 60 C is 140 F
     elif var_type == 'wind speed':
         limited_data[original_data < 0] = clip_value  # Negative wind speed is impossible
-        limited_data[original_data >= 70] = clip_value  # 70 m/s is a cat 5 hurricane
+        limited_data[original_data >= 35] = clip_value  # 35 m/s is a cat 1 hurricane
     elif var_type == 'precipitation':
         limited_data[original_data < 0] = clip_value  # Negative precipitation is impossible
         limited_data[original_data >= 610] = clip_value  # 610 mm is 2 ft of rain a day

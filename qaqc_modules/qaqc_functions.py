@@ -452,6 +452,7 @@ def rs_period_percentile_corr(log_writer, start, end, rs, rso):
     rs_corr_values = rs_percent_corr(start, end, rs, rso, corr_thresh, corr_period)  # correction factors to apply to rs
 
     # now apply those values to the data for each period
+    correction_cutoff_counter = 0
     x = start  # index that tracks along data points for the full selected correction interval
     y = 0  # index that tracks how far along a period we are
     z = 0  # index that tracks which correction period we are in
@@ -459,15 +460,26 @@ def rs_period_percentile_corr(log_writer, start, end, rs, rso):
         # x is less than the length of var1 to prevent OOB,
         # and is before or at the end of the correction interval
         # and we have not yet run out of correction periods
+        # and capping correction by a fifty percent increase or decrease
         if y <= corr_period:
             # if y is less than the size of a correction period
-            corr_rs[x] = rs[x] / rs_corr_values[z]
+
+            # Check to see if rs correction factor is smaller than a 50% relative increase or decrease
+            # if it is larger than that we will remove it for a later fill with Rs_TR
+            if rs_corr_values[z] <= 1.50 or rs_corr_values[z] >= 0.5:
+                corr_rs[x] = rs[x] / rs_corr_values[z]
+            else:
+                corr_rs[x] = np.nan
+                correction_cutoff_counter += 1
             x += 1
             y += 1
         else:
             # We have reached the end of the correction period, go to next period
             y = 1
             z += 1
+
+    log_writer.write('%s data points were removed due to their correction factor exceeding a '
+                     '50 percent relative increase or decrease. \n' % correction_cutoff_counter)
 
     return corr_rs, rso
 
