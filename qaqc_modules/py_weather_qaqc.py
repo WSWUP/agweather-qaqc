@@ -24,7 +24,7 @@ class WeatherQAQC:
     #########################
     # Obtaining initial data
     (data_df, column_df, station_name, log_file, station_lat, station_elev, ws_anemometer_height, missing_fill_value,
-     script_mode, generate_bokeh) = input_functions.obtain_data(config_path)
+     script_mode, auto_mode, generate_bokeh) = input_functions.obtain_data(config_path)
 
     if script_mode == 1:  # correcting data
         mc_iterations = 1000  # Number of iters for MC simulation of thornton running solar radiation generation
