@@ -82,7 +82,7 @@ def generate_corr_menu(code, auto_corr, first_pass):
         choice = 4
         loop = 0
         first_pass = 0
-        print('\n Automatic first-pass correction is being performed, option 4 selected.')
+        print('\n Automatic first-pass correction is being performed, option 4 selected. \n')
     else:
         choice = int(input("Enter your selection: "))
         loop = 1
@@ -258,13 +258,15 @@ def temp_find_outliers(log_writer, t_var_one, var_one_name, t_var_two, var_two_n
     return corrected_var_one, corrected_var_two
 
 
-def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
+def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year, percentage):
     """
             Performs a year-based percentile correction on relative humidity, works on the belief that every year should
             have at least a few observations where RHMax hits 100% (such as when it rains). This is a concise way to
             solve sensor drift issues that may arise. The correction strength is determined only by RHMax values, but
             the correction is also duplicated to RHMin values as they are obtained by the same sensor and likely suffer
             the same sensor drift problem.
+
+            Divide 100 by user specified percentage to get a
 
             Parameters:
                 log_writer : logging object for log file
@@ -273,6 +275,7 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
                 rhmax : 1D numpy array of rhmax
                 rhmin : 1D numpy array of rhmin
                 year : 1D numpy array of year values
+                percentage : integer of what top yearly percentages user wants to base correction on, recommended is 2
 
             Returns:
                 corr_rhmax : 1D numpy array of rhmax values after correction is applied
@@ -280,6 +283,8 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
 
     """
 
+    # Obtain sample size from percentage value provided
+    percentage_sample_size = np.floor(100/percentage)
     # ID unique years in data set
     unique_years = np.unique(year)
     corr_sample_per_year = np.zeros(unique_years.size)
@@ -295,7 +300,8 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
         rh_year = np.array(rhmax[t_index])
         rh_year = rh_year[~np.isnan(rh_year)]
 
-        corr_sample_per_year[k] = int(np.floor((rh_year.size / 50)))  # get how many days are 2% of the year
+        # find the required number of days to sample each year by dividing the size of the year by percent_sample_size
+        corr_sample_per_year[k] = int(np.floor((rh_year.size / percentage_sample_size)))
         if corr_sample_per_year[k] < 1:
             corr_sample_per_year[k] = 1
         else:
@@ -354,10 +360,11 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
     print("\n" + str(rhmax_cutoff) + " RHMax data points were removed for exceeding the logical limit of 100%.")
     print("\n" + str(rhmin_cutoff) + " RHMin data points were removed for exceeding the logical limit of 100%.")
 
-    log_writer.write('Year-based RH correction used the 98th percentile (7 points for a full year), '
+    log_writer.write('Year-based RH correction used the top %s percentile (%s points for a full year), '
                      'RHMax had %s points exceed 100 percent.'
                      ' RHMin had %s points exceed 100 percent. \n'
-                     % (rhmax_cutoff, rhmin_cutoff))
+                     % (percentage, int(np.floor((365 / percentage_sample_size))), rhmax_cutoff, rhmin_cutoff))
+
     return corr_rhmax, corr_rhmin
 
 
@@ -672,8 +679,13 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code,
             (corr_var_one, corr_var_two) = temp_find_outliers(corr_log, var_one, var_one_name, var_two, var_two_name,
                                                               month)
         elif choice == 4 and code == 8:
+            if auto_corr != 0:
+                corr_percentile = 2
+            else:
+                corr_percentile = int(input('\nEnter which top percentile you want to base corrections on (rec. 2): '))
+
             (corr_var_one, corr_var_two) = rh_yearly_percentile_corr(corr_log, int_start, int_end, var_one, var_two,
-                                                                     year)
+                                                                     year, corr_percentile)
         elif choice == 4 and code == 5:
             if auto_corr != 0:
                 corr_period = 60
