@@ -1,4 +1,5 @@
 from bokeh.layouts import gridplot
+from bokeh.models import Label, ColumnDataSource, HoverTool
 from bokeh.plotting import figure, output_file, reset_output
 
 import numpy as np
@@ -157,6 +158,22 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
     """
     (units, title, var_one_name, var_one_color, var_two_name, var_two_color) = generate_line_plot_features(code, usage)
 
+    date_list = dt_array.tolist()
+    source = ColumnDataSource(data=dict(date=date_list, v_one=var_one))
+    empty_array = np.zeros(len(date_list))
+    empty_array[:] = np.nan
+
+    if var_two is None:
+        source.add(empty_array, name='v_two')
+    else:
+        source.add(var_two, name='v_two')
+
+    tooltips = [
+        ('Index', '$index'),
+        ('Date', '@date{%F}'),
+        ('Value', '$y')]
+    formatters = {'date': 'datetime'}
+
     if dt_array.size == 12:  # Mean monthly plot
         x_label = 'Month'
         x_axis_type = 'linear'
@@ -168,21 +185,23 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
         subplot = figure(
             width=x_size, height=y_size, x_axis_type=x_axis_type,
             x_axis_label=x_label, y_axis_label=units, title=title,
-            tools='pan, box_zoom, undo, reset, hover, save')
+            tools='pan, box_zoom, undo, reset, save')
     else:  # Plot is passed to link x-axis with
         subplot = figure(
             x_range=link_plot.x_range,
             width=x_size, height=y_size, x_axis_type=x_axis_type,
             x_axis_label=x_label, y_axis_label=units, title=title,
-            tools='pan, box_zoom, undo, reset, hover, save')
+            tools='pan, box_zoom, undo, reset, save')
 
-    subplot.line(dt_array, var_one, line_color=var_one_color, legend=var_one_name)
+    subplot.line(x='date', y='v_one', line_color=var_one_color, legend=var_one_name, source=source)
     if var_two_name.lower() == 'null':
         pass
     else:
-        subplot.line(dt_array, var_two, line_color=var_two_color, legend=var_two_name)
+        subplot.line(x='date', y='v_two', line_color=var_two_color, legend=var_two_name, source=source)
 
     subplot.legend.location = 'bottom_left'
+    subplot.sizing_mode = 'stretch_both'
+    subplot.add_tools(HoverTool(tooltips=tooltips, formatters=formatters))
 
     return subplot
 
