@@ -35,15 +35,18 @@ def additive_corr(log_writer, start, end, var_one, var_two):
     return corr_var_one, corr_var_two
 
 
-def generate_corr_menu(code):
+def generate_corr_menu(code, auto_corr, first_pass):
     """
         Generates menu and obtains user selection on how they want to correct the variables they have provided
 
         Parameters:
             code : integer code passed by main script that indicates what type of data has been passed
+            auto_corr : flag for whether or not automatic correction has been enabled
+            first_pass : flag for if this is the first iteration of correction or not
 
         Returns:
             choice : integer of user selection on how they want to correct data
+            first_pass : flag for if this is the first iteration of correction or not
 
     """
     corr_method = '   To skip correcting this data, enter 4.'
@@ -75,8 +78,14 @@ def generate_corr_menu(code):
           '\n   To set everything in this interval to NaN, enter 3.'.format(var_type))
     print(corr_method)
 
-    choice = int(input("Enter your selection: "))
-    loop = 1
+    if auto_corr != 0 and first_pass == 1:  # automatic pass enabled
+        choice = 4
+        loop = 0
+        first_pass = 0
+        print('\n Automatic first-pass correction is being performed, option 4 selected.')
+    else:
+        choice = int(input("Enter your selection: "))
+        loop = 1
 
     while loop:
         if 1 <= choice <= 4:
@@ -85,7 +94,7 @@ def generate_corr_menu(code):
             print('Please enter a valid option.')
             choice = int(input('Specify which variable you would like to correct: '))
 
-    return choice
+    return choice, first_pass
 
 
 def generate_interval(var_size):
@@ -205,34 +214,37 @@ def modified_z_score_outlier_detection(data):
     return cleaned_data, outlier_count
 
 
-def temp_find_outliers(log_writer, var_one, var_one_name, var_two, var_two_name, month):
+def temp_find_outliers(log_writer, t_var_one, var_one_name, t_var_two, var_two_name, month):
     """
             Uses a modified z-score approach to automatically detect outliers and set them to nan.
 
             Parameters:
                 log_writer : logging object for log file
-                var_one : 1D numpy array of first variable, either tmax, or tmin
+                t_var_one : 1D numpy array of first variable, either tmax, or tmin
                 var_one_name : string of var one name
-                var_two : 1D numpy array of second variable, either tmin or tdew
+                t_var_two : 1D numpy array of second variable, either tmin or tdew
                 var_two_name : string of var two name
                 month : 1D numpy array of month values
 
             Returns:
-                var_one : 1D numpy array of first variable after data was removed
-                var_two : 1D numpy array of second variable after data was removed
+                t_var_one : 1D numpy array of first variable after data was removed
+                t_var_two : 1D numpy array of second variable after data was removed
 
     """
     log_writer.write('User has opted to use a modified z-score approach to identify and remove outliers. \n')
     var_one_total_outliers = 0
     var_two_total_outliers = 0
 
+    corrected_var_one = np.array(t_var_one)
+    corrected_var_two = np.array(t_var_two)
+
     k = 1
     while k <= 12:
         t_index = np.where(month == k + 1)[0]
         t_index = np.array(t_index)
 
-        (var_one[t_index], var_one_outlier_count) = modified_z_score_outlier_detection(var_one[t_index])
-        (var_two[t_index], var_two_outlier_count) = modified_z_score_outlier_detection(var_two[t_index])
+        (corrected_var_one[t_index], var_one_outlier_count) = modified_z_score_outlier_detection(t_var_one[t_index])
+        (corrected_var_two[t_index], var_two_outlier_count) = modified_z_score_outlier_detection(t_var_two[t_index])
 
         var_one_total_outliers = var_one_total_outliers + var_one_outlier_count
         var_two_total_outliers = var_two_total_outliers + var_two_outlier_count
@@ -243,7 +255,7 @@ def temp_find_outliers(log_writer, var_one, var_one_name, var_two, var_two_name,
     log_writer.write('{0} outliers were removed on variable {1}. \n'.format(var_one_total_outliers, var_one_name))
     log_writer.write('{0} outliers were removed on variable {1}. \n'.format(var_two_total_outliers, var_two_name))
 
-    return var_one, var_two
+    return corrected_var_one, corrected_var_two
 
 
 def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
@@ -267,13 +279,12 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
                 corr_rhmin : 1D numpy array of rhmin values after correction is applied
 
     """
-    # Corrects the data based on a year-based percentile correction
-    corr_thresh = float(input("\nEnter the percentile threshold to use for this correction (rec. 98-99): "))
 
     # ID unique years in data set
     unique_years = np.unique(year)
-    percentile_year = np.zeros(unique_years.size)
+    corr_sample_per_year = np.zeros(unique_years.size)
     rh_corr_per_year = np.zeros(unique_years.size)
+
     corr_rhmax = np.array(rhmax)
     corr_rhmin = np.array(rhmin)
 
@@ -282,8 +293,18 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
         t_index = np.array(t_index)
 
         rh_year = np.array(rhmax[t_index])
-        percentile_year[k] = np.nanpercentile(rh_year, corr_thresh)
-        rh_corr_per_year[k] = 100 / percentile_year[k]
+        rh_year = rh_year[~np.isnan(rh_year)]
+
+        corr_sample_per_year[k] = int(np.floor((rh_year.size / 50)))  # get how many days are 2% of the year
+        if corr_sample_per_year[k] < 1:
+            corr_sample_per_year[k] = 1
+        else:
+            pass
+
+        rh_year_sorted = rh_year.argsort()
+        rh_values_to_pull = int(corr_sample_per_year[k])
+        rh_sample_indexes = rh_year_sorted[-rh_values_to_pull:]
+        rh_corr_per_year[k] = 100 / np.nanmean(rh_year[rh_sample_indexes])
 
         print("{0} days were included in year {1} of the RH correction process."
               .format(rh_year.size, unique_years[k]))
@@ -333,30 +354,58 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year):
     print("\n" + str(rhmax_cutoff) + " RHMax data points were removed for exceeding the logical limit of 100%.")
     print("\n" + str(rhmin_cutoff) + " RHMin data points were removed for exceeding the logical limit of 100%.")
 
-    log_writer.write('Year-based RH correction used the %s th percentile, RHMax had %s points exceed 100 percent.'
+    log_writer.write('Year-based RH correction used the 98th percentile (7 points for a full year), '
+                     'RHMax had %s points exceed 100 percent.'
                      ' RHMin had %s points exceed 100 percent. \n'
-                     % (corr_thresh, rhmax_cutoff, rhmin_cutoff))
+                     % (rhmax_cutoff, rhmin_cutoff))
     return corr_rhmax, corr_rhmin
 
 
-def rs_percent_corr(start, end, rs, rso, thresh, period):
+def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period, period):
     """
-            This function is called by rs_period_percentile_corr(), takes in both rs and rso, calculates the
-            percentile correction factor for each period, and returns an array of those factors
+            This function corrects rs by applying a correction factor (a ratio of rso/rs) to each user defined period
+            to counteract sensor drift and other errors.
+
+            The start and end of the correction interval is used to cut a section of both rs and rso,
+            with these new sections being divided into 60 day periods. Each period is checked for the number of times
+            rs exceeds rso. If there are less than three, they are removed (set to rso) as potential voltage spikes or
+            other errors, but if there are more then they are left in.
+            Each period then has a correction factor calculated based on a user-specified (6 is recommended)
+            largest number of points for rs/rso.
+
+            If a period does not contain enough valid data points to fill the user-specified number, the entire period
+            is thrown out.
+
+            Averages are formed for both rs and rso of those largest points,
+            and then this new average rso is divided by this new average rs to get a final ratio, which is then
+            to be multiplied to all points within its corresponding period.
+
+            To prevent the code from correcting data beyond the point of believability, if the correction factor is
+            below 0.5 or above 1.5, the data for that period is removed instead.
+
+            Finally, the function returns the corrected solar radiation that has had spikes removed (if applicable)
+            and the period-based correction factor applied.
 
             Parameters:
+                log_writer : logging object for the log file
                 start : starting index of correction interval
                 end : ending index of correction interval
                 rs : 1D numpy array of rs
                 rso : 1D numpy array of rso
-                thresh : percentile threshold that correction factors are going to be calculated off of
+                sample_size_per_period : percentile threshold that correction factors are going to be calculated off of
                 period : length of each correction period within the user-specified interval
 
             Returns:
-                period_corr : 1D numpy array of correction factors for each period within the interval
-
+                corr_rs : 1D numpy array of corrected rs values
+                rso : not actually changed from input, but is returned to keep everything consistent in main qaqc funct.
     """
-    # Determining percentile correction for intervals based on pre-defined periods
+
+    corr_rs = np.array(rs)  # corrected variable that all the corrections are going to be written to
+    despike_counter = 0  # counter for the number of times points were removed as voltage spikes
+    insufficient_period_counter = 0  # counter for the number of periods that were removed due to insufficient data
+    insufficient_data_counter = 0 # counter for the number of datapoints that were removed due to insufficient data
+
+    # Determining correction factor for intervals based on pre-defined periods
     num_periods = int(math.ceil((end - start) / period))
     rs_period = np.zeros(period)
     rso_period = np.zeros(period)
@@ -365,6 +414,7 @@ def rs_percent_corr(start, end, rs, rso, thresh, period):
     # Placing intervals in separate array for easy handling
     rs_interval = np.array(rs[start:end])
     rso_interval = np.array(rso[start:end])
+    despiked_rs_interval = np.array([])  # used to recreate interval of rs that will track the despiking of points
 
     # separate the interval into predefined periods and compute correction
     count_one = 0  # index for full correction interval
@@ -372,20 +422,62 @@ def rs_percent_corr(start, end, rs, rso, thresh, period):
     count_three = 0  # index for number of periods
     while count_one < len(rs_interval):
         if (count_two < period) and count_one == len(rs_interval) - 1:
-            # if statement handles final period
+            # this if statement handles final period, which may be potentially shorter than expected period length
             rs_period[count_two] = rs_interval[count_one]
             rso_period[count_two] = rso_interval[count_one]
-            count_one += 1
-            count_two += 1
-            while count_two < period:
-                # This fills out the rest of the final period with NaNs so
-                # they are not impacted by the remaining zeros
-                rs_period[count_two] = np.nan
-                rso_period[count_two] = np.nan
-                count_two += 1
 
-            ratio = np.divide(rs_period, rso_period)
-            period_corr[count_three] = np.nanpercentile(ratio, thresh)
+            rs_period = rs_period[:count_two-(period-1)].copy()
+            rso_period = rso_period[:count_two-(period-1)].copy()
+
+            count_one += 1  # increment by 1 to end the loop after this iteration
+
+            period_ratios = np.divide(rs_period, rso_period)
+
+            spike_sum = sum(period_ratios > 1)  # count the number of times within this period that Rs exceeds Rso
+            if spike_sum < 3:
+                spike_indexes = np.where(period_ratios > 1)
+                rs_period[spike_indexes] = rso_period[spike_indexes]
+                period_ratios = np.divide(rs_period, rso_period)  # this is done again in case spikes were removed
+                despike_counter += spike_sum
+            else:
+                # too many points found to count as spikes, or no spikes/data exist at all.
+                pass
+
+            period_ratios_copy = np.array(period_ratios)  # make a copy, we remove largest val to find the next largest
+            max_ratio_indexes = []  # tracks the indexes of the maximum values found
+            invalid_period = 0  # boolean flag to specify if this period has the data necessary to calculate corr factor
+
+            # First, check to see if there are non-nan values present
+            # and the period has at least the sample size in days present
+            if np.any(np.isfinite(period_ratios_copy)) and np.size(period_ratios_copy) >= sample_size_per_period:
+                for i in range(sample_size_per_period):  # loop through and return enough largest non nan values
+                    max_ratio_indexes.append(np.nanargmax(period_ratios_copy))
+                    period_ratios_copy[np.nanargmax(period_ratios_copy)] = np.nan  # set to nan to find next largest
+
+                    if np.any(np.isfinite(period_ratios_copy)):  # are any non-nan values still present?
+                        # Yes, continue to find next largest value
+                        pass
+                    else:
+                        # only nans are left, have to quit loop and throw out the data
+                        invalid_period = 1
+                        break
+            else:
+                # there is not enough data in this final period to compute correction data
+                invalid_period = 1
+
+            if invalid_period != 1:  # period has valid data to compute correction factor
+                rs_avg = np.nanmean(rs_period[max_ratio_indexes])
+                rso_avg = np.nanmean(rso_period[max_ratio_indexes])
+
+                period_corr[count_three] = rso_avg / rs_avg
+            else:
+                period_corr[count_three] = np.nan
+                rs_period[:] = np.nan  # insufficient data exists to correct this period, so set it to nan
+                insufficient_period_counter += 1
+                insufficient_data_counter += rs_period.size
+
+            # add this period's rs data, which has potentially been thrown out or despiked, to the new interval of rs
+            despiked_rs_interval = np.append(despiked_rs_interval, rs_period)
 
         elif count_two < period:
             # haven't run out of data points, and period still hasn't been filled
@@ -393,81 +485,83 @@ def rs_percent_corr(start, end, rs, rso, thresh, period):
             rso_period[count_two] = rso_interval[count_one]
             count_one += 1
             count_two += 1
+
         else:
             # end of a period
+            period_ratios = np.divide(rs_period, rso_period)
+
+            spike_sum = sum(period_ratios > 1)  # count the number of times within this period that Rs exceeds Rso
+            if spike_sum < 3:
+                spike_indexes = np.where(period_ratios > 1)
+                rs_period[spike_indexes] = rso_period[spike_indexes]
+                period_ratios = np.divide(rs_period, rso_period)  # this is done again in case spikes were removed
+                despike_counter += spike_sum
+            else:
+                # too many points found to count as spikes, or no spikes/data exist at all.
+                pass
+
+            period_ratios_copy = np.array(period_ratios)  # make a copy, we remove largest val to find the next largest
+            max_ratio_indexes = []  # tracks the indexes of the maximum values found
+            invalid_period = 0  # boolean flag to specify if this period has the data necessary to calculate corr factor
+
+            # First, check to see if there are non-nan values present
+            # and the period has at least the sample size in days present
+            if np.any(np.isfinite(period_ratios_copy)) and np.size(period_ratios_copy) >= sample_size_per_period:
+                for i in range(sample_size_per_period):  # loop through and return enough largest non nan values
+                    max_ratio_indexes.append(np.nanargmax(period_ratios_copy))
+                    period_ratios_copy[np.nanargmax(period_ratios_copy)] = np.nan  # set to nan to find next largest
+
+                    if np.any(np.isfinite(period_ratios_copy)):  # are any non-nan values still present?
+                        # Yes, continue to find next largest value
+                        pass
+                    else:
+                        # only nans are left, have to quit loop and throw out the data
+                        invalid_period = 1
+                        break
+            else:
+                # there is not enough data in this period to compute correction data
+                invalid_period = 1
+
+            if invalid_period != 1:  # period has valid data to compute correction factor
+                rs_avg = np.nanmean(rs_period[max_ratio_indexes])
+                rso_avg = np.nanmean(rso_period[max_ratio_indexes])
+
+                period_corr[count_three] = rso_avg / rs_avg
+            else:
+                period_corr[count_three] = np.nan
+                rs_period[:] = np.nan  # insufficient data exists to correct this period, so set it to nan
+                insufficient_period_counter += 1
+                insufficient_data_counter += rs_period.size
+
+            # add this period's rs data, which has potentially been thrown out or despiked, to the new interval of rs
+            despiked_rs_interval = np.append(despiked_rs_interval, rs_period)
+
             count_two = 0
-            ratio = np.divide(rs_period, rso_period)
-            period_corr[count_three] = np.nanpercentile(ratio, thresh)
             count_three += 1
 
-    return period_corr
+    # Now that the correction factor has been computed for each period, we now step through each period again and
+    # apply those correction factors
 
-
-def rs_period_percentile_corr(log_writer, start, end, rs, rso):
-    """
-            This corrects solar radiation by applying a percentile-based correction to each user-defined period
-            also despikes the data by removing all potentially-erroneous spikes in rs values so that they do not impact
-            the actual percentile correction.
-
-            Parameters:
-                log_writer : logging object for log file
-                start : starting index of correction interval
-                end : ending index of correction interval
-                rs : 1D numpy array of rs
-                rso : 1D numpy array of rso
-
-            Returns:
-                corr_rs : 1D numpy array of corrected rs values
-                rso : not actually changed from input, but is returned to keep everything consistent in main qaqc funct.
-
-    """
-    corr_rs = np.array(rs)
-
-    discard_thresh = float(input('\nEnter the discard threshold as a percentage integer (recommended 99): '))
-    corr_period = int(input('\nEnter the number of days each correction period will last (rec. 60): '))
-    corr_thresh = float(input('\nEnter the correction threshold as a percentage integer (recommended 90): '))
-
-    # begin by despiking rs data, all values removed are set to NaN
-    # this is done to ideally remove all/most observations that are the result of voltage spikes or bad readings
-    # so that they do not impact the actual percentile correction
-    despike_ratios = rs / rso
-    despike_discard = np.nanpercentile(despike_ratios, discard_thresh)
-
-    despike_counter = 0
-    for i in range(start, end):
-        if despike_ratios[i] > despike_discard:
-            rs[i] = np.nan
-            despike_counter += 1
-        else:
-            pass
-    print("\n" + str(despike_counter) + " points were removed as part of the rs despiking procedure.")
-
-    log_writer.write('Periodic Percentile Rs corrections were applied, despiking percentile was %s,'
-                     ' period length was %s, and correction percentile was %s. \n'
-                     % (discard_thresh, corr_period, corr_thresh))
-    log_writer.write('%s data points were removed as part of the despiking process. \n'
-                     % despike_counter)
-
-    # now that data is despiked, correction can begin, pass to function to determine values for each period
-    rs_corr_values = rs_percent_corr(start, end, rs, rso, corr_thresh, corr_period)  # correction factors to apply to rs
-
-    # now apply those values to the data for each period
+    corr_rs[start:end] = despiked_rs_interval[:]  # save all the values removed for despiking/insufficient data
     correction_cutoff_counter = 0
     x = start  # index that tracks along data points for the full selected correction interval
     y = 0  # index that tracks how far along a period we are
     z = 0  # index that tracks which correction period we are in
-    while x < len(rs) and x < end and z < len(rs_corr_values):
+    while x < len(rs) and x < end and z < len(period_corr):
         # x is less than the length of var1 to prevent OOB,
         # and is before or at the end of the correction interval
         # and we have not yet run out of correction periods
         # and capping correction by a fifty percent increase or decrease
-        if y <= corr_period:
+        if y <= period:
             # if y is less than the size of a correction period
 
             # Check to see if rs correction factor is smaller than a 50% relative increase or decrease
             # if it is larger than that we will remove it for a later fill with Rs_TR
-            if rs_corr_values[z] <= 1.50 or rs_corr_values[z] >= 0.5:
-                corr_rs[x] = rs[x] / rs_corr_values[z]
+            if period_corr[z] <= 1.50 or period_corr[z] >= 0.5:
+                corr_rs[x] = rs[x] * period_corr[z]
+            elif np.isnan(period_corr[z]):
+                # This data was already set to nan during the steps above, so pass
+                pass
             else:
                 corr_rs[x] = np.nan
                 correction_cutoff_counter += 1
@@ -478,16 +572,27 @@ def rs_period_percentile_corr(log_writer, start, end, rs, rso):
             y = 1
             z += 1
 
+    print('\n%s Rs data points were removed due to their correction factor exceeding a '
+          '50 percent relative increase or decrease. \n' % correction_cutoff_counter)
+
+    print('\n%s Rs data points in %s different periods were removed due to insufficient data present in either Rs or '
+          'Rso to compute a correction factor. \n' % (insufficient_data_counter, insufficient_period_counter))
+
+    log_writer.write('Periodic ratio-based Rs corrections were applied,'
+                     ' period length was %s, and correction sample size was %s. \n'
+                     % (period, sample_size_per_period))
+    log_writer.write('%s data points were removed as part of the despiking process. \n'
+                     % despike_counter)
+    log_writer.write('%s Rs data points in %s different periods were removed due to insufficient data present in'
+                     ' either Rs or Rso to compute a correction factor. \n'
+                     % (insufficient_data_counter, insufficient_period_counter))
     log_writer.write('%s data points were removed due to their correction factor exceeding a '
                      '50 percent relative increase or decrease. \n' % correction_cutoff_counter)
-
-    print('\n%s data points were removed due to their correction factor exceeding a '
-          '50 percent relative increase or decrease. \n' % correction_cutoff_counter)
 
     return corr_rs, rso
 
 
-def correction(station, log_path, var_one, var_two, dt_array, month, year, code):
+def correction(station, log_path, var_one, var_two, dt_array, month, year, code, auto_corr=0):
     """
             This main qaqc function takes in two variables and, depending on the code provided, enables different
             correction methods for the user to use to correct data. Once a correction has been applied, user has the
@@ -506,12 +611,14 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code)
                 month : 1D numpy array of month values
                 year : 1D numpy array of year values
                 code : integer that is used to determine what variables are actually passed as var_one and var_two
+                auto_corr : int flag for the "automatic first pass" mode, which auto-applies default correction first
 
             Returns:
                 corr_var_one : 1D numpy array of corrected var_one values
                 corr_var_two : 1D numpy array of corrected var_two values
     """
     correction_loop = 1
+    first_pass = 1  # boolean flag for whether or not it is the first pass, used in automation with auto_corr
     var_size = var_one.shape[0]
     backup_var_one = np.array(var_one)
     backup_var_two = np.array(var_two)
@@ -532,9 +639,12 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code)
 
     ####################
     # Generate Before-Corrections Graph
-    corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
-                                                            corr_var_two, code)
-    show(corr_fig)
+    if first_pass == 1 and auto_corr != 0:  # first automatic pass, skip plotting variables for now
+        pass
+    else:
+        corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
+                                                                corr_var_two, code)
+        show(corr_fig)
 
     ####################
     # Correction Loop
@@ -543,8 +653,14 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code)
         ####################
         # Interval and Correction Method Selection
         # Determine what subset of data the user wants to correct, then determine how they want to do it.
-        (int_start, int_end) = generate_interval(var_size)
-        choice = generate_corr_menu(code)
+
+        if first_pass == 1 and auto_corr != 0:  # first automatic pass, select full bracket
+            int_start = 0
+            int_end = var_size
+        else:
+            (int_start, int_end) = generate_interval(var_size)
+
+        (choice, first_pass) = generate_corr_menu(code, auto_corr, first_pass)
 
         if choice == 1:
             (corr_var_one, corr_var_two) = additive_corr(corr_log, int_start, int_end, var_one, var_two)
@@ -559,7 +675,15 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code)
             (corr_var_one, corr_var_two) = rh_yearly_percentile_corr(corr_log, int_start, int_end, var_one, var_two,
                                                                      year)
         elif choice == 4 and code == 5:
-            (corr_var_one, corr_var_two) = rs_period_percentile_corr(corr_log, int_start, int_end, var_one, var_two)
+            if auto_corr != 0:
+                corr_period = 60
+                corr_sample = 6
+            else:
+                corr_period = int(input('\nEnter the number of days each correction period will last (rec. 60): '))
+                corr_sample = int(input('\nEnter the number of points per period to correct based on (rec 6): '))
+
+            (corr_var_one, corr_var_two) = rs_period_ratio_corr(corr_log, int_start, int_end, var_one, var_two,
+                                                                corr_sample, corr_period)
 
         elif choice == 4 and (code == 3 or code == 4 or code == 7 or code == 9):
             # Data is either uz, precip, ea, or rhavg and user doesn't want to correct it.
@@ -575,6 +699,9 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code)
         corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
                                                                 corr_var_two, code)
         show(corr_fig)
+
+        if auto_corr == 1 or auto_corr == 0:
+            auto_corr = 0  # set to 0 to prevent another automatic correction loop
 
         ####################
         # Determine if user wants to keep correcting

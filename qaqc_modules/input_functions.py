@@ -367,6 +367,7 @@ def obtain_data(config_file_path):
 
     script_mode = config_file['MODES'].getboolean('script_mode')  # Option to either correct or view uncorrected data
     auto_mode = config_file['MODES'].getboolean('auto_mode')  # Option to automatically do first iteration of QAQC
+    fill_mode = config_file['MODES'].getboolean('fill_mode')  # Option to automatically to fill in missing data
     gen_bokeh = config_file['MODES'].getboolean('generate_plots')  # Option to generate bokeh plots or not
 
     station_text = file_path.split('.csv')  # Splitting file extension off of file name
@@ -500,7 +501,7 @@ def obtain_data(config_file_path):
     data_df.day = date_reindex.day
 
     return data_df, col_df, station_name, log_file, station_lat, station_elev, anemom_height, fill_value, \
-        script_mode, auto_mode, gen_bokeh
+        script_mode, auto_mode, fill_mode, gen_bokeh
 
 
 # This is never run by itself

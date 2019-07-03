@@ -11,67 +11,17 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/pyWeatherQAQC$qaqc_single_station.coverage" NAME="qaqc_single_station Coverage Results" MODIFIED="1560895177759" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/pyWeatherQAQC$qaqc_single_station.coverage" NAME="qaqc_single_station Coverage Results" MODIFIED="1562129745906" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/pyWeatherQAQC$qaqc_functions.coverage" NAME="qaqc_functions Coverage Results" MODIFIED="1561991913396" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/qaqc_modules" />
     <SUITE FILE_PATH="coverage/pyWeatherQAQC$py_weather_qaqc.coverage" NAME="py_weather_qaqc Coverage Results" MODIFIED="1556654780106" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/qaqc_modules" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/config.ini">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="459">
-              <caret line="39" column="59" selection-start-line="39" selection-start-column="59" selection-end-line="39" selection-end-column="59" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/qaqc_modules/py_weather_qaqc.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="15" column="24" lean-forward="true" selection-start-line="15" selection-start-column="24" selection-end-line="15" selection-end-column="24" />
-              <folding>
-                <element signature="e#0#34#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/qaqc_modules/data_functions.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="34">
-              <caret line="5" selection-start-line="5" selection-end-line="5" />
-              <folding>
-                <element signature="e#0#21#0" expanded="true" />
-                <element signature="e#174#2064#0" />
-                <element signature="e#2228#6867#0" />
-                <element signature="e#6958#10171#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/qaqc_modules/input_functions.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="110">
-              <caret line="480" column="103" lean-forward="true" selection-start-line="480" selection-start-column="103" selection-end-line="480" selection-end-column="103" />
-              <folding>
-                <element signature="e#0#25#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/qaqc_modules/plotting_functions.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2635">
-              <caret line="159" selection-start-line="159" selection-end-line="159" />
-              <folding>
-                <element signature="e#0#34#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="782">
+              <caret line="46" column="36" selection-start-line="46" selection-start-column="36" selection-end-line="46" selection-end-column="36" />
             </state>
           </provider>
         </entry>
@@ -79,8 +29,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/qaqc_single_station.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="238">
-              <caret line="15" column="49" selection-start-line="15" selection-start-column="49" selection-end-line="15" selection-end-column="49" />
+            <state relative-caret-position="153">
+              <caret line="10" column="26" lean-forward="true" selection-start-line="10" selection-start-column="26" selection-end-line="10" selection-end-column="26" />
             </state>
           </provider>
         </entry>
@@ -88,20 +38,21 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/qaqc_modules/qaqc_functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="8194">
-              <caret line="488" selection-start-line="488" selection-end-line="488" />
+            <state relative-caret-position="561">
+              <caret line="363" column="90" selection-start-line="363" selection-start-column="90" selection-end-line="363" selection-end-column="90" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
+                <element signature="e#214#1323#0" />
+                <element signature="e#1383#3722#0" />
+                <element signature="e#3321#4234#0" />
+                <element signature="e#4308#5429#0" />
+                <element signature="e#5494#6515#0" />
+                <element signature="e#6568#8090#0" />
+                <element signature="e#8186#10024#0" />
+                <element signature="e#10106#14736#0" />
+                <element signature="e#15241#28139#0" />
+                <element signature="e#27778#36083#0" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret column="101" selection-start-column="101" selection-end-column="101" />
             </state>
           </provider>
         </entry>
@@ -128,6 +79,16 @@
       <find>user_co</find>
       <find>gridplot_columns</find>
       <find>mode</find>
+      <find>percentile</find>
+      <find>rs_corr_values</find>
+      <find>desp</find>
+      <find>despike</find>
+      <find>corr_thresh</find>
+      <find>auto_mode</find>
+      <find>count_two</find>
+      <find>corr_var_two</find>
+      <find>size_sum</find>
+      <find>fill</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -145,19 +106,19 @@
         <option value="$PROJECT_DIR$/py_weather_qaqc.py" />
         <option value="$PROJECT_DIR$/qaqc_single_station.py" />
         <option value="$PROJECT_DIR$/qaqc_modules/plotting_functions.py" />
-        <option value="$PROJECT_DIR$/qaqc_modules/qaqc_functions.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
-        <option value="$PROJECT_DIR$/config.ini" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py" />
         <option value="$PROJECT_DIR$/qaqc_modules/input_functions.py" />
         <option value="$PROJECT_DIR$/qaqc_modules/py_weather_qaqc.py" />
+        <option value="$PROJECT_DIR$/qaqc_modules/qaqc_functions.py" />
+        <option value="$PROJECT_DIR$/config.ini" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
-    <option name="x" value="-625" />
-    <option name="y" value="220" />
-    <option name="width" value="1945" />
-    <option name="height" value="745" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="-8" />
+    <option name="width" value="1937" />
+    <option name="height" value="1005" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -239,6 +200,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="qaqc_functions" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="pyWeatherQAQC" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/qaqc_modules" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/qaqc_modules/qaqc_functions.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="qaqc_single_station" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="pyWeatherQAQC" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -264,6 +247,7 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.qaqc_single_station" />
+        <item itemvalue="Python.qaqc_functions" />
         <item itemvalue="Python.py_weather_qaqc" />
       </list>
     </recent_temporary>
@@ -290,33 +274,43 @@
       <workItem from="1557520743770" duration="2035000" />
       <workItem from="1560824622349" duration="4349000" />
       <workItem from="1560885225120" duration="3051000" />
-      <workItem from="1561391067918" duration="427000" />
+      <workItem from="1561391067918" duration="4992000" />
+      <workItem from="1561773367744" duration="30590000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="31726000" />
+    <option name="totallyTimeSpent" value="66881000" />
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="848" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.110738255" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.11208054" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32960895" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.32960895" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.48603353" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.16620111" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.17597765" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32960895" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="11" />
-      <window_info anchor="bottom" id="Python Console" order="12" weight="0.5086207" />
+      <window_info anchor="bottom" id="Terminal" order="11" weight="0.3282123" />
+      <window_info anchor="bottom" id="Python Console" order="12" weight="0.42318437" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -337,6 +331,13 @@
         </breakpoint>
       </default-breakpoints>
     </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="despiked_rs_interval" />
+        <watch expression="rs_period" />
+        <watch expression="rs_interval" />
+      </configuration>
+    </watches-manager>
   </component>
   <component name="editorHistoryManager">
     <entry file="file://C:/Anaconda3/Lib/configparser.py">
@@ -366,33 +367,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/qaqc_modules/plotting_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2635">
-          <caret line="159" selection-start-line="159" selection-end-line="159" />
-          <folding>
-            <element signature="e#0#34#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/qaqc_single_station.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="15" column="49" selection-start-line="15" selection-start-column="49" selection-end-line="15" selection-end-column="49" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/qaqc_modules/qaqc_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="8194">
-          <caret line="488" selection-start-line="488" selection-end-line="488" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
       <provider selected="true" editor-type-id="text-editor">
         <state>
@@ -400,16 +374,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config.ini">
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://C:/Anaconda3/Lib/site-packages/numpy/lib/nanfunctions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
-          <caret line="39" column="59" selection-start-line="39" selection-start-column="59" selection-end-line="39" selection-end-column="59" />
+        <state relative-caret-position="299">
+          <caret line="517" selection-start-line="517" selection-end-line="517" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/qaqc_modules/data_functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
+        <state relative-caret-position="85">
           <caret line="5" selection-start-line="5" selection-end-line="5" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
@@ -422,21 +399,68 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/qaqc_modules/input_functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="110">
-          <caret line="480" column="103" lean-forward="true" selection-start-line="480" selection-start-column="103" selection-end-line="480" selection-end-column="103" />
+        <state relative-caret-position="-43">
+          <caret line="487" column="99" selection-start-line="487" selection-start-column="99" selection-end-line="487" selection-end-column="99" />
           <folding>
             <element signature="e#0#25#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/qaqc_modules/plotting_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="145">
+          <caret line="213" column="32" selection-start-line="213" selection-start-column="7" selection-end-line="213" selection-end-column="32" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+            <element signature="e#231#3751#0" />
+            <element signature="e#3805#5117#0" />
+            <element signature="e#5212#7664#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/qaqc_modules/py_weather_qaqc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="15" column="24" lean-forward="true" selection-start-line="15" selection-start-column="24" selection-end-line="15" selection-end-column="24" />
+        <state relative-caret-position="3041">
+          <caret line="207" column="12" selection-start-line="207" selection-start-column="12" selection-end-line="207" selection-end-column="25" />
           <folding>
             <element signature="e#0#34#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/qaqc_single_station.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="10" column="26" lean-forward="true" selection-start-line="10" selection-start-column="26" selection-end-line="10" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/qaqc_modules/qaqc_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="561">
+          <caret line="363" column="90" selection-start-line="363" selection-start-column="90" selection-end-line="363" selection-end-column="90" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#214#1323#0" />
+            <element signature="e#1383#3722#0" />
+            <element signature="e#3321#4234#0" />
+            <element signature="e#4308#5429#0" />
+            <element signature="e#5494#6515#0" />
+            <element signature="e#6568#8090#0" />
+            <element signature="e#8186#10024#0" />
+            <element signature="e#10106#14736#0" />
+            <element signature="e#15241#28139#0" />
+            <element signature="e#27778#36083#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config.ini">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="782">
+          <caret line="46" column="36" selection-start-line="46" selection-start-column="36" selection-end-line="46" selection-end-column="36" />
         </state>
       </provider>
     </entry>

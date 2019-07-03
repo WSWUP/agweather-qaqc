@@ -24,7 +24,7 @@ class WeatherQAQC:
     #########################
     # Obtaining initial data
     (data_df, column_df, station_name, log_file, station_lat, station_elev, ws_anemometer_height, missing_fill_value,
-     script_mode, auto_mode, generate_bokeh) = input_functions.obtain_data(config_path)
+     script_mode, auto_mode, fill_mode, generate_bokeh) = input_functions.obtain_data(config_path)
 
     if script_mode == 1:  # correcting data
         mc_iterations = 1000  # Number of iters for MC simulation of thornton running solar radiation generation
@@ -158,40 +158,40 @@ class WeatherQAQC:
         # Correcting Max/Min Temperature data
         if user == 1:
             (data_tmax, data_tmin) = qaqc_functions.correction(station_name, log_file, data_tmax, data_tmin, dt_array,
-                                                               data_month, data_year, 1)
+                                                               data_month, data_year, 1, auto_mode)
         # Correcting Min/Dew Temperature data
         elif user == 2:
             (data_tmin, data_tdew) = qaqc_functions.correction(station_name, log_file, data_tmin, data_tdew, dt_array,
-                                                               data_month, data_year, 2)
+                                                               data_month, data_year, 2, auto_mode)
         # Correcting Windspeed
         elif user == 3:
             (data_ws, data_null) = qaqc_functions.correction(station_name, log_file, data_ws, data_null, dt_array,
-                                                             data_month, data_year, 3)
+                                                             data_month, data_year, 3, auto_mode)
         # Correcting Precipitation
         elif user == 4:
             (data_precip, data_null) = qaqc_functions.correction(station_name, log_file, data_precip, data_null,
-                                                                 dt_array, data_month, data_year, 4)
+                                                                 dt_array, data_month, data_year, 4, auto_mode)
         # Correcting Solar radiation
         elif user == 5:
             (data_rs, data_null) = qaqc_functions.correction(station_name, log_file, data_rs, rso, dt_array,
-                                                             data_month, data_year, 5)
+                                                             data_month, data_year, 5, auto_mode)
         # Correcting Humidity Variable
         elif user == 6:
             # Variables passed depends on what variables were provided
             if column_df.ea != -1:
                 # Vapor Pressure exists
                 (data_ea, data_null) = qaqc_functions.correction(station_name, log_file, data_ea, data_null, dt_array,
-                                                                 data_month, data_year, 7)
+                                                                 data_month, data_year, 7, auto_mode)
 
             elif column_df.ea == -1 and column_df.rhmax != -1 and column_df.rhmin != -1:
                 # No vapor pressure but have rhmax and min
                 (data_rhmax, data_rhmin) = qaqc_functions.correction(station_name, log_file, data_rhmax, data_rhmin,
-                                                                     dt_array, data_month, data_year, 8)
+                                                                     dt_array, data_month, data_year, 8, auto_mode)
 
             elif column_df.ea == -1 and column_df.rhmax == -1 and column_df.rhmin == -1 and column_df.rhavg != -1:
                 # Only have RHavg
                 (data_rhavg, data_null) = qaqc_functions.correction(station_name, log_file, data_rhavg, data_null,
-                                                                    dt_array, data_month, data_year, 9)
+                                                                    dt_array, data_month, data_year, 9, auto_mode)
             else:
                 # If an unsupported combination of humidity variables is present, raise a value error.
                 raise ValueError('Humidity correction section encountered an '
@@ -205,41 +205,44 @@ class WeatherQAQC:
         # Now that a variable has been corrected, fill any variables and recalculate all relevant secondary variables
         if user == 1 or user == 2 or user == 5:
 
-            if user == 1:  # User has corrected temperature, so fill all missing values with a normal distribution
-                # Create mean monthly and standard deviation
-                mm_tmax = np.zeros(12)
-                mm_tmin = np.zeros(12)
-                std_tmax = np.zeros(12)
-                std_tmin = np.zeros(12)
+            if fill_mode:
+                if user == 1:  # User has corrected temperature, so fill all missing values with a normal distribution
+                    # Create mean monthly and standard deviation
+                    mm_tmax = np.zeros(12)
+                    mm_tmin = np.zeros(12)
+                    std_tmax = np.zeros(12)
+                    std_tmin = np.zeros(12)
 
-                for k in range(12):
-                    temp_indexes = np.where(data_month == k+1)[0]
-                    temp_indexes = np.array(temp_indexes, dtype=int)
-                    mm_tmax[k] = np.nanmean(data_tmax[temp_indexes])
-                    std_tmax[k] = np.nanstd(data_tmax[temp_indexes])
-                    mm_tmin[k] = np.nanmean(data_tmin[temp_indexes])
-                    std_tmin[k] = np.nanstd(data_tmax[temp_indexes])
+                    for k in range(12):
+                        temp_indexes = np.where(data_month == k+1)[0]
+                        temp_indexes = np.array(temp_indexes, dtype=int)
+                        mm_tmax[k] = np.nanmean(data_tmax[temp_indexes])
+                        std_tmax[k] = np.nanstd(data_tmax[temp_indexes])
+                        mm_tmin[k] = np.nanmean(data_tmin[temp_indexes])
+                        std_tmin[k] = np.nanstd(data_tmax[temp_indexes])
 
 
-                # Fill missing observations with samples from a normal distribution with monthly mean and variance
-                for i in range(data_length):
-                    if np.isnan(data_tmax[i]):
-                        data_tmax[i] = np.random.normal(mm_tmax[data_month[i] - 1], std_tmax[data_month[i] - 1], 1)
-                        fill_tmax[i] = data_tmax[i]
-                    else:
-                        pass
-                    if np.isnan(data_tmin[i]):
-                        data_tmin[i] = np.random.normal(mm_tmin[data_month[i] - 1], std_tmin[data_month[i] - 1], 1)
-                        fill_tmin[i] = data_tmin[i]
-                    else:
-                        pass
-                    if (data_tmax[i] <= data_tmin[i]) or (data_tmax[i] - data_tmin[i] <= 3):
-                        # This is not realistic, tmax needs to be warmer than tmin and daily temp isn't constant
-                        # Fill this observation in with  mm observation with the difference of 1/2 of mm delta t
-                        data_tmax[i] = mm_tmax[data_month[i] - 1] + (0.5 * mm_delta_t[data_month[i] - 1])
-                        fill_tmax[i] = data_tmax[i]
-                        data_tmin[i] = mm_tmin[data_month[i] - 1] - (0.5 * mm_delta_t[data_month[i] - 1])
-                        fill_tmin[i] = data_tmin[i]
+                    # Fill missing observations with samples from a normal distribution with monthly mean and variance
+                    for i in range(data_length):
+                        if np.isnan(data_tmax[i]):
+                            data_tmax[i] = np.random.normal(mm_tmax[data_month[i] - 1], std_tmax[data_month[i] - 1], 1)
+                            fill_tmax[i] = data_tmax[i]
+                        else:
+                            pass
+                        if np.isnan(data_tmin[i]):
+                            data_tmin[i] = np.random.normal(mm_tmin[data_month[i] - 1], std_tmin[data_month[i] - 1], 1)
+                            fill_tmin[i] = data_tmin[i]
+                        else:
+                            pass
+                        if (data_tmax[i] <= data_tmin[i]) or (data_tmax[i] - data_tmin[i] <= 3):
+                            # This is not realistic, tmax needs to be warmer than tmin and daily temp isn't constant
+                            # Fill this observation in with  mm observation with the difference of 1/2 of mm delta t
+                            data_tmax[i] = mm_tmax[data_month[i] - 1] + (0.5 * mm_delta_t[data_month[i] - 1])
+                            fill_tmax[i] = data_tmax[i]
+                            data_tmin[i] = mm_tmin[data_month[i] - 1] - (0.5 * mm_delta_t[data_month[i] - 1])
+                            fill_tmin[i] = data_tmin[i]
+                else:
+                    pass
             else:
                 pass
             # Figure out which humidity variables are provided and recalculate Ea and TDew if needed
@@ -263,21 +266,25 @@ class WeatherQAQC:
                 # and the now filled TDew sections are used to calculate ea for those filled indices.
                 # Nothing occurs if this fill code is run a second time because vars are already filled unless
                 # correction methods throw out data.
-                for i in range(data_length):
-                    if np.isnan(data_tdew[i]):
-                        data_tdew[i] = data_tmin[i] - mm_k_not[data_month[i] - 1]
-                        fill_tdew[i] = data_tdew[i]
 
-                        if column_df.ea == -1 or (column_df.ea != -1 and np.isnan(data_ea[i])):
-                            # Either Ea not provided, OR Ea is provided and this index is empty and can be filled
-                            data_ea[i] = (0.6108 * np.exp((17.27 * data_tdew[i]) / (data_tdew[i] + 237.3)))
-                            fill_ea[i] = data_ea[i]
+                if fill_mode:
+                    for i in range(data_length):
+                        if np.isnan(data_tdew[i]):
+                            data_tdew[i] = data_tmin[i] - mm_k_not[data_month[i] - 1]
+                            fill_tdew[i] = data_tdew[i]
+
+                            if column_df.ea == -1 or (column_df.ea != -1 and np.isnan(data_ea[i])):
+                                # Either Ea not provided, OR Ea is provided and this index is empty and can be filled
+                                data_ea[i] = (0.6108 * np.exp((17.27 * data_tdew[i]) / (data_tdew[i] + 237.3)))
+                                fill_ea[i] = data_ea[i]
+                            else:
+                                # Ea is provided and the index is not empty, do nothing to avoid overwriting actual data
+                                pass
                         else:
-                            # Ea is provided and the index is not empty, do nothing to avoid overwriting actual data
+                            # If TDew isn't empty then nothing is required to be done.
                             pass
-                    else:
-                        # If TDew isn't empty then nothing is required to be done.
-                        pass
+                else:
+                    pass
             else:
                 pass
         else:
@@ -308,25 +315,28 @@ class WeatherQAQC:
             mm_ws[k] = np.nanmean(data_ws[temp_indexes])
             std_ws[k] = np.nanmean(data_ws[temp_indexes])
 
-        for i in range(data_length):
-            # loop to fill data_rs with rs_tr and data_ws with an exponential function centered on mm_ws for that month
-            if np.isnan(data_rs[i]):
-                data_rs[i] = opt_rs_tr[i]
-                fill_rs[i] = opt_rs_tr[i]
-            else:
-                # If rs isn't empty then nothing is required to be done.
-                pass
-            if np.isnan(data_ws[i]):
-                data_ws[i] = np.random.normal(mm_ws[data_month[i] - 1], std_ws[data_month[i] - 1], 1)
-
-                if data_ws[i] < 0.2:  # check to see if filled windspeed is lower than reasonable
-                    data_ws[i] = 0.2
+        if fill_mode:
+            for i in range(data_length):
+                # fill data_rs with rs_tr and data_ws with an exponential function centered on mm_ws for that month
+                if np.isnan(data_rs[i]):
+                    data_rs[i] = opt_rs_tr[i]
+                    fill_rs[i] = opt_rs_tr[i]
                 else:
+                    # If rs isn't empty then nothing is required to be done.
                     pass
-                fill_ws[i] = data_ws[i]
-            else:
-                # If ws isn't empty then nothing is required to be done.
-                pass
+                if np.isnan(data_ws[i]):
+                    data_ws[i] = np.random.normal(mm_ws[data_month[i] - 1], std_ws[data_month[i] - 1], 1)
+
+                    if data_ws[i] < 0.2:  # check to see if filled windspeed is lower than reasonable
+                        data_ws[i] = 0.2
+                    else:
+                        pass
+                    fill_ws[i] = data_ws[i]
+                else:
+                    # If ws isn't empty then nothing is required to be done.
+                    pass
+        else:
+            pass
 
         # Recalculate eto and etr one final time
         (rso, mm_rs, eto, etr, mm_eto, mm_etr) = data_functions. \
