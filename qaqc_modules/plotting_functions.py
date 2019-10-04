@@ -220,9 +220,9 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
 
     # Obtain title based on variables passed for file name
     (units, title, var_one_name, var_one_color, var_two_name, var_two_color) = generate_line_plot_features(code, '')
-    output_file("correction_files/" + station + "_" + title + "_correction_plots.html")
+    output_file(station + "_" + title + "_correction_plots.html")
 
-    original_plot = line_plot(x_size, y_size, dt_array, var_one, var_two, code, station + ' Original ', link_plot=None)
+    original_plot = line_plot(x_size, y_size, dt_array, var_one, var_two, code, 'Original ', link_plot=None)
 
     corrected_plot = line_plot(x_size, y_size, dt_array, corr_var_one, corr_var_two, code, 'Corrected ',
                                link_plot=original_plot)
@@ -233,8 +233,7 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
     percent_plot = line_plot(x_size, y_size, dt_array, prct_var_one, prct_var_two, code, '% Difference of ',
                              link_plot=original_plot)
 
-    corr_fig = gridplot([[original_plot], [corrected_plot], [delta_plot], [percent_plot]],
-                        toolbar_location="left")
+    corr_fig = gridplot([[original_plot], [corrected_plot], [delta_plot], [percent_plot]], toolbar_location="left")
     return corr_fig
 
 
