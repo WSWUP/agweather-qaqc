@@ -2,6 +2,7 @@ import configparser as cp
 import datetime as dt
 import logging as log
 import numpy as np
+import os
 import pandas as pd
 
 
@@ -19,7 +20,7 @@ def extract_variable(raw_data, col):
     data_size = raw_data.shape[0]  # size of data set
     
     if col != -1:  # Column of -1 indicates variable isn't included in data
-        var = np.array(raw_data[:, col].astype('float'))  # Needs to be typed as float for numpy nans in dataset
+        var = np.array(raw_data.iloc[:, col].astype('float'))  # Needs to be typed as float for numpy nans in dataset
     else:
         var = np.zeros(data_size)
         var[:] = np.nan
@@ -109,9 +110,12 @@ def convert_units(config_file_path, data, var_type):
             pass
     elif var_type == 'wind speed':
         ws_mph_flag = unit_config['DATA'].getboolean('ws_mph_flag')
+        ws_run_km_flag = unit_config['DATA'].getboolean('ws_run_km_flag')
 
-        if ws_mph_flag == 1:  # Miles per hour
+        if ws_mph_flag == 1 and ws_run_km_flag == 0:  # Miles per hour
             converted_data = np.array(data * 0.44704)  # Convert mph to m/s
+        if ws_mph_flag == 0 and ws_run_km_flag == 1:  # wind run in km/day
+                converted_data = np.array((data * 1000) / 86400)  # Convert km to m and day to seconds
         else:
             pass
     elif var_type == 'precipitation':
@@ -202,9 +206,12 @@ def daily_realistic_limits(original_data, log_path, var_type):
     elif var_type == 'vapor pressure':
         limited_data[original_data <= 0] = clip_value  # Negative vapor pressure is impossible
         limited_data[original_data >= 8] = clip_value
-    elif var_type in ['maximum relative humidity', 'minimum relative humidity', 'average relative humidity']:
-        limited_data[original_data <= 2] = clip_value
-        limited_data[original_data >= 100] = clip_value  # Relative humidity above 100% is impossible
+    elif var_type in ['maximum relative humidity', 'minimum relative humidity']:
+        limited_data[original_data < 2] = clip_value
+        limited_data[original_data > 110] = clip_value  # relative humidity above 110% is unlikely even with drift
+    elif var_type == 'average relative humidity':
+        limited_data[original_data < 2] = clip_value
+        limited_data[original_data > 100] = clip_value  # avg relative humidity above 100% is unlikely even with drift
     else:
         # If an unsupported variable type is passed, raise a value error to point it out.
         raise ValueError('Unsupported variable type {} passed to daily_realistic_limits function.'.format(var_type))
@@ -327,13 +334,14 @@ def process_variable(config_file_path, raw_data, log_path, var_type):
     return processed_var, var_col
 
 
-def obtain_data(config_file_path):
+def obtain_data(config_file_path, metadata_file_path=None):
     """
         Opens the config.ini file passed to this function, and from that reads the parameters for importing
         the dataset, including converting them to the correct units.
 
         Parameters:
             config_file_path : string of path to config file, should work with absolute or relative path
+            metadata_file_path : string of path to metadata file if provided
 
         Returns:
             extracted_data : pandas dataframe of entire dataset, with the variables being organized into columns
@@ -353,50 +361,86 @@ def obtain_data(config_file_path):
     print('\nSystem: Opening config file: %s' % config_file_path)
 
     #########################
-    # METADATA and MODE parameters
+    # METADATA parameters
+    # If a metadata file is not provided, read in metadata from config, if it is provided, open metadata file
     # Reads in metadata and opens data file to extract raw data
 
-    file_path = config_file['METADATA']['data_file_path']
-    station_lat = config_file['METADATA'].getfloat('station_latitude')  # Expected in decimal degrees
-    station_elev = config_file['METADATA'].getfloat('station_elevation')  # Expected in meters
-    anemom_height = config_file['METADATA'].getfloat('anemometer_height')  # Expected in meters
+    if metadata_file_path is not None:
+        metadata_df = pd.read_excel(metadata_file_path, sheet_name=0, index_col=0, engine='xlrd',
+                                    keep_default_na=True, na_filter=True, verbose=True, skip_blank_lines=True)
+
+        current_row = metadata_df.run_count.ne(2).idxmax() - 1
+
+        metadata_series = metadata_df.iloc[current_row]
+
+        file_path = metadata_series.input_path
+        station_lat = metadata_series.latitude
+        station_lon = metadata_series.longitude
+        station_elev = metadata_series.elev_m
+        anemom_height = metadata_series.anemom_height_m
+        script_mode = metadata_series.run_count
+
+        station_name = metadata_series.id
+        (unused_var, station_extension) = os.path.splitext(file_path)
+
+    else:
+        file_path = config_file['METADATA']['data_file_path']
+        station_lat = config_file['METADATA'].getfloat('station_latitude')  # Expected in decimal degrees
+        station_lon = config_file['METADATA'].getfloat('station_longitude')  # Expected in decimal degrees
+        station_elev = config_file['METADATA'].getfloat('station_elevation')  # Expected in meters
+        anemom_height = config_file['METADATA'].getfloat('anemometer_height')  # Expected in meters
+        script_mode = config_file['MODES'].getboolean('script_mode')  # Option to either correct or view uncorrected
+        (file_name, station_extension) = os.path.splitext(file_path)
+        (folder_name, station_name) = file_name.split('/')
+        metadata_df = None
+        metadata_series = None
+
     fill_value = config_file['METADATA']['output_fill_value']  # Value for missing data in output file
     missing_data_value = config_file['METADATA']['missing_data_value']  # Value used to signify missing data in file
     lines_of_header = config_file['METADATA'].getint('lines_of_file_header')  # Lines of header in file to skip
     lines_of_footer = config_file['METADATA'].getint('lines_of_file_footer')  # Lines of footer in file to skip
 
-    script_mode = config_file['MODES'].getboolean('script_mode')  # Option to either correct or view uncorrected data
     auto_mode = config_file['MODES'].getboolean('auto_mode')  # Option to automatically do first iteration of QAQC
     fill_mode = config_file['MODES'].getboolean('fill_mode')  # Option to automatically to fill in missing data
+    metadata_mode = config_file['MODES'].getboolean('metadata_mode')  # Option to create and fill in metadata file
     gen_bokeh = config_file['MODES'].getboolean('generate_plots')  # Option to generate bokeh plots or not
 
-    station_text = file_path.split('.csv')  # Splitting file extension off of file name
-    station_name = station_text[0]  # Name of file that will be attached to all of the outputs
+    print('\nSystem: Opening data file: %s' % file_path)
+    if station_extension == '.csv':  # csv file provided
+        raw_data = pd.read_csv(file_path, delimiter=',', header=lines_of_header, index_col=None, engine='python',
+                               skipfooter=lines_of_footer, na_values=missing_data_value, keep_default_na=True,
+                               na_filter=True, verbose=True, skip_blank_lines=True)
 
-    # read in data and trim it of header and footer
-    raw_data = np.genfromtxt(file_path, dtype='U', delimiter=',', skip_header=lines_of_header,
-                             skip_footer=lines_of_footer, autostrip=True)
+    elif station_extension in ['.xls', '.xlsx']:
+        raw_data = pd.read_excel(file_path, sheet_name=0, header=lines_of_header, index_col=None, engine='xlrd',
+                                 skipfooter=lines_of_footer, na_values=missing_data_value, keep_default_na=True,
+                                 na_filter=True, verbose=True, skip_blank_lines=True)
 
-    raw_rows = raw_data.shape[0]  # number of rows in data
-    raw_cols = raw_data.shape[1]  # number of columns in data
+    else:
+        # read in data and trim it of header and footer
+        raw_data = np.genfromtxt(file_path, dtype='U', delimiter=',', skip_header=lines_of_header,
+                                 skip_footer=lines_of_footer, autostrip=True)
 
-    print("\nSystem: Raw data successfully read in.")
+    raw_data = raw_data.replace(to_replace='NO RECORD   ', value=np.nan)  # catch for tricky whitespaces on agriment
+
+    # check for the existance of 'correction_files' folder and if not present make one
+    if not os.path.exists('correction_files'):
+        os.makedirs('correction_files')
+        os.makedirs('correction_files/before_graphs/')
+        os.makedirs('correction_files/after_graphs/')
+
+    else:
+        pass
+
     # Create log file for this new data file
     log.basicConfig()
-    log_file = station_name + "_changes_log" + ".txt"
+    log_file = "correction_files/" + station_name + "_changes_log" + ".txt"
     logger = open(log_file, 'w')
     logger.write('The raw data for %s has been successfully read in at %s. \n \n' %
                  (station_name, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     logger.close()
 
-    # go through raw data and replace missing data values with nans
-    # note that values will not be nan until list is typecast as a float
-    for i in range(raw_rows):
-        for j in range(raw_cols):
-            if missing_data_value in raw_data[i, j]:
-                raw_data[i, j] = np.nan
-            else:
-                pass
+    print("\nSystem: Raw data successfully read in and log file successfully created.")
 
     #########################
     # Date handling
@@ -405,30 +449,38 @@ def obtain_data(config_file_path):
 
     if date_format == 1:  # Date is provided as a string, expected format is MM/DD/YYYY, time can be included as well.
         date_col = config_file['DATA'].getint('date_col')
-        date_time_included = config_file['DATA'].getboolean('date_time_included')  # see if HOURS:MINUTES was attached
 
         if date_col != -1:
-            data_date = np.array(raw_data[:, date_col])
+            data_date = np.array(raw_data.iloc[:, date_col])
+            dt_date = pd.to_datetime(data_date, errors='raise')
+
+            data_day = np.array(dt_date.day.astype('int'))
+            data_month = np.array(dt_date.month.astype('int'))
+            data_year = np.array(dt_date.year.astype('int'))
+
         else:
-            # Script cannot function without a time variable
+            # Script cannot function without a time variable11
             raise ValueError('Missing parameter: pyWeatherQAQC requires date values in order to process data.')
 
-        # Extract date information to produce DOY and serial date
-        if date_time_included:
-            date_format = "%m/%d/%Y %H:%M"
-        else:
-            date_format = "%m/%d/%Y"
-
-        data_day = np.zeros(raw_rows)
-        data_month = np.zeros(raw_rows)
-        data_year = np.zeros(raw_rows)
-
-        # Have to loop elementwise because dt.datetime doesn't like numpy arrays
-        for i in range(raw_rows):
-            date_info = dt.datetime.strptime(data_date[i], date_format)
-            data_day[i] = date_info.day
-            data_month[i] = date_info.month
-            data_year[i] = date_info.year
+        # TODO: changed string date handling to above, unsure of how solid this is and it needs more testing
+        # Leaving the below code in until I can be reasonably sure the above code works.
+        # # Extract date information to produce DOY and serial date
+        # date_time_included = config_file['DATA'].getint('date_time_included')  # see if HOURS:MINUTES was attached
+        # if date_time_included:
+        #     date_format = "%m/%d/%Y %H:%M:%S %p"
+        # else:
+        #     date_format = "%m/%d/%Y"
+        #
+        # data_day = np.zeros(raw_rows)
+        # data_month = np.zeros(raw_rows)
+        # data_year = np.zeros(raw_rows)
+        #
+        # # Have to loop elementwise because dt.datetime doesn't like numpy arrays
+        # for i in range(raw_rows):
+        #     date_info = dt.datetime.strptime(data_date[i], date_format)
+        #     data_day[i] = date_info.day
+        #     data_month[i] = date_info.month
+        #     data_year[i] = date_info.year
 
     elif date_format == 2:
         # Date is pre-split into several columns
@@ -437,9 +489,9 @@ def obtain_data(config_file_path):
         year_col = config_file['DATA'].getint('year_col')
 
         if month_col != -1 and day_col != -1 and year_col != -1:
-            data_month = np.array(raw_data[:, month_col].astype('int'))
-            data_day = np.array(raw_data[:, day_col].astype('int'))
-            data_year = np.array(raw_data[:, year_col].astype('int'))
+            data_month = np.array(raw_data.iloc[:, month_col].astype('int'))
+            data_day = np.array(raw_data.iloc[:, day_col].astype('int'))
+            data_year = np.array(raw_data.iloc[:, year_col].astype('int'))
         else:
             # Script cannot function without a time variable
             raise ValueError('Parameter error: pyWeatherQAQC requires date values in order to process data.')
@@ -472,12 +524,22 @@ def obtain_data(config_file_path):
 
     # Create Datetime dataframe for reindexing
     datetime_df = pd.DataFrame({'year': data_year, 'month': data_month, 'day': data_day})
-    datetime_df = pd.to_datetime(datetime_df[['month', 'day', 'year']])
+    datetime_df = pd.to_datetime(datetime_df)
+
     # Create a series of all dates in time series
     date_reindex = pd.date_range(datetime_df.iloc[0], datetime_df.iloc[-1])
 
+    reindexing_additions = np.setdiff1d(np.array(date_reindex), np.array(datetime_df), assume_unique=False)
+
+    logger = open(log_file, 'w')
+    logger.write('The raw data file had %s missing date entries from its time record. \n \n' %
+                 reindexing_additions.size)
+    logger.close()
+
+    print('\nSystem: The input data file had %s missing dates in its time record.' % reindexing_additions.size)
+
     # Create dataframe of data
-    data_df = pd.DataFrame({'date': datetime_df, 'year': data_year, 'month': data_month,
+    data_df = pd.DataFrame({'year': data_year, 'month': data_month,
                             'day': data_day, 'tavg': data_tavg, 'tmax': data_tmax, 'tmin': data_tmin,
                             'tdew': data_tdew, 'ea': data_ea, 'rhavg': data_rhavg, 'rhmax': data_rhmax,
                             'rhmin': data_rhmin, 'rs': data_rs, 'ws': data_ws, 'precip': data_precip},
@@ -500,8 +562,8 @@ def obtain_data(config_file_path):
     data_df.month = date_reindex.month
     data_df.day = date_reindex.day
 
-    return data_df, col_df, station_name, log_file, station_lat, station_elev, anemom_height, fill_value, \
-        script_mode, auto_mode, fill_mode, gen_bokeh
+    return data_df, col_df, station_name, log_file, station_lat, station_lon, station_elev, anemom_height, \
+        fill_value, script_mode, auto_mode, fill_mode, metadata_mode, gen_bokeh, metadata_df, metadata_series
 
 
 # This is never run by itself
