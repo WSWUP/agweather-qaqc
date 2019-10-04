@@ -330,6 +330,7 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year, percen
     # Now we apply the correction to both RHmax and RHmin
     rhmax_cutoff = 0  # tracks number of observations corrected above 100%
     rhmin_cutoff = 0  # tracks number of observations corrected above 100%
+    invert_max_min_cutoff = 0  # tracks the number of times rhmax was less than rhmin (as an initial problem w/ data)
     for i in range(start, end):
         if unique_years[offset] == year[i]:  # Years are aligned
             corr_rhmax[i] = rhmax[i] * rh_corr_per_year[offset]
@@ -344,22 +345,29 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year, percen
         if corr_rhmax[i] > 100:
             corr_rhmax[i] = 100
             rhmax_cutoff += 1
-        elif corr_rhmax[i] < 0:  # This should never really happen but need to control for it anyways.
-            corr_rhmax[i] = 0
+        elif corr_rhmax[i] <= 0:  # This should never really happen but need to control for it anyways.
+            corr_rhmax[i] = 1
         else:
             pass
 
         if corr_rhmin[i] > 100:
             corr_rhmin[i] = 100
             rhmin_cutoff += 1
-        elif corr_rhmin[i] < 0:  # This should never really happen but need to control for it anyways
-            corr_rhmin[i] = 0
+        elif corr_rhmin[i] <= 0:  # This should never really happen but need to control for it anyways
+            corr_rhmin[i] = 1
+        else:
+            pass
+
+        if corr_rhmax[i] < corr_rhmin[i]:
+            corr_rhmax[i] = np.nan
+            corr_rhmin[i] = np.nan
+            invert_max_min_cutoff += 1
         else:
             pass
 
     print("\n" + str(rhmax_cutoff) + " RHMax data points were removed for exceeding the logical limit of 100%.")
     print("\n" + str(rhmin_cutoff) + " RHMin data points were removed for exceeding the logical limit of 100%.")
-
+    print("\n" + str(invert_max_min_cutoff) + " indexes were removed because RHMax was less than RHMin.")
     log_writer.write('Year-based RH correction used the top %s percentile (%s points for a full year), '
                      'RHMax had %s points exceed 100 percent.'
                      ' RHMin had %s points exceed 100 percent. \n'
@@ -390,6 +398,9 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
             To prevent the code from correcting data beyond the point of believability, if the correction factor is
             below 0.5 or above 1.5, the data for that period is removed instead.
 
+            In addition, if the correction factor is between 0.97 < X < 1.03, the data is unchanged under the assumption
+            that the sensor was behaving as expected.
+
             Finally, the function returns the corrected solar radiation that has had spikes removed (if applicable)
             and the period-based correction factor applied.
 
@@ -408,9 +419,9 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
     """
 
     corr_rs = np.array(rs)  # corrected variable that all the corrections are going to be written to
-    despike_counter = 0  # counter for the number of times points were removed as voltage spikes
     insufficient_period_counter = 0  # counter for the number of periods that were removed due to insufficient data
-    insufficient_data_counter = 0 # counter for the number of datapoints that were removed due to insufficient data
+    insufficient_data_counter = 0  # counter for the number of rs data points that were removed due to insufficient data
+    despike_counter = 0
 
     # Determining correction factor for intervals based on pre-defined periods
     num_periods = int(math.ceil((end - start) / period))
@@ -428,34 +439,35 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
     count_two = 0  # index for within each period
     count_three = 0  # index for number of periods
     while count_one < len(rs_interval):
-        if (count_two < period) and count_one == len(rs_interval) - 1:
-            # this if statement handles final period, which may be potentially shorter than expected period length
-            rs_period[count_two] = rs_interval[count_one]
-            rso_period[count_two] = rso_interval[count_one]
+        if ((count_two < period) and count_one == len(rs_interval) - 1) or count_two == period:
+            # The first part of this if statement handles reaching the end of the final period
+            # The second part of this if statement handles reaching the end of any other period
 
-            rs_period = rs_period[:count_two-(period-1)].copy()
-            rso_period = rso_period[:count_two-(period-1)].copy()
+            if count_two < period:  # We are dealing with the final period
+                rs_period[count_two] = rs_interval[count_one]
+                rso_period[count_two] = rso_interval[count_one]
 
-            count_one += 1  # increment by 1 to end the loop after this iteration
+                # each period's data is overwritten by the subsequent period's data, because the final period may not
+                # have 60 days, chop off remaining days that have values from previous period.
+                rs_period = rs_period[:count_two-(period-1)].copy()
+                rso_period = rso_period[:count_two-(period-1)].copy()
+                count_one += 1  # increment by 1 to end the loop after this iteration
 
-            period_ratios = np.divide(rs_period, rso_period)
-
-            spike_sum = sum(period_ratios > 1)  # count the number of times within this period that Rs exceeds Rso
-            if spike_sum < 3:
-                spike_indexes = np.where(period_ratios > 1)
-                rs_period[spike_indexes] = rso_period[spike_indexes]
-                period_ratios = np.divide(rs_period, rso_period)  # this is done again in case spikes were removed
-                despike_counter += spike_sum
-            else:
-                # too many points found to count as spikes, or no spikes/data exist at all.
+            else:  # We have reached the end of a period, no special treatment needed
                 pass
 
+            # Now that we are at the end of a period or finishing up the last period, we check for the existence of
+            # potential voltage spikes
+            period_ratios = np.divide(rs_period, rso_period)
             period_ratios_copy = np.array(period_ratios)  # make a copy, we remove largest val to find the next largest
             max_ratio_indexes = []  # tracks the indexes of the maximum values found
+
             invalid_period = 0  # boolean flag to specify if this period has the data necessary to calculate corr factor
+            despike_loop = 1  # boolean flag to specify if we should keep checking for voltage spikes or not
 
             # First, check to see if there are non-nan values present
             # and the period has at least the sample size in days present
+            # and pull the 6 largest ratios to serve as the initial correction factor.
             if np.any(np.isfinite(period_ratios_copy)) and np.size(period_ratios_copy) >= sample_size_per_period:
                 for i in range(sample_size_per_period):  # loop through and return enough largest non nan values
                     max_ratio_indexes.append(np.nanargmax(period_ratios_copy))
@@ -467,24 +479,119 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
                     else:
                         # only nans are left, have to quit loop and throw out the data
                         invalid_period = 1
+                        despike_loop = 0
+                        print('\nA period was thrown out due to insufficient data, failed finding valid point # %s '
+                              ' out of the required %s.' % (i + 1, sample_size_per_period))
                         break
             else:
                 # there is not enough data in this final period to compute correction data
+                print('\nA period was thrown out due to insufficient data, either because it had no valid ratios,'
+                      'or because it had less than %s days.' % sample_size_per_period)
                 invalid_period = 1
+                despike_loop = 0
+
+            # institute a loop that remains true as long as none of the ending conditions are met
+            # while we iterate down the rest of the values until we're reasonably sure that remaining points
+            # don't massively shift the data
+            cf_index_start = 0
+            cf_index_end = cf_index_start + sample_size_per_period  # ending index is not inclusive
+            new_cf_index_start = cf_index_start + 1
+            new_cf_index_end = cf_index_end + 1
+            while despike_loop == 1:
+
+                if np.any(np.isfinite(period_ratios_copy)) and np.size(period_ratios_copy) >= sample_size_per_period:
+                    max_ratio_indexes.append(np.nanargmax(period_ratios_copy))
+                    period_ratios_copy[np.nanargmax(period_ratios_copy)] = np.nan  # set to nan to find next largest
+
+                else:
+                    # only nans are left, end the loop and set the period as invalid
+                    # this is under the logic that if we've iterated through all points without finding a
+                    # non-likely-spike then something is obviously wrong with this period.
+                    invalid_period = 1
+                    despike_loop = 0
+                    print('\nA period was thrown out due to failing to find a sufficient '
+                          'number of valid values when testing for despiking.')
+
+                rs_avg = np.nanmean(rs_period[max_ratio_indexes[cf_index_start:cf_index_end]])
+                rso_avg = np.nanmean(rso_period[max_ratio_indexes[cf_index_start:cf_index_end]])
+
+                new_rs_avg = np.nanmean(rs_period[max_ratio_indexes[new_cf_index_start:new_cf_index_end]])
+                new_rso_avg = np.nanmean(rso_period[max_ratio_indexes[new_cf_index_start:new_cf_index_end]])
+
+                # Example: if current_cf uses largest points 0-5, new_cf uses largest points 1-6 (omitting the largest)
+
+                current_cf = rso_avg / rs_avg  # current correction factor from currently used points
+                new_cf = new_rso_avg / new_rs_avg  # exploratory correction factor used to check for large changes
+                diff_cf = new_cf - current_cf
+                percent_diff_cf = (diff_cf / current_cf) * 100
+
+                # First of the two rules used to check for the existence of voltage spikes, the logic is that if
+                # removing the largest point causes over a 2% change in the correction factor (which is an average of
+                # six largest points) then that point carried an undue influence and is a likely voltage spike
+                # We only need to care if Rs_average is above Rso_average, it it was below rso_average then it likely
+                # would not be a voltage spike
+                if percent_diff_cf >= 2.0 and rs_avg > rso_avg:
+                    new_cf_significant_change = True
+                else:
+                    new_cf_significant_change = False
+
+                # Second of the two rules used to check for the existence of voltage spikes is if Rs average
+                # is sufficiently larger than rso average. This would occur with a lot of spikes with consistent values,
+                # this should occur very infrequently
+                if (rs_avg - rso_avg) >= 75:
+                    rs_avg_greatly_exceeds_rso_avg = True
+                else:
+                    rs_avg_greatly_exceeds_rso_avg = False
+
+                # Now we see if either of the two rules were violated
+                if new_cf_significant_change or rs_avg_greatly_exceeds_rso_avg:
+                    # at least one of the rules were violated, so continue forward with the next iteration
+
+                    # check for the rarer rule occuring:
+                    if not new_cf_significant_change and rs_avg_greatly_exceeds_rso_avg:
+                        print('\nWARNING: The rule for rs greatly exceeding rso was triggered without triggering the'
+                              ' significant change to correction factor rule. Look at the data to make sure the data'
+                              ' has a lot of voltage spikes. Period was {} starting around {} and ending around {}. \n'
+                              .format(count_three, (count_one - period), count_one))
+
+                    # increment indexes and keep iterating for more spikes
+                    cf_index_start += 1
+                    cf_index_end = cf_index_start + sample_size_per_period  # ending index is not inclusive
+                    new_cf_index_start = cf_index_start + 1
+                    new_cf_index_end = cf_index_end + 1
+
+                    despike_counter += 1
+                else:
+                    # if neither of the two rules were violated, we can proceed with the assumption that all likely
+                    # spikes have been removed, and we use the current_cf as the correction factor
+                    despike_loop = 0
 
             if invalid_period != 1:  # period has valid data to compute correction factor
-                rs_avg = np.nanmean(rs_period[max_ratio_indexes])
-                rso_avg = np.nanmean(rso_period[max_ratio_indexes])
+                rs_avg = np.nanmean(rs_period[max_ratio_indexes[cf_index_start:cf_index_end]])
+                rso_avg = np.nanmean(rso_period[max_ratio_indexes[cf_index_start:cf_index_end]])
 
-                period_corr[count_three] = rso_avg / rs_avg
+                period_corr[count_three] = rso_avg / rs_avg  # compute the correction factor
+
+                # Go through and set the rs points marked as likely spikes to a unique identifier to find later
+                rs_period[max_ratio_indexes[:cf_index_start]] = -12345
+
             else:
-                period_corr[count_three] = np.nan
+                # This period has insufficient data to correct, instead we will remove all poitns and track how many we
+                # remove
+                removed_points = np.count_nonzero(~np.isnan(rs_period))  # count number of points we're about to remove
                 rs_period[:] = np.nan  # insufficient data exists to correct this period, so set it to nan
+                period_corr[count_three] = np.nan
                 insufficient_period_counter += 1
-                insufficient_data_counter += rs_period.size
+                insufficient_data_counter += removed_points
+                print('\nThis insufficient period contained %s datapoints for Rs, which have been set to nan.'
+                      % removed_points)
 
             # add this period's rs data, which has potentially been thrown out or despiked, to the new interval of rs
             despiked_rs_interval = np.append(despiked_rs_interval, rs_period)
+
+            # adjust counters to move to next period, if this is the final period then then does nothing.
+            count_two = 0
+            count_three += 1
 
         elif count_two < period:
             # haven't run out of data points, and period still hasn't been filled
@@ -494,63 +601,16 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
             count_two += 1
 
         else:
-            # end of a period
-            period_ratios = np.divide(rs_period, rso_period)
-
-            spike_sum = sum(period_ratios > 1)  # count the number of times within this period that Rs exceeds Rso
-            if spike_sum < 3:
-                spike_indexes = np.where(period_ratios > 1)
-                rs_period[spike_indexes] = rso_period[spike_indexes]
-                period_ratios = np.divide(rs_period, rso_period)  # this is done again in case spikes were removed
-                despike_counter += spike_sum
-            else:
-                # too many points found to count as spikes, or no spikes/data exist at all.
-                pass
-
-            period_ratios_copy = np.array(period_ratios)  # make a copy, we remove largest val to find the next largest
-            max_ratio_indexes = []  # tracks the indexes of the maximum values found
-            invalid_period = 0  # boolean flag to specify if this period has the data necessary to calculate corr factor
-
-            # First, check to see if there are non-nan values present
-            # and the period has at least the sample size in days present
-            if np.any(np.isfinite(period_ratios_copy)) and np.size(period_ratios_copy) >= sample_size_per_period:
-                for i in range(sample_size_per_period):  # loop through and return enough largest non nan values
-                    max_ratio_indexes.append(np.nanargmax(period_ratios_copy))
-                    period_ratios_copy[np.nanargmax(period_ratios_copy)] = np.nan  # set to nan to find next largest
-
-                    if np.any(np.isfinite(period_ratios_copy)):  # are any non-nan values still present?
-                        # Yes, continue to find next largest value
-                        pass
-                    else:
-                        # only nans are left, have to quit loop and throw out the data
-                        invalid_period = 1
-                        break
-            else:
-                # there is not enough data in this period to compute correction data
-                invalid_period = 1
-
-            if invalid_period != 1:  # period has valid data to compute correction factor
-                rs_avg = np.nanmean(rs_period[max_ratio_indexes])
-                rso_avg = np.nanmean(rso_period[max_ratio_indexes])
-
-                period_corr[count_three] = rso_avg / rs_avg
-            else:
-                period_corr[count_three] = np.nan
-                rs_period[:] = np.nan  # insufficient data exists to correct this period, so set it to nan
-                insufficient_period_counter += 1
-                insufficient_data_counter += rs_period.size
-
-            # add this period's rs data, which has potentially been thrown out or despiked, to the new interval of rs
-            despiked_rs_interval = np.append(despiked_rs_interval, rs_period)
-
-            count_two = 0
-            count_three += 1
+            # This should never happen
+            pass
 
     # Now that the correction factor has been computed for each period, we now step through each period again and
     # apply those correction factors
 
     corr_rs[start:end] = despiked_rs_interval[:]  # save all the values removed for despiking/insufficient data
     correction_cutoff_counter = 0
+    rso_clipping_counter = 0
+    unchanged_data_counter = 0
     x = start  # index that tracks along data points for the full selected correction interval
     y = 0  # index that tracks how far along a period we are
     z = 0  # index that tracks which correction period we are in
@@ -565,11 +625,32 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
             # Check to see if rs correction factor is smaller than a 50% relative increase or decrease
             # if it is larger than that we will remove it for a later fill with Rs_TR
             if period_corr[z] <= 1.50 or period_corr[z] >= 0.5:
-                corr_rs[x] = rs[x] * period_corr[z]
+
+                # was the current rs point removed for being a voltage spike?
+                # if so, set it to 1.05*Rso and leave it there (do not later clip it)
+                if corr_rs[x] == -12345:
+                    corr_rs[x] = rso[x] * 1.05
+
+                # current rs point was not a potential voltage spike
+                else:
+                    if 0.97 <= period_corr[z] <= 1.03:
+                        # dont change the data under the assumption that the sensor is working
+                        unchanged_data_counter += 1
+                    else:
+                        # apply the correction to the data
+                        corr_rs[x] = rs[x] * period_corr[z]
+
+                    if corr_rs[x] > (rso[x] * 1.03):  # Check to see if Rs now sufficiently exceeds rso for clipping
+                        corr_rs[x] = rso[x]
+                        rso_clipping_counter += 1
+                    else:  # no special action needed
+                        pass
+
             elif np.isnan(period_corr[z]):
                 # This data was already set to nan during the steps above, so pass
                 pass
             else:
+                # correction factor would be too high, so throw out the data
                 corr_rs[x] = np.nan
                 correction_cutoff_counter += 1
             x += 1
@@ -579,11 +660,19 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
             y = 1
             z += 1
 
+    print('\n%s data points were removed as part of the despiking process. \n' % despike_counter)
+
     print('\n%s Rs data points were removed due to their correction factor exceeding a '
           '50 percent relative increase or decrease. \n' % correction_cutoff_counter)
 
     print('\n%s Rs data points in %s different periods were removed due to insufficient data present in either Rs or '
           'Rso to compute a correction factor. \n' % (insufficient_data_counter, insufficient_period_counter))
+
+    print('\n%s Rs data points were clipped to Rso due to exceeding 1.03 * Rso after correction.'
+          % rso_clipping_counter)
+
+    print('\n%s Rs data points were unchanged due to the correction factor being between 0.97 and 1.03.'
+          % unchanged_data_counter)
 
     log_writer.write('Periodic ratio-based Rs corrections were applied,'
                      ' period length was %s, and correction sample size was %s. \n'
@@ -595,6 +684,8 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
                      % (insufficient_data_counter, insufficient_period_counter))
     log_writer.write('%s data points were removed due to their correction factor exceeding a '
                      '50 percent relative increase or decrease. \n' % correction_cutoff_counter)
+    log_writer.write('\n%s Rs data points were clipped to  1.03 * Rso due to exceeding 1.03 * Rso after correction.'
+                     % rso_clipping_counter)
 
     return corr_rs, rso
 
@@ -680,9 +771,9 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code,
                                                               month)
         elif choice == 4 and code == 8:
             if auto_corr != 0:
-                corr_percentile = 2
+                corr_percentile = 1
             else:
-                corr_percentile = int(input('\nEnter which top percentile you want to base corrections on (rec. 2): '))
+                corr_percentile = int(input('\nEnter which top percentile you want to base corrections on (rec. 1): '))
 
             (corr_var_one, corr_var_two) = rh_yearly_percentile_corr(corr_log, int_start, int_end, var_one, var_two,
                                                                      year, corr_percentile)
