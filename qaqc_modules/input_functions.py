@@ -195,7 +195,7 @@ def daily_realistic_limits(original_data, log_path, var_type):
         limited_data[original_data <= -50] = clip_value  # -50 C is -58 F
         limited_data[original_data >= 60] = clip_value  # 60 C is 140 F
     elif var_type == 'wind speed':
-        limited_data[original_data < 0] = clip_value  # Negative wind speed is impossible
+        limited_data[original_data < 0.1] = clip_value  # Negative wind speed is impossible
         limited_data[original_data >= 35] = clip_value  # 35 m/s is a cat 1 hurricane
     elif var_type == 'precipitation':
         limited_data[original_data < 0] = clip_value  # Negative precipitation is impossible
@@ -514,6 +514,27 @@ def obtain_data(config_file_path, metadata_file_path=None):
     (data_rs, rs_col) = process_variable(config_file_path, raw_data, log_file, 'solar radiation')
     (data_ws, ws_col) = process_variable(config_file_path, raw_data, log_file, 'wind speed')
     (data_precip, precip_col) = process_variable(config_file_path, raw_data, log_file, 'precipitation')
+
+    # HPRCC data reports '0' for missing observations as well as a text column, but this script doesn't interpret text
+    # columns, so instead we see if both tmax and tmin have the same value (0, or -17.7778 depending on units) and if so
+    # mark that row as missing
+
+    # realistically tmax should never equal tmin, so this is an okay check to have in general
+    for i in range(len(data_tmax)):
+        if data_tmax[i] == data_tmin[i]:
+            data_tmax[i] = np.nan
+            data_tmin[i] = np.nan
+            data_tavg[i] = np.nan
+            data_tdew[i] = np.nan
+            data_ea[i] = np.nan
+            data_rhmax[i] = np.nan
+            data_rhmin[i] = np.nan
+            data_rhavg[i] = np.nan
+            data_rs[i] = np.nan
+            data_ws[i] = np.nan
+            data_precip[i] = np.nan
+        else:
+            pass
 
     #########################
     # Dataframe Construction
