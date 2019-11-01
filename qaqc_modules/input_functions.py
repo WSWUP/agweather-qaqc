@@ -20,7 +20,8 @@ def extract_variable(raw_data, col):
     data_size = raw_data.shape[0]  # size of data set
     
     if col != -1:  # Column of -1 indicates variable isn't included in data
-        var = np.array(raw_data.iloc[:, col].astype('float'))  # Needs to be typed as float for numpy nans in dataset
+
+        var = np.array(pd.to_numeric(raw_data.iloc[:, col], errors='coerce'))  # force all misc strings into NaN
     else:
         var = np.zeros(data_size)
         var[:] = np.nan
@@ -103,11 +104,17 @@ def convert_units(config_file_path, data, var_type):
             raise ValueError('Incorrect parameters: dewpoint temperature unit flags in config file are not correct.')
     elif var_type == 'vapor pressure':
         ea_torr_flag = unit_config['DATA'].getboolean('ea_torr_flag')
+        ea_mbar_flag = unit_config['DATA'].getboolean('ea_mbar_flag')
 
-        if ea_torr_flag == 1:  # Units torr or millimeters hydrogen
+        if ea_torr_flag == 1 and ea_mbar_flag == 0:  # Units torr or millimeters hydrogen
             converted_data = np.array(data * 0.133322)  # Converts to kPa
-        else:
+        elif ea_torr_flag == 0 and ea_mbar_flag == 1:  # Units mbar
+            converted_data = np.array(data * 0.1)  # Converts to kPa
+        elif ea_torr_flag == 0 and ea_mbar_flag == 0:  # Units kilopascals
             pass
+        else:
+            # Incorrect setup of vapor pressure flags, raise an error
+            raise ValueError('Incorrect parameters: vapor pressure unit flags in config file are not correct.')
     elif var_type == 'wind speed':
         ws_mph_flag = unit_config['DATA'].getboolean('ws_mph_flag')
         ws_run_km_flag = unit_config['DATA'].getboolean('ws_run_km_flag')
@@ -380,7 +387,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
         anemom_height = metadata_series.anemom_height_m
         script_mode = metadata_series.run_count
 
-        station_name = metadata_series.id
+        station_name = str(metadata_series.id)
         (unused_var, station_extension) = os.path.splitext(file_path)
 
     else:
@@ -391,7 +398,12 @@ def obtain_data(config_file_path, metadata_file_path=None):
         anemom_height = config_file['METADATA'].getfloat('anemometer_height')  # Expected in meters
         script_mode = config_file['MODES'].getboolean('script_mode')  # Option to either correct or view uncorrected
         (file_name, station_extension) = os.path.splitext(file_path)
-        (folder_name, station_name) = file_name.split('/')
+
+        # check to see if file is in a subdirectory or by itself
+        if '/' in file_name:
+            (folder_name, station_name) = file_name.split('/')
+        else:
+            station_name = file_name
         metadata_df = None
         metadata_series = None
 
@@ -459,28 +471,8 @@ def obtain_data(config_file_path, metadata_file_path=None):
             data_year = np.array(dt_date.year.astype('int'))
 
         else:
-            # Script cannot function without a time variable11
+            # Script cannot function without a time variable
             raise ValueError('Missing parameter: pyWeatherQAQC requires date values in order to process data.')
-
-        # TODO: changed string date handling to above, unsure of how solid this is and it needs more testing
-        # Leaving the below code in until I can be reasonably sure the above code works.
-        # # Extract date information to produce DOY and serial date
-        # date_time_included = config_file['DATA'].getint('date_time_included')  # see if HOURS:MINUTES was attached
-        # if date_time_included:
-        #     date_format = "%m/%d/%Y %H:%M:%S %p"
-        # else:
-        #     date_format = "%m/%d/%Y"
-        #
-        # data_day = np.zeros(raw_rows)
-        # data_month = np.zeros(raw_rows)
-        # data_year = np.zeros(raw_rows)
-        #
-        # # Have to loop elementwise because dt.datetime doesn't like numpy arrays
-        # for i in range(raw_rows):
-        #     date_info = dt.datetime.strptime(data_date[i], date_format)
-        #     data_day[i] = date_info.day
-        #     data_month[i] = date_info.month
-        #     data_year[i] = date_info.year
 
     elif date_format == 2:
         # Date is pre-split into several columns
@@ -495,6 +487,24 @@ def obtain_data(config_file_path, metadata_file_path=None):
         else:
             # Script cannot function without a time variable
             raise ValueError('Parameter error: pyWeatherQAQC requires date values in order to process data.')
+
+    elif date_format == 3:
+        # Date is pre-split between year column and DOY column
+        doy_col = config_file['DATA'].getint('doy_col')
+        year_col = config_file['DATA'].getint('year_doy_col')
+
+        if doy_col != -1 and year_col != -1:
+            data_doy = np.array(raw_data.iloc[:, doy_col].astype('int'))
+            data_year = np.array(raw_data.iloc[:, year_col].astype('int'))
+        else:
+            # Script cannot function without a time variable
+            raise ValueError('Parameter error: pyWeatherQAQC requires date values in order to process data.')
+
+        dt_date = pd.to_datetime(data_year * 1000 + data_doy, format='%Y%j', errors='raise')
+        data_day = np.array(dt_date.day.astype('int'))
+        data_month = np.array(dt_date.month.astype('int'))
+        data_year = np.array(dt_date.year.astype('int'))
+
     else:
         # Script cannot function without a time variable
         raise ValueError('Parameter error: date_format is set to an unexpected value.')
