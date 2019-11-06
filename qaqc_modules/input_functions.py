@@ -402,6 +402,8 @@ def obtain_data(config_file_path, metadata_file_path=None):
         # check to see if file is in a subdirectory or by itself
         if '/' in file_name:
             (folder_name, station_name) = file_name.split('/')
+        if '\\' in file_name:
+            (folder_name, station_name) = file_name.split('\\')
         else:
             station_name = file_name
         metadata_df = None

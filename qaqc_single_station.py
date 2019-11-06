@@ -5,9 +5,8 @@ import sys
 if __name__ == "__main__":
     # This code sets up the WeatherQAQC class to handle a single station
     # Initial setup
-    # Check if user has passed in a config file, or else just 366131
-    # 4
-    # grab the default.
+    # Check if user has passed in a config file, or else just grab the default.
+    # Also see if user has passed a metadata file to allow for automatic reading/writing into the metadata file.
 
     print("\nSystem: Starting single station data QAQC script.")
     if len(sys.argv) == 2:
