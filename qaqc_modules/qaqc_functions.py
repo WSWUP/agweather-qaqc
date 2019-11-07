@@ -690,7 +690,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
     return corr_rs, rso
 
 
-def correction(station, log_path, var_one, var_two, dt_array, month, year, code, auto_corr=0):
+def correction(station, log_path, folder_path, var_one, var_two, dt_array, month, year, code, auto_corr=0):
     """
             This main qaqc function takes in two variables and, depending on the code provided, enables different
             correction methods for the user to use to correct data. Once a correction has been applied, user has the
@@ -703,6 +703,7 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code,
             Parameters:
                 station : string of station name for saving files
                 log_path : string of path to log file
+                folder_path : string of path to correction files directory
                 var_one : 1d numpy array of first variable passed
                 var_two : 1d numpy array of second variable passed
                 dt_array : date time array used for bokeh plotting
@@ -741,7 +742,7 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code,
         pass
     else:
         corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
-                                                                corr_var_two, code)
+                                                                corr_var_two, code, folder_path)
         show(corr_fig)
 
     ####################
@@ -800,7 +801,7 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code,
         ####################
         # Generate After-Corrections Graph
         corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
-                                                                corr_var_two, code)
+                                                                corr_var_two, code, folder_path)
         show(corr_fig)
 
         if auto_corr == 1 or auto_corr == 0:
@@ -847,7 +848,7 @@ def correction(station, log_path, var_one, var_two, dt_array, month, year, code,
     # All previous graphs were either entirely before corrections, or showed differences between iterations
     # This graph is between completely original values and final corrected product
     corr_fig = plotting_functions.variable_correction_plots(station, dt_array, backup_var_one, corr_var_one,
-                                                            backup_var_two, corr_var_two, code)
+                                                            backup_var_two, corr_var_two, code, folder_path)
     save(corr_fig)
 
     # return corrected variables, or save original values as corrected values if correction was rejected

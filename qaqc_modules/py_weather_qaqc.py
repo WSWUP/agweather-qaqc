@@ -23,7 +23,7 @@ class WeatherQAQC:
         (self.data_df, self.column_df, self.station_name, self.log_file, self.station_lat, self.station_lon,
          self.station_elev, self.ws_anemometer_height, self.missing_fill_value, self.script_mode,
          self.auto_mode, self.fill_mode, self.metadata_mode, self.generate_bokeh, self.metadata_df,
-         metadata_series) = input_functions.obtain_data(self.config_path, self.metadata_path)
+         self.metadata_series, self.folder_path) = input_functions.obtain_data(self.config_path, self.metadata_path)
 
         if self.script_mode == 1:  # correcting data
             self.mc_iterations = 1000  # Number of iters for MC simulation of thornton running solar radiation gen
@@ -48,7 +48,7 @@ class WeatherQAQC:
         self.data_ws = np.array(self.data_df.ws)
         self.data_precip = np.array(self.data_df.precip)
 
-        self.output_file_path = "correction_files/" + self.station_name + "_output" + ".xlsx"
+        self.output_file_path = self.folder_path + "/correction_files/" + self.station_name + "_output" + ".xlsx"
 
     def _calculate_secondary_vars(self):
         """
@@ -172,27 +172,32 @@ class WeatherQAQC:
             # Correcting Max/Min Temperature data
             if user == 1:
                 (self.data_tmax, self.data_tmin) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_tmax, self.data_tmin, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_tmax, self.data_tmin, self.dt_array,
                                self.data_month, self.data_year, 1, self.auto_mode)
             # Correcting Min/Dew Temperature data
             elif user == 2:
                 (self.data_tmin, self.data_tdew) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_tmin, self.data_tdew, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_tmin, self.data_tdew, self.dt_array,
                                self.data_month, self.data_year, 2, self.auto_mode)
             # Correcting Windspeed
             elif user == 3:
                 (self.data_ws, self.data_null) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_ws, self.data_null, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_ws, self.data_null, self.dt_array,
                                self.data_month, self.data_year, 3, self.auto_mode)
             # Correcting Precipitation
             elif user == 4:
                 (self.data_precip, self.data_null) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_precip, self.data_null, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_precip, self.data_null, self.dt_array,
                                self.data_month, self.data_year, 4, self.auto_mode)
             # Correcting Solar radiation
             elif user == 5:
                 (self.data_rs, self.data_null) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_rs, self.rso, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_rs, self.rso, self.dt_array,
                                self.data_month, self.data_year, 5, self.auto_mode)
             # Correcting Humidity Variable
             elif user == 6:
@@ -200,20 +205,23 @@ class WeatherQAQC:
                 if self.column_df.ea != -1:
                     # Vapor Pressure exists
                     (self.data_ea, self.data_null) = qaqc_functions.\
-                        correction(self.station_name, self.log_file, self.data_ea, self.data_null, self.dt_array,
+                        correction(self.station_name, self.log_file, self.folder_path,
+                                   self.data_ea, self.data_null, self.dt_array,
                                    self.data_month, self.data_year, 7, self.auto_mode)
 
                 elif self.column_df.ea == -1 and self.column_df.rhmax != -1 and self.column_df.rhmin != -1:
                     # No vapor pressure but have rhmax and min
                     (self.data_rhmax, self.data_rhmin) = qaqc_functions.\
-                        correction(self.station_name, self.log_file, self.data_rhmax, self.data_rhmin, self.dt_array,
+                        correction(self.station_name, self.log_file, self.folder_path,
+                                   self.data_rhmax, self.data_rhmin, self.dt_array,
                                    self.data_month, self.data_year, 8, self.auto_mode)
 
                 elif self.column_df.ea == -1 and self.column_df.rhmax == -1 \
                         and self.column_df.rhmin == -1 and self.column_df.rhavg != -1:
                     # Only have RHavg
                     (self.data_rhavg, self.data_null) = qaqc_functions.\
-                        correction(self.station_name, self.log_file, self.data_rhavg, self.data_null, self.dt_array,
+                        correction(self.station_name, self.log_file, self.folder_path,
+                                   self.data_rhavg, self.data_null, self.dt_array,
                                    self.data_month, self.data_year, 9, self.auto_mode)
                 else:
                     # If an unsupported combination of humidity variables is present, raise a value error.
@@ -270,7 +278,7 @@ class WeatherQAQC:
                             self.fill_tmax[i] = self.complete_tmax[i]
 
                             self.complete_tmin[i] = self.mm_tmin[self.data_month[i] - 1] - \
-                                                    (0.5 * self.mm_delta_t[self.data_month[i] - 1])
+                                (0.5 * self.mm_delta_t[self.data_month[i] - 1])
                             self.fill_tmin[i] = self.complete_tmin[i]
                         else:
                             # data is different enough to appear valid
@@ -444,7 +452,7 @@ class WeatherQAQC:
             k_not_hist = plotting_functions.histogram_plot(self.k_not[~np.isnan(self.k_not)],
                                                            'Ko', 'black', 'degrees C')
 
-            output_file("correction_files/" + self.station_name + '_histograms.html',
+            output_file(self.folder_path + "/correction_files/histograms/" + self.station_name + '_histograms.html',
                         title=self.station_name + ' histograms')
 
             save(gridplot([ws_hist, tmax_hist, tmin_hist, tavg_hist, tdew_hist, k_not_hist], ncols=2,
@@ -462,10 +470,10 @@ class WeatherQAQC:
             y_size = 350
 
             if self.script_mode == 0:
-                output_file("correction_files/before_graphs/" + self.station_name +
+                output_file(self.folder_path + "/correction_files/before_graphs/" + self.station_name +
                             "_before_corrections_composite_graph.html")
             elif self.script_mode == 1:
-                output_file("correction_files/after_graphs/" + self.station_name +
+                output_file(self.folder_path + "/correction_files/after_graphs/" + self.station_name +
                             "_after_corrections_composite_graph.html")
             else:
                 # Incorrect setup of script mode variable, raise an error

@@ -4,3 +4,5 @@ datetime
 numpy
 pandas
 refet
+xlrd
+openpyxl

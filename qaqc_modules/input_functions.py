@@ -388,7 +388,15 @@ def obtain_data(config_file_path, metadata_file_path=None):
         script_mode = metadata_series.run_count
 
         station_name = str(metadata_series.id)
-        (unused_var, station_extension) = os.path.splitext(file_path)
+        (file_name, station_extension) = os.path.splitext(file_path)
+
+        # check to see if file is in a subdirectory or by itself
+        if '/' in file_name:
+            (folder_path, delimiter, _station_name) = file_name.rpartition('/')
+        elif '\\' in file_name:
+            (folder_path, delimiter, _station_name) = file_name.rpartition('\\')
+        else:
+            folder_path = os.getcwd()
 
     else:
         file_path = config_file['METADATA']['data_file_path']
@@ -397,15 +405,18 @@ def obtain_data(config_file_path, metadata_file_path=None):
         station_elev = config_file['METADATA'].getfloat('station_elevation')  # Expected in meters
         anemom_height = config_file['METADATA'].getfloat('anemometer_height')  # Expected in meters
         script_mode = config_file['MODES'].getboolean('script_mode')  # Option to either correct or view uncorrected
+
         (file_name, station_extension) = os.path.splitext(file_path)
 
         # check to see if file is in a subdirectory or by itself
         if '/' in file_name:
-            (folder_name, station_name) = file_name.split('/')
-        if '\\' in file_name:
-            (folder_name, station_name) = file_name.split('\\')
+            (folder_path, delimiter, station_name) = file_name.rpartition('/')
+        elif '\\' in file_name:
+            (folder_path, delimiter, station_name) = file_name.rpartition('\\')
         else:
             station_name = file_name
+            folder_path = os.getcwd()
+
         metadata_df = None
         metadata_series = None
 
@@ -437,18 +448,20 @@ def obtain_data(config_file_path, metadata_file_path=None):
 
     raw_data = raw_data.replace(to_replace='NO RECORD   ', value=np.nan)  # catch for tricky whitespaces on agriment
 
-    # check for the existance of 'correction_files' folder and if not present make one
-    if not os.path.exists('correction_files'):
-        os.makedirs('correction_files')
-        os.makedirs('correction_files/before_graphs/')
-        os.makedirs('correction_files/after_graphs/')
+    # check for the existence of 'correction_files' folder and if not present make one
+    test_string = folder_path + '/corr_test_file'
+    if not os.path.exists(folder_path + '/correction_files'):
+        os.makedirs(folder_path + '/correction_files')
+        os.makedirs(folder_path + '/correction_files/before_graphs/')
+        os.makedirs(folder_path + '/correction_files/after_graphs/')
+        os.makedirs(folder_path + '/correction_files/histograms/')
 
     else:
         pass
 
     # Create log file for this new data file
     log.basicConfig()
-    log_file = "correction_files/" + station_name + "_changes_log" + ".txt"
+    log_file = folder_path + '/correction_files/' + station_name + '_changes_log' + '.txt'
     logger = open(log_file, 'w')
     logger.write('The raw data for %s has been successfully read in at %s. \n \n' %
                  (station_name, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
@@ -596,7 +609,8 @@ def obtain_data(config_file_path, metadata_file_path=None):
     data_df.day = date_reindex.day
 
     return data_df, col_df, station_name, log_file, station_lat, station_lon, station_elev, anemom_height, \
-        fill_value, script_mode, auto_mode, fill_mode, metadata_mode, gen_bokeh, metadata_df, metadata_series
+        fill_value, script_mode, auto_mode, fill_mode, metadata_mode, gen_bokeh, metadata_df, metadata_series, \
+        folder_path
 
 
 # This is never run by itself

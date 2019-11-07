@@ -206,7 +206,7 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
     return subplot
 
 
-def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two, corr_var_two, code):
+def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two, corr_var_two, code, folder_path):
     x_size = 800
     y_size = 350
     reset_output()  # clears bokeh output, prevents ballooning file sizes
@@ -220,7 +220,7 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
 
     # Obtain title based on variables passed for file name
     (units, title, var_one_name, var_one_color, var_two_name, var_two_color) = generate_line_plot_features(code, '')
-    output_file("correction_files/" + station + "_" + title + "_correction_plots.html")
+    output_file(folder_path + "/correction_files/" + station + "_" + title + "_correction_plots.html")
 
     original_plot = line_plot(x_size, y_size, dt_array, var_one, var_two, code, station + ' Original ', link_plot=None)
 
