@@ -19,8 +19,6 @@ if __name__ == "__main__":
         config_path = 'config.ini'
         metadata_path = None
 
-    config_path = 'config.ini'
-    metadata_path = 'new_cimis_metadata.xlsx'
     station_qaqc = WeatherQAQC(config_path, metadata_path, gridplot_columns=1)
     station_qaqc.process_station()
 
