@@ -331,6 +331,68 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
     return orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr
 
 
+def compiled_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col):
+    """
+        This function is used to create a 'compiled' ea from all provided humidity variables, always using the best one
+        provided within the dataset for each given day of the record. This function will work regardless of if ea is
+        provided by the dataset or not.
+
+        Parameters:
+            tmax : 1D array of maximum temperature values
+            tmin : 1D array of minimum temperature values
+            tavg : 1D array of average temperature values
+            ea : 1D array of vapor pressure values, which may be empty
+            tdew : 1D array of dewpoint temperature values, which may be empty
+            tdew_col : column of Tdew variable in data file, if it is provided
+            rhmax : 1D array of maximum relative humidity values, which may be empty
+            rhmax_col : column of rhmax variable in data file, if it was provided
+            rhmin : 1D array of minimum relative humidity values, which may be empty
+            rhmin_col : column of rhmin variable in data file, if it was provided
+            rhavg : 1D array of average relative humidity values, which may be empty
+            rhavg_col : column of rhavg variable in data file, if it was provided
+
+        Returns:
+            Returns a "complete" ea array
+    """
+    data_length = ea.shape[0]
+    compiled_ea = np.empty(data_length) * np.nan
+    tdew_calc_ea = np.empty(data_length) * np.nan
+    rh_max_min_calc_ea = np.empty(data_length) * np.nan
+    rh_avg_calc_ea = np.empty(data_length) * np.nan
+
+    if tdew_col != -1:  # Dewpoint temperature is provided
+
+        tdew_calc_ea = np.array(0.6108 * np.exp((17.27 * tdew) / (tdew + 237.3)))  # EQ 8, units kPa
+
+    if rhmax_col != -1 and rhmin_col != -1:  # relative humidity is provided
+
+        eo_tmax = np.array(0.6108 * np.exp((17.27 * tmax) / (tmax + 237.3)))  # units kPa, EQ 7
+        eo_tmin = np.array(0.6108 * np.exp((17.27 * tmin) / (tmin + 237.3)))  # units kPa, EQ 7
+
+        rh_max_min_calc_ea = np.array((eo_tmin * (rhmax / 100)) + (eo_tmax * (rhmin / 100)) / 2)  # EQ 11
+
+    if rhavg_col != -1:  # RHAvg is provided
+
+        eo_tavg = np.array(0.6108 * np.exp((17.27 * tavg) / (tavg + 237.3)))  # units kPa, EQ 7
+        rh_avg_calc_ea = np.array(eo_tavg * (rhavg / 100))  # EQ 14
+
+    for i in range(data_length):
+        if np.isnan(ea[i]):
+
+            if not np.isnan(tdew_calc_ea[i]):
+                compiled_ea[i] = tdew_calc_ea[i]
+
+            elif np.isnan(tdew_calc_ea[i]) and not np.isnan(rh_max_min_calc_ea[i]):
+                compiled_ea[i] = rh_max_min_calc_ea[i]
+
+            elif np.isnan(tdew_calc_ea[i]) and np.isnan(rh_max_min_calc_ea[i]) and not np.isnan(rh_avg_calc_ea[i]):
+                compiled_ea[i] = rh_avg_calc_ea[i]
+
+        else:  # ea exists here so no need to fill
+            compiled_ea[i] = ea[i]
+
+    return compiled_ea
+
 # This is never run by itself
 if __name__ == "__main__":
     print("\nThis module is called as a part of the QAQC script, it does nothing by itself.")

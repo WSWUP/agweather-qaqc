@@ -856,6 +856,138 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
     return corr_var_one, corr_var_two
 
 
+def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax, tmin, tavg, compiled_ea, ea, ea_col,
+                                tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko):
+    """
+        This function is used to create a 'compiled' ea from all provided humidity variables, always using the best one
+        provided within the dataset for each given day of the record. This function will work regardless of if ea is
+        provided by the dataset or not.
+
+        Parameters:
+            tmax : 1D array of maximum temperature values
+            tmin : 1D array of minimum temperature values
+            tavg : 1D array of average temperature values
+            ea : 1D array of vapor pressure values, which may be empty
+            tdew : 1D array of dewpoint temperature values, which may be empty
+            tdew_col : column of Tdew variable in data file, if it is provided
+            rhmax : 1D array of maximum relative humidity values, which may be empty
+            rhmax_col : column of rhmax variable in data file, if it was provided
+            rhmin : 1D array of minimum relative humidity values, which may be empty
+            rhmin_col : column of rhmin variable in data file, if it was provided
+            rhavg : 1D array of average relative humidity values, which may be empty
+            rhavg_col : column of rhavg variable in data file, if it was provided
+
+        Returns:
+            Returns a "compiled" ea array that has had select sections replaced by the "best" variables
+    """
+
+    adjustment_loop = 1
+    first_pass = 1  # boolean flag for whether or not it is the first pass, used in automation with auto_corr
+    var_size = compiled_ea.shape[0]
+    backup_compiled_ea = np.array(compiled_ea)
+    edited_compiled_ea = np.array(compiled_ea)
+
+    ####################
+    # Logging
+    # Reopen log file and append correction actions taken to it.
+    log.basicConfig()
+    humidity_log = open(log_path, 'a')
+    humidity_log.write('\n------------------------------------------------------------------------------------------\n')
+    humidity_log.write('Now beginning humidity record adjustment. \n')
+
+    humidity_fig = plotting_functions.humidity_adjustment_plots\
+        (station, dt_array, compiled_ea, ea, ea_col, tmin, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col,
+         rhavg, rhavg_col, tdew_ko, folder_path)
+
+    show(humidity_fig)
+
+    ####################
+    # Adjustment Loop
+    # User gets to repeat this process as many times as they want
+    while adjustment_loop:
+
+        ####################
+        # First the user will select an interval, then they will choose a variable to copy from.
+
+        (int_start, int_end) = generate_interval(var_size)
+
+        print('\nPlease select which variable you want to use for this interval:'
+              '\n   To use Ea data provided by the input file, enter 1.'
+              '\n   To use Dewpoint Temperature data provided by the input file, enter 2.'
+              '\n   To use RH Max and Min data provided by the input file, enter 3.'
+              '\n   To use RH Avg data provided by the input file, enter 4.'
+              '\n   To use Dewpoint temperature data that was filled in from TMin - Ko, enter 5.'
+              '\n   To skip this selected interval, enter 6.')
+
+
+        choice = int(input("Enter your selection: "))
+        loop = 1
+
+        while loop:
+            if 1 <= choice <= 6:
+                if choice == 1 and ea_col == -1:
+                    print('Ea was not provided by the dataset, please select a provided option.')
+                    choice = int(input('Specify which variable you would like to use: '))
+                elif choice == 2 and tdew_col == -1:
+                    print('TDew was not provided by the dataset, please select a provided option.')
+                    choice = int(input('Specify which variable you would like to use: '))
+                elif choice == 3 and (rhmax_col == -1 or rhmin_col == -1):
+                    print('RH Max and Min were not provided by the dataset, please select a provided option.')
+                    choice = int(input('Specify which variable you would like to use: '))
+                elif choice == 4 and rhavg_col == -1:
+                    print('RH Avg was not provided by the dataset, please select a provided option.')
+                    choice = int(input('Specify which variable you would like to use: '))
+                else:
+                    # Ko Tdew and skipping always a possible option
+                    loop = 0
+            else:
+                print('Please enter a valid option.')
+                choice = int(input('Specify which variable you would like to use: '))
+
+        # todo write new overwrite code here, including new logging
+
+        ####################
+        # Determine if user wants to keep correcting
+        print('\nAre you done adjusting humidity?'
+              '\n   Enter 1 for yes.'
+              '\n   Enter 2 for another iteration.'
+              '\n   Enter 3 to start over.'
+              '\n   Enter 4 to discard all changes.')
+
+        choice = int(input("Enter your selection: "))
+        loop = 1
+        while loop:
+            if 1 <= choice <= 4:
+                loop = 0
+            else:
+                print('Please enter a valid option.')
+                choice = int(input('Enter your selection: '))
+
+        if choice == 1:
+            adjustment_loop = 0
+            humidity_log.write('---> User has elected to end adjustments. \n')
+        elif choice == 2:
+            compiled_ea = np.array(edited_compiled_ea)
+            humidity_log.write('---> User has elected to do another iteration of adjustments. \n')
+        elif choice == 3:
+            compiled_ea = np.array(backup_compiled_ea)
+            edited_compiled_ea = np.array(backup_compiled_ea)
+            humidity_log.write('---> User has elected to ignore previous iterations of adjustments and start over. \n')
+        else:
+            adjustment_loop = 0
+            edited_compiled_ea = np.array(backup_compiled_ea)
+            humidity_log.write('---> User has elected to end adjustments without keeping any changes. \n')
+
+
+    ####################
+    # Generate Final Graph
+    # All previous graphs were either entirely before corrections, or showed differences between iterations
+    # This graph is between completely original values and final corrected product
+    #ea_compiled_fig = plotting_functions.variable_correction_plots(station, dt_array, backup_var_one, corr_var_one,
+    #                                                        backup_var_two, corr_var_two, code, folder_path)
+    #save(ea_compiled_fig)
+
+    return edited_compiled_ea
 # This is never run by itself
 if __name__ == "__main__":
     print("\nThis module is called as a part of the QAQC script, it does nothing by itself.")
