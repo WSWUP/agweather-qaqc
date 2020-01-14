@@ -80,8 +80,27 @@ class WeatherQAQC:
                                     self.data_tdew, self.column_df.tdew, self.data_rhmax, self.column_df.rhmax,
                                     self.data_rhmin, self.column_df.rhmin, self.data_rhavg, self.column_df.rhavg)
 
-        # Create a 'compiled' ea if multiple humidity variables are provided. This compiled ea is used to create
-        # the best possible record of humidity data.
+        '''
+            This script uses multiple vapor pressure (ea) variables. As a reference for readability:
+    
+            data_ea = either ea data provided by the station or ea that has been calculated by whatever the 'best'
+                      humidity variable was in the input file. If it is the latter, this ea will have all the gaps and
+                      issues (like drift) that the underlying variable had.
+    
+            compiled_ea = the script creates as complete a record as possible of ea values by calculating ea from 
+                       'worse' variables should there be gaps in the more preferred ones. It only samples from data 
+                       that has been provided by the dataset. By the end of this process, the only gaps that will exist 
+                       will match the gaps that exist within Tmin. The preference is as follows:
+    
+                       (provided) Ea > (provided) TDew > RH Max and Min > RH Avg > TDew generated from TMin - Ko curve
+    
+            complete_ea = this is compiled ea but with all of the gaps filled in with TDew generated from 
+                       TMin - Ko Curve, and all gaps in TMin filled in by sampling from a monthly normal distribution
+                       of values. Unless the user specifically wants to export this day (option is in config file)
+                       then this data is only used to create a complete record of Rso values for Rs correction,
+                       and then is discarded at the end.
+        '''
+
         self.compiled_ea = data_functions.compile_ea(self.data_tmax, self.data_tmin, self.data_tavg,
                                                      self.data_ea, self.data_tdew, self.column_df.tdew,
                                                      self.data_rhmax, self.column_df.rhmax, self.data_rhmin,
@@ -146,6 +165,10 @@ class WeatherQAQC:
         self.fill_rs = np.zeros(self.data_length)
         self.fill_ws = np.zeros(self.data_length)
         self.fill_rso = np.zeros(self.data_length)
+
+        # Tdew_ko will have all missing values of tdew filled in with tmin - Ko curve method, but will keep missing
+        # values if the underlying tmin is also missing
+        self.tdew_ko = np.array(self.data_tdew)
 
         # Begin loop for correcting variables
         while self.script_mode == 1:
@@ -337,11 +360,14 @@ class WeatherQAQC:
                     # correction methods throw out data.
                     for i in range(self.data_length):
                         if np.isnan(self.data_tdew[i]):
+
+                            # Tdew_ko will have gaps that match gaps in Tmin
+                            # Complete_tdew will match complete_tmin in having no gaps
+                            self.tdew_ko[i] = self.data_tmin[i] - self.mm_k_not[self.data_month[i] - 1]
                             self.complete_tdew[i] = self.complete_tmin[i] - self.mm_k_not[self.data_month[i] - 1]
                             self.fill_tdew[i] = self.complete_tdew[i]
 
                             if np.isnan(self.compiled_ea[i]):
-                                # Either Ea not provided, OR Ea is provided and this index is empty and can be filled
                                 self.complete_ea[i] = (0.6108 * np.exp((17.27 * self.complete_tdew[i])
                                                        / (self.complete_tdew[i] + 237.3)))
                                 self.fill_ea[i] = self.complete_ea[i]
@@ -354,7 +380,6 @@ class WeatherQAQC:
 
                         if self.fill_mode:
                             # we are filling in data, so copy all of the filled versions onto the original arrays
-                            # todo the difference here between filled 'data_ea' and compiled ea is ambigouous
                             self.data_tdew = np.array(self.complete_tdew)
                             self.data_ea = np.array(self.complete_ea)
                         else:
