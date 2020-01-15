@@ -233,7 +233,7 @@ class WeatherQAQC:
                         print('\nVapor Pressure was not provided by the file, please choose a different option.')
                         user = int(input('Specify which variable you would like to correct: '))
 
-                    elif user == 7 and self.column_df.rhmax == -1 or self.column_df.rhmin == -1:
+                    elif user == 7 and (self.column_df.rhmax == -1 or self.column_df.rhmin == -1):
                         print('\nRHMax and RHMin were not provided by the file, please choose a different option.')
                         user = int(input('Specify which variable you would like to correct: '))
 
