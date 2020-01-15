@@ -331,7 +331,7 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
     return orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr
 
 
-def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col):
+def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko):
     """
         This function is used to create a 'compiled' ea from all provided humidity variables, always using the best one
         provided within the dataset for each given day of the record. This function will work regardless of if ea is
@@ -350,6 +350,7 @@ def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rh
             rhmin_col : column of rhmin variable in data file, if it was provided
             rhavg : 1D array of average relative humidity values, which may be empty
             rhavg_col : column of rhavg variable in data file, if it was provided
+            tdew_ko : 1D array of tdew data filled in by tmin-ko curve
 
         Returns:
             Returns a "complete" ea array
@@ -359,6 +360,9 @@ def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rh
     tdew_calc_ea = np.empty(data_length) * np.nan
     rh_max_min_calc_ea = np.empty(data_length) * np.nan
     rh_avg_calc_ea = np.empty(data_length) * np.nan
+
+    # TDew data filled in with TMin - Ko curve is always an option
+    tdew_ko_calc_ea = np.array(0.6108 * np.exp((17.27 * tdew_ko) / (tdew_ko + 237.3)))  # EQ 8, units kPa
 
     if tdew_col != -1:  # Dewpoint temperature is provided
 
@@ -377,7 +381,7 @@ def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rh
         rh_avg_calc_ea = np.array(eo_tavg * (rhavg / 100))  # EQ 14
 
     for i in range(data_length):
-        if np.isnan(ea[i]):
+        if np.isnan(ea[i]):  # Either Ea is provided or is already calculated by the best humidity variable available
 
             if not np.isnan(tdew_calc_ea[i]):
                 compiled_ea[i] = tdew_calc_ea[i]
@@ -387,6 +391,9 @@ def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rh
 
             elif np.isnan(tdew_calc_ea[i]) and np.isnan(rh_max_min_calc_ea[i]) and not np.isnan(rh_avg_calc_ea[i]):
                 compiled_ea[i] = rh_avg_calc_ea[i]
+
+            elif np.isnan(tdew_calc_ea[i]) and np.isnan(rh_max_min_calc_ea[i]) and np.isnan(rh_avg_calc_ea[i]):
+                compiled_ea[i] = tdew_ko_calc_ea[i]
 
         else:  # ea exists here so no need to fill
             compiled_ea[i] = ea[i]

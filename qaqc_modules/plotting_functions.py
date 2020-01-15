@@ -64,35 +64,28 @@ def generate_line_plot_features(code, usage=''):
         var_two_color = 'black'
         units = 'w/m2'
         title = usage + var_two_name + ' and ' + var_one_name  # reverse order so titles are clearer
-    elif code == 7:  # Humidity - Composite Ea
-        var_one_name = 'Composite Vapor Pressure'
+    elif code == 7:  # Humidity - Ea
+        var_one_name = 'Vapor Pressure'
         var_one_color = 'black'
         var_two_name = 'null'
         var_two_color = 'black'
         units = 'kPa'
         title = usage + var_one_name
-    elif code == 8:  # Humidity - Provided Ea
-        var_one_name = 'Provided Vapor Pressure'
-        var_one_color = 'black'
-        var_two_name = 'null'
-        var_two_color = 'black'
-        units = 'kPa'
-        title = usage + var_one_name
-    elif code == 9:  # Humidity - RHMax and RHMin
+    elif code == 8:  # Humidity - RHMax and RHMin
         var_one_name = 'RHMax'
         var_one_color = 'blue'
         var_two_name = 'RHMin'
         var_two_color = 'red'
         units = '%'
         title = usage + var_one_name + ' and ' + var_two_name
-    elif code == 10:  # Humidity - RHAvg
+    elif code == 9:  # Humidity - RHAvg
         var_one_name = 'RHAvg'
         var_one_color = 'black'
         var_two_name = 'null'
         var_two_color = 'black'
         units = '%'
         title = usage + var_one_name
-    elif code == 11:  # ko curve
+    elif code == 10:  # ko curve
         var_one_name = 'ko Curve'
         var_one_color = 'black'
         var_two_name = 'null'
@@ -255,11 +248,11 @@ def humidity_adjustment_plots(station, dt_array, comp_ea, ea, ea_col, tmin, tdew
 
     output_file(folder_path + "/correction_files/" + station + "_humidity_adjustment_plots.html")
 
-    ea_comp_plot = line_plot(x_size, y_size, dt_array, comp_ea, None, 7, station + ' ', link_plot=None)
+    ea_comp_plot = line_plot(x_size, y_size, dt_array, comp_ea, None, 7, station + ' Composite ', link_plot=None)
     humidity_plot_list.append(ea_comp_plot)
 
     if ea_col != -1:
-        ea_provided_plot = line_plot(x_size, y_size, dt_array, ea, None, 8, '', link_plot=ea_comp_plot)
+        ea_provided_plot = line_plot(x_size, y_size, dt_array, ea, None, 7, 'Provided ', link_plot=ea_comp_plot)
         humidity_plot_list.append(ea_provided_plot)
 
     if tdew_col != -1:
@@ -267,11 +260,11 @@ def humidity_adjustment_plots(station, dt_array, comp_ea, ea, ea_col, tmin, tdew
         humidity_plot_list.append(tdew_provided_plot)
 
     if rhmax_col != -1 and rhmin_col != -1:
-        rh_max_min_plot = line_plot(x_size, y_size, dt_array, rhmax, rhmin, 9, '', link_plot=ea_comp_plot)
+        rh_max_min_plot = line_plot(x_size, y_size, dt_array, rhmax, rhmin, 8, '', link_plot=ea_comp_plot)
         humidity_plot_list.append(rh_max_min_plot)
 
     if rhavg_col != -1:
-        rh_avg_plot = line_plot(x_size, y_size, dt_array, rhavg, None, 10, '', link_plot=ea_comp_plot)
+        rh_avg_plot = line_plot(x_size, y_size, dt_array, rhavg, None, 9, '', link_plot=ea_comp_plot)
         humidity_plot_list.append(rh_avg_plot)
 
     tdew_ko_filled_plot = line_plot(x_size, y_size, dt_array, tmin, tdew_ko, 2, 'Ko curve ', link_plot=ea_comp_plot)
@@ -279,15 +272,16 @@ def humidity_adjustment_plots(station, dt_array, comp_ea, ea, ea_col, tmin, tdew
 
     # Now construct grid plot out of all of the subplots
     number_of_plots = len(humidity_plot_list)
-    grid_of_plots = [[None] for i in range(number_of_plots)]
+    humid_grid_of_plots = [([None] * 1) for i in range(number_of_plots)]
 
     for i in range(number_of_plots):
-        if len(humidity_plot_list) > 0:
-            grid_of_plots[i] = humidity_plot_list.pop(0)
-        else:
-            pass
+        for j in range(1):
+            if len(humidity_plot_list) > 0:
+                humid_grid_of_plots[i][j] = humidity_plot_list.pop(0)
+            else:
+                pass
 
-    humidity_fig = gridplot(grid_of_plots, toolbar_location='left')
+    humidity_fig = gridplot(humid_grid_of_plots, toolbar_location='left')
 
     return humidity_fig
 

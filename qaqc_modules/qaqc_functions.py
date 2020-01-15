@@ -977,7 +977,7 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
             s_tmax = tmax[int_start:int_end]
             s_tmin = tmin[int_start:int_end]
             s_rhmax = rhmax[int_start:int_end]
-            s_rhmin= rhmin[int_start:int_end]
+            s_rhmin = rhmin[int_start:int_end]
 
             eo_tmax = np.array(0.6108 * np.exp((17.27 * s_tmax) / (s_tmax + 237.3)))  # units kPa, EQ 7
             eo_tmin = np.array(0.6108 * np.exp((17.27 * s_tmin) / (s_tmin + 237.3)))  # units kPa, EQ 7
@@ -1050,6 +1050,7 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
             edited_compiled_ea = np.array(backup_compiled_ea)
             humidity_log.write('---> User has elected to end adjustments without keeping any changes. \n')
 
+    humidity_log.close()
     return edited_compiled_ea
 
 
