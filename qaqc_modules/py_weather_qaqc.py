@@ -20,10 +20,24 @@ class WeatherQAQC:
         """
             Obtain initial data and put it into a dataframe
         """
-        (self.data_df, self.column_df, self.station_name, self.log_file, self.station_lat, self.station_lon,
-         self.station_elev, self.ws_anemometer_height, self.missing_fill_value, self.script_mode,
-         self.auto_mode, self.fill_mode, self.metadata_mode, self.generate_bokeh, self.metadata_df,
-         self.metadata_series, self.folder_path) = input_functions.obtain_data(self.config_path, self.metadata_path)
+        (self.data_df, self.column_df, self.metadata_df, self.metadata_series, self.config_dict) = \
+            input_functions.obtain_data(self.config_path, self.metadata_path)
+
+        # todo this individual assignment section is only temporary as the config_dict of input functions will be
+        #    referenced though this script eventually
+        self.station_name = self.config_dict['station_name']
+        self.log_file = self.config_dict['log_file_path']
+        self.station_lat = self.config_dict['station_latitude']
+        self.station_lon = self.config_dict['station_longitude']
+        self.station_elev = self.config_dict['station_elevation']
+        self.ws_anemometer_height = self.config_dict['anemometer_height']
+        self.missing_fill_value = self.config_dict['missing_fill_value']
+        self.folder_path = self.config_dict['folder_path']
+
+        self.script_mode = self.config_dict['corr_flag']
+        self.auto_mode = self.config_dict['auto_flag']
+        self.fill_mode = self.config_dict['fill_flag']
+        self.generate_bokeh = self.config_dict['plot_flag']
 
         if self.script_mode == 1:  # correcting data
             self.mc_iterations = 1000  # Number of iters for MC simulation of thornton running solar radiation gen
@@ -745,21 +759,19 @@ class WeatherQAQC:
 
         #########################
         # Create necessary variables for generic metadata file, as well as
-        # generate and fill metadata file, if user wants it
+        # generate and fill metadata file
         record_start = pd.to_datetime(self.dt_array[0]).date()
         record_end = pd.to_datetime(self.dt_array[-1]).date()
 
-        if self.metadata_mode == 1 and self.script_mode == 1:
-            # user wants to fill metadata and it is the correct mode
-
+        if self.script_mode == 1:  # only need to generate metadata if we are correcting it
             # First check to see if metadata file already exists
             if not os.path.isfile('correction_metadata.xlsx'):
                 # file does not exist, create new one
-                metadata_info = pd.DataFrame({'station_name': self.station_name, 'station_lat': self.station_lat,
-                                              'station_lon': self.station_lon, 'station_elev_m': self.station_elev,
+                metadata_info = pd.DataFrame({'Station': self.station_name, 'Latitude': self.station_lat,
+                                              'Longitude': self.station_lon, 'station_elev_m': self.station_elev,
                                               'record_start': record_start, 'record_end': record_end,
                                               'anemom_height_m': self.ws_anemometer_height,
-                                              'output_file_path': self.output_file_path}, index=np.array([1]))
+                                              'Filename': self.output_file_path}, index=np.array([1]))
 
                 with pd.ExcelWriter('correction_metadata.xlsx', date_format='YYYY-MM-DD',
                                     datetime_format='YYYY-MM-DD HH:MM:SS', engine='openpyxl', mode='w') as writer:
@@ -770,11 +782,11 @@ class WeatherQAQC:
                 metadata_info = pd.read_excel('correction_metadata.xlsx', sheet_name=0, index_col=None, engine='xlrd',
                                               keep_default_na=False, verbose=True, skip_blank_lines=True)
 
-                new_meta_info = pd.DataFrame({'station_name': self.station_name, 'station_lat': self.station_lat,
-                                              'station_lon': self.station_lon, 'station_elev_m': self.station_elev,
+                new_meta_info = pd.DataFrame({'Station': self.station_name, 'Latitude': self.station_lat,
+                                              'Longitude': self.station_lon, 'station_elev_m': self.station_elev,
                                               'record_start': record_start, 'record_end': record_end,
                                               'anemom_height_m': self.ws_anemometer_height,
-                                              'output_file_path': self.output_file_path}, index=np.array([1]))
+                                              'Filepath': self.output_file_path}, index=np.array([1]))
 
                 output_metadata = pd.concat([metadata_info, new_meta_info], ignore_index=True)
 
@@ -835,7 +847,7 @@ class WeatherQAQC:
         datetime_df = pd.to_datetime(datetime_df[['month', 'day', 'year']])
 
         # Create output dataframe
-        output_df = pd.DataFrame({'date': datetime_df, 'year': self.data_year, 'month': self.data_month,
+        output_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month,
                                   'day': self.data_day, 'TAvg (C)': self.data_tavg, 'TMax (C)': self.data_tmax,
                                   'TMin (C)': self.data_tmin, 'TDew (C)': self.data_tdew,
                                   'Compiled Ea (kPa)': self.compiled_ea,
@@ -847,7 +859,7 @@ class WeatherQAQC:
                                  index=datetime_df)
 
         # Creating difference dataframe to track amount of correction
-        delta_df = pd.DataFrame({'date': datetime_df, 'year': self.data_year, 'month': self.data_month,
+        delta_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month,
                                  'day': self.data_day, 'TAvg (C)': diff_tavg, 'TMax (C)': diff_tmax,
                                  'TMin (C)': diff_tmin, 'TDew (C)': diff_tdew,
                                  'Vapor Pres (kPa)': diff_ea, 'RHAvg (%)': diff_rhavg, 'RHMax (%)': diff_rhmax,
@@ -856,12 +868,14 @@ class WeatherQAQC:
                                  'ETr (mm)': diff_etr, 'ETo (mm)': diff_eto}, index=datetime_df)
 
         # Creating a fill dataframe that tracks where missing data was filled in
-        fill_df = pd.DataFrame({'date': datetime_df, 'year': self.data_year, 'month': self.data_month,
+        fill_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month,
                                 'day': self.data_day, 'TMax (C)': self.fill_tmax, 'TMin (C)': self.fill_tmin,
                                 'TDew (C)': self.fill_tdew, 'Vapor Pres (kPa)': self.fill_ea, 'Rs (w/m2)': self.fill_rs,
                                 'Complete Record Rso (w/m2)': self.fill_rso},
                                index=datetime_df)
-
+        output_df.index.name = 'date'
+        delta_df.index.name = 'date'
+        fill_df.index.name = 'date'
         # Open up pandas excel writer
         output_writer = pd.ExcelWriter(self.output_file_path, engine='xlsxwriter')
         # Convert data frames to xlsxwriter excel objects

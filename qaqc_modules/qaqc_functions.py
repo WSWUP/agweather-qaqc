@@ -981,7 +981,7 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
 
             eo_tmax = np.array(0.6108 * np.exp((17.27 * s_tmax) / (s_tmax + 237.3)))  # units kPa, EQ 7
             eo_tmin = np.array(0.6108 * np.exp((17.27 * s_tmin) / (s_tmin + 237.3)))  # units kPa, EQ 7
-            calc_ea = np.array((eo_tmin * (s_rhmax / 100)) + (eo_tmax * (s_rhmin / 100)) / 2)  # EQ 11
+            calc_ea = np.array(((eo_tmin * (s_rhmax / 100)) + (eo_tmax * (s_rhmin / 100))) / 2)  # EQ 11
             edited_compiled_ea[int_start:int_end] = calc_ea
             print('\n The selected interval was overwritten by RH Maximum and Minimum.')
             humidity_log.write('Variable used was provided RH Maximum and Minimum. \n')

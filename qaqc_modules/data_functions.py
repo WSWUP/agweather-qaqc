@@ -95,7 +95,7 @@ def calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax,
             eo_tmax = np.array(0.6108 * np.exp((17.27 * tmax) / (tmax + 237.3)))  # units kPa, EQ 7
             eo_tmin = np.array(0.6108 * np.exp((17.27 * tmin) / (tmin + 237.3)))  # units kPa, EQ 7
 
-            calc_ea = np.array((eo_tmin * (rhmax / 100)) + (eo_tmax * (rhmin / 100)) / 2)  # EQ 11
+            calc_ea = np.array(((eo_tmin * (rhmax / 100)) + (eo_tmax * (rhmin / 100))) / 2)  # EQ 11
             calc_tdew = np.array((116.91 + (237.3 * np.log(calc_ea))) / (16.78 - np.log(calc_ea)))  # EQ cited above
 
             return calc_ea, calc_tdew
@@ -373,7 +373,7 @@ def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rh
         eo_tmax = np.array(0.6108 * np.exp((17.27 * tmax) / (tmax + 237.3)))  # units kPa, EQ 7
         eo_tmin = np.array(0.6108 * np.exp((17.27 * tmin) / (tmin + 237.3)))  # units kPa, EQ 7
 
-        rh_max_min_calc_ea = np.array((eo_tmin * (rhmax / 100)) + (eo_tmax * (rhmin / 100)) / 2)  # EQ 11
+        rh_max_min_calc_ea = np.array(((eo_tmin * (rhmax / 100)) + (eo_tmax * (rhmin / 100))) / 2)  # EQ 11
 
     if rhavg_col != -1:  # RHAvg is provided
 
