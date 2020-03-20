@@ -495,6 +495,12 @@ def obtain_data(config_file_path, metadata_file_path=None):
         config_dict['station_extension'] = station_extension
         config_dict['folder_path'] = folder_path
 
+    # Check lines_of_header value, if 0 change it to NONE, if nonzero minus it by one
+    if config_dict['lines_of_header'] == 0:
+        config_dict['lines_of_header'] = None
+    else:
+        config_dict['lines_of_header'] = config_dict['lines_of_header'] - 1
+
     # Open data file
     validate_file(config_dict['data_file_path'], ['csv', 'xls', 'xlsx'])
     if station_extension == '.csv':  # csv file provided
