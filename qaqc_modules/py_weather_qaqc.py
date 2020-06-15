@@ -842,6 +842,10 @@ class WeatherQAQC:
         diff_etr = np.array(self.etr - self.original_df.etr)
         diff_eto = np.array(self.eto - self.original_df.eto)
 
+        # Create k0 array to output values
+        k_not_vals = np.zeros(self.data_length)
+        k_not_vals[0:12] = self.mm_k_not[0:12]
+
         # Create datetime for output dataframe
         datetime_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month, 'day': self.data_day})
         datetime_df = pd.to_datetime(datetime_df[['month', 'day', 'year']])
@@ -871,7 +875,7 @@ class WeatherQAQC:
         fill_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month,
                                 'day': self.data_day, 'TMax (C)': self.fill_tmax, 'TMin (C)': self.fill_tmin,
                                 'TDew (C)': self.fill_tdew, 'Vapor Pres (kPa)': self.fill_ea, 'Rs (w/m2)': self.fill_rs,
-                                'Complete Record Rso (w/m2)': self.fill_rso},
+                                'Complete Record Rso (w/m2)': self.fill_rso, 'mm k0 values': k_not_vals},
                                index=datetime_df)
         output_df.index.name = 'date'
         delta_df.index.name = 'date'

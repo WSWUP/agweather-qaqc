@@ -1,9 +1,0 @@
-###################
-Common Data Issues
-###################
-
-This page contains a list of common data issues to look out for when you are examining weather data.
-
-
-.. note::
-   This is currently under construction.

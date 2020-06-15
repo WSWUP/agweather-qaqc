@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Correction Methods &mdash; PyWeatherQAQC 0.3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Example Run" href="example_run.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyWeatherQAQC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="qaqc_setup.html">pyWeatherQAQC Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_preparation.html">Data Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_run.html">Example Run</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Correction Methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#limits-on-data">Limits on Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#temperature-correction">Temperature Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wind-and-precipitation">Wind and Precipitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#relative-humidity-max-min-correction">Relative Humidity Max/Min Correction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#vapor-pressure-and-rh-average">Vapor Pressure and RH Average</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#solar-radiation-correction">Solar Radiation Correction</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyWeatherQAQC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Correction Methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/correction_methods.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="correction-methods">
+<h1>Correction Methods<a class="headerlink" href="#correction-methods" title="Permalink to this headline">¶</a></h1>
+<p>This page contains details on the correction methods used by pyWeatherQAQC. The methods chosen could be summed up as:</p>
+<p><strong>Make as few changes as possible to fix bad trends in data without sacrificing the real measured qualities of that data.</strong></p>
+<div class="section" id="limits-on-data">
+<h2>Limits on Data<a class="headerlink" href="#limits-on-data" title="Permalink to this headline">¶</a></h2>
+<p>The following limits are used when reading in the data to determine any unreasonable values, which are then removed.</p>
+<ul class="simple">
+<li><p>-50 C &lt;= Temperature &lt;= 60 C</p></li>
+<li><p>0 m/s &lt; Wind Speed &lt;= 35 m/s</p></li>
+<li><p>0 mm &lt;= Precipitation &lt;= 610 mm</p></li>
+<li><p>5 w/m2 &lt;= Solar Radiation &lt;= 700 w/m2</p></li>
+<li><p>0 kPa &lt;= Vapor Pressure &lt;= 8 kPa  #</p></li>
+<li><p>2% &lt; Relative Humidity &lt; 110%</p></li>
+</ul>
+<p>The number of points from each variable removed by these limits are saved in the log file.</p>
+</div>
+<div class="section" id="temperature-correction">
+<h2>Temperature Correction<a class="headerlink" href="#temperature-correction" title="Permalink to this headline">¶</a></h2>
+<p>Temperature correction is done by removing outliers using a modified z-score approach based on median absolute deviation as described in:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;Boris Iglewicz and David Hoaglin (1993)</span>
+ <span class="n">Volume</span> <span class="mi">16</span><span class="p">:</span> <span class="n">How</span> <span class="n">to</span> <span class="n">Detect</span> <span class="ow">and</span> <span class="n">Handle</span> <span class="n">Outliers</span><span class="p">,</span>
+ <span class="n">The</span> <span class="n">ASQC</span> <span class="n">Basic</span> <span class="n">References</span> <span class="ow">in</span> <span class="n">Quality</span> <span class="n">Control</span><span class="p">:</span> <span class="n">Statistical</span> <span class="n">Techniques</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>The process occurs in the following steps:</p>
+<ol class="arabic simple">
+<li><p>Temperature values are divided into subgroups based on what month they occur in.</p></li>
+<li><p>Each group (twelve total groups) of temperature values has its median absolute deviation calculated.</p></li>
+<li><p>That median absolute deviation is used to calculate a z-score for every temperature value within the group.</p></li>
+<li><p>Any value that exceeds the z-score threshold of 3.5 is removed as a likely outlier. The threshold of 3.5 is recommended by Iglewicz and Hoaglin.</p></li>
+<li><p>The data, once free of outliers, is considered corrected.</p></li>
+</ol>
+<p>Generally, temperature data suffers from discrete outliers introduced from equipment malfunctions rather than chronic problems like sensor drift.
+Checking for outliers with an outlier-resistant method such as this allows for the removal of those outliers without modifying the rest of
+the data.</p>
+</div>
+<div class="section" id="wind-and-precipitation">
+<h2>Wind and Precipitation<a class="headerlink" href="#wind-and-precipitation" title="Permalink to this headline">¶</a></h2>
+<p>There are no easy, reliable ways for us to infer what reasonable wind or precipitation data should be when presented with bad values,
+such as suspiciously high amounts of rainfall or wind data that remains constant over time. For these variables it is recommended to
+just throw remove bad or suspect values.</p>
+</div>
+<div class="section" id="relative-humidity-max-min-correction">
+<h2>Relative Humidity Max/Min Correction<a class="headerlink" href="#relative-humidity-max-min-correction" title="Permalink to this headline">¶</a></h2>
+<p>Relative humidity correction is done through a year-based percentile approach, broken down into these steps:</p>
+<ol class="arabic simple">
+<li><p>Divide the entire record into periods based on calendar years (365-366 values per year).</p></li>
+<li><p>Remove all nans from within each calendar year.</p></li>
+<li><p>Find the top 1% RHMax values within each calendar year once NaNs have been removed by dividing the number of non-nan
+days by 100, rounding down, but with a minimum of one, and finding that many largest values (3 for a full year). This
+division of the year by 100 is to prevent years at the start and end of record that may not have a full year from being oversampled.</p></li>
+<li><p>Take the average of those values.</p></li>
+<li><p>Calculate the ratio of 100 and that RHMax average.</p></li>
+<li><p>Multiply every RHMax value within each calendar year with its corresponding 100/RHMax average.</p></li>
+<li><p>Multiply every RHMin value within each calendar year with its corresponding 100/RHMax average.</p></li>
+<li><p>If any points of RHMax or RHMin are greater than 100% post correction, those points are set to equal 100. If any
+points of RHMax or RHMin are less than 0% post correction,  those points are set equal to 0.
+If RHMax is less than RHMin ( as an error in initial dataset), that RHMax and Min are thrown out.</p></li>
+<li><p>The data is now considered corrected.</p></li>
+</ol>
+<p>One of the most common problems with RH data is sensor drift that occurs slowly over time. This pattern is visible
+in the test_data.csv dataset that is provided in the repository. A year-based percentile approach allows for
+steadily-increasing correction factors over time to fix this, and making the periods of correction years will ideally
+make each period have all four seasons, which is important in arid locations or other places with seasonal rainfall.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>This method assumes daily RH values that have been calculated from subdaily RH values. If RH is computed from
+measured dewpoint temperature then this method is not reliable. However, if dewpoint temperature is provided
+and directly measured, using dewpoint data is preferable to using relative humidity data.</p>
+</div>
+<div class="section" id="vapor-pressure-and-rh-average">
+<h3>Vapor Pressure and RH Average<a class="headerlink" href="#vapor-pressure-and-rh-average" title="Permalink to this headline">¶</a></h3>
+<p>As with wind and precipitation data, there are no easy, reliable ways for us to infer what vapor pressure or average relative humidity should
+be when presented with bad values, for these variables it is recommended to just throw remove bad or suspect values, or instead choose
+to use a variable like RH Max/Min and Dewpoint Temperature than you can QC.</p>
+</div>
+</div>
+<div class="section" id="solar-radiation-correction">
+<h2>Solar Radiation Correction<a class="headerlink" href="#solar-radiation-correction" title="Permalink to this headline">¶</a></h2>
+<p>Correcting solar radiation data is done through a period-based percentile correction, which occurs in the following steps:</p>
+<ol class="arabic simple">
+<li><p>Divide the entire record into 60 day periods.</p></li>
+<li><p>Find the number of ratios of Rs/Rso for each 60 day period that are above one (signifying measured Rs is above Rso).</p></li>
+<li><p>Check the number of points that are above one in each 60 day period.</p></li>
+<li><p>If it is only one or two, remove those two points for Rs and set them to 1.05 * Rso. Go to step 6.</p></li>
+<li><p>If it is either zero, or three (5% of the period) or more, do nothing. Go to step 6.</p></li>
+<li><p>Once that is done, try to find the top six (10% of the period) ratios of rs/rso for each 60 day period.</p></li>
+<li><p>If you can find those all those values, go to step 9.</p></li>
+<li><p>If you cannot find 6 non-NaN values, throw out all datapoints in the period as there is insufficient data to make a correction.
+The number of data points removed by this process is tracked in the log file. Go to step 9.</p></li>
+<li><p>Find the corresponding six Rs and Rso values for those six ratios.</p></li>
+<li><p>Take the average of those six Rs data points and the average of those six Rso data points.</p></li>
+<li><p>Divide this new average Rso value with this new average Rs value to get a final ratio.</p></li>
+<li><p>Check the value of this final Rso_avg/Rs_avg ratio.</p></li>
+<li><p>If the ratio is between 0.97-1.03, do nothing, as the data is considered “real.” Go to step 16.</p></li>
+<li><p>If the ratio is below 0.50 or above 1.50, throw out all data within that period. Go to step 16.</p></li>
+<li><p>Multiply every Rs value within the 60 day period by that Rso_avg/Rs_avg ratio to correct the data.</p></li>
+<li><p>Any Rs values that have been corrected to be larger than their corresponding Rso are set to equal Rso.
+The number of points modified in this manner is tracked in the log file.</p></li>
+<li><p>The data is now considered corrected.</p></li>
+</ol>
+<p>Rs correction is dependant on Rso values, which itself is dependant on humidity data. We recommend Rs is corrected last
+so that we can use the best-possible Rso for the correction process.</p>
+<p>Solar radiation is more likely to have problems than other weather data, and will frequently have voltage spikes and sensor drift
+occurring together. This period-based percentile approach that tracks the number of times measured solar radiation exceeds theoretical clear-sky
+solar radiation allows for the correction of progressive sensor drift while at the same time catching voltage spikes during the period.
+The limit of 3 observations in each 60-day period is to account for stations where Rs constantly exceeds Rso, either due to
+poor calibration or some natural factor like additional reflected solar radiation from objects like clouds.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="example_run.html" class="btn btn-neutral float-left" title="Example Run" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Christian Dunkerly
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
