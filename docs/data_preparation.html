@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Data Preparation &mdash; PyWeatherQAQC 0.3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example Run" href="example_run.html" />
+    <link rel="prev" title="pyWeatherQAQC Setup" href="qaqc_setup.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyWeatherQAQC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="qaqc_setup.html">pyWeatherQAQC Setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data Preparation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#directory-structure">Directory Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-the-config-file">Setting up the Config File</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#metadata">METADATA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#options">OPTIONS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data">DATA</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-the-metadata-file">Setting up the Metadata File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-pyweatherqaqc">Running pyWeatherQAQC</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="example_run.html">Example Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="correction_methods.html">Correction Methods</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyWeatherQAQC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Data Preparation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/data_preparation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="data-preparation">
+<h1>Data Preparation<a class="headerlink" href="#data-preparation" title="Permalink to this headline">¶</a></h1>
+<p>In order for pyWeatherQAQC to work, you need to specify what weather variables are being provided,
+where in the data file they are located, and what units they are in.
+Most weather stations on a network have the same format for their data,
+so this process may only have to be done once for multiple stations.</p>
+<p>All of this is accomplished through the parameters specified in <strong>config.ini</strong>, but before getting into that we’ll talk about directory structure.</p>
+<div class="section" id="directory-structure">
+<h2>Directory Structure<a class="headerlink" href="#directory-structure" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/qaqc_directory.jpg"><img alt="The contents of the pyWeatherQAQC directory." class="align-center" src="_images/qaqc_directory.jpg" style="width: 400px; height: 100px;" /></a>
+<p>Assuming you have cloned the github directory, your folder should contain the following items:</p>
+<ul class="simple">
+<li><p>The “qaqc_modules” directory containing the different functions used by the main script.</p></li>
+<li><p>config.ini - The configuration file used by the script to find variables in the data file.</p></li>
+<li><p>qaqc_single_station.py - The actual script you will call to process weather data.
+Your icon may not match what is pictured here.</p></li>
+<li><p>A .csv, .xls, or .xlsx data file containing the weather data to process.
+In this example, it is located within the “test_files” folder.</p></li>
+</ul>
+<p>When the file <strong>qaqc_single_station.py</strong> is run, it looks for the <strong>config.ini</strong> file within the same folder and
+starts pulling all the relevant information from that config file.</p>
+<p>The github repository includes an example data file and a matching config.ini that is already set up to be run.
+This data is the one processed in the <a class="reference internal" href="example_run.html"><span class="doc">example run.</span></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>pyWeatherQAQC saves all of the output files in the same directory as the input file, so plan accordingly!</p>
+</div>
+</div>
+<div class="section" id="setting-up-the-config-file">
+<h2>Setting up the Config File<a class="headerlink" href="#setting-up-the-config-file" title="Permalink to this headline">¶</a></h2>
+<p>The configuration file “config.ini” can be broken down into 3 sections:</p>
+<div class="section" id="metadata">
+<h3>METADATA<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h3>
+<p>The top section of the config.ini file is where you will specify the metadata of both the weather station
+the data came from and information abou the data file unrelated to measured variables.
+This includes things like the station’s geographical location and whether or not the file has a header.</p>
+</div>
+<div class="section" id="options">
+<h3>OPTIONS<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
+<p>The next section of the config.ini file is where you will specify what options you want the script to run with.
+Examples of this would be whether or not you wanted to correct the data, or whether or not you wanted to
+generate and save plots of the data. This section may change in the future as more options are added.</p>
+<p>All of the settings in this section are either set to “0” (indicating FALSE, or NO) or “1” (indicating TRUE, or YES).
+For most users, the only option you’ll actually change will be <strong>correction_option</strong>, depending on if you
+want to correct data or not.</p>
+</div>
+<div class="section" id="data">
+<h3>DATA<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h3>
+<p>The majority of work in setting up the config.ini file is done in this section, where we specify what variables
+are in which columns of data, and what units those variables are in. The configuration file has explanations
+for its various prompts, but as an example, we’ll look at specifying the details for solar radiation:</p>
+<a class="reference internal image-reference" href="_images/data_file_example.png"><img alt="A typical dataset from a local weather station." class="align-center" src="_images/data_file_example.png" style="width: 600px; height: 300px;" /></a>
+<p>In this example, we can see that Solar radiation (Rs) data is measured in langleys (lang), and is
+located in <strong>Column F</strong>, which might lead you to think it’s in the 6th column.
+<strong>However, in Python, indexes start at 0</strong>, so Column A would be 0, Column B would be 1, and so on.
+Accounting for that, we would say <strong>Rs data is actually in Column 5.</strong></p>
+<p><strong>Now that we have that information, we can go to the relevant section of the .ini file and fill it in:</strong></p>
+<a class="reference internal image-reference" href="_images/solar_config.png"><img alt="The configuration parameters for solar radiation in the [DATA] section." class="align-center" src="_images/solar_config.png" style="width: 450px; height: 250px;" /></a>
+<p>Fill in rs_col with the appropriate value (in this case, 4), and set the appropriate unit flag (in this case, langleys)
+from “0” (indicating FALSE) to “1” (indicating TRUE).</p>
+<p>If, hypothetically, the solar radiation data was provided in w/m2, you would indicate that to the script by having
+all other unit flags be set to 0 (FALSE). The default units for each variable are always specified by the variable name.</p>
+<p><strong>A note on humidity data:</strong></p>
+<p>Humidity is commonly measured through either:</p>
+<ol class="arabic simple">
+<li><p>Actual Vapor Pressure (<strong>Ea</strong>)</p></li>
+<li><p>Dewpoint Temperature (<strong>TDew</strong>)</p></li>
+<li><p>Maximum and Minimum Relative Humidity (<strong>RHMax</strong> and <strong>RHMin</strong>)</p></li>
+<li><p>Average Relative Humidity (<strong>RHAvg</strong>)</p></li>
+</ol>
+<p>In terms of accuracy, this is a tiered list where the top option (<strong>Ea</strong>) is most desirable,
+and the bottom option (<strong>RHAvg</strong>) is the least. When configuring humidity measurements,
+<strong>input all the variables you may have</strong>, and the script will automatically pick the most preferable option.</p>
+</div>
+</div>
+<div class="section" id="setting-up-the-metadata-file">
+<h2>Setting up the Metadata File<a class="headerlink" href="#setting-up-the-metadata-file" title="Permalink to this headline">¶</a></h2>
+<p>Setting up a metadata file is an optional step that may save time depending on how many datafiles
+need to be processed. When this metadata file is setup, the software will iterate through all the lines of
+files contained within it, so that you do not need to manually change the config file parameters for each station.</p>
+<p>There is an example metadata file found within the <strong>test_files</strong> folder, which is shown here:</p>
+<a class="reference internal image-reference" href="_images/example_metadata.png"><img alt="The example metadata file, text_metadata.xlsx." class="align-center" src="_images/example_metadata.png" style="width: 650px; height: 75px;" /></a>
+<p>You will need to fill out columns:</p>
+<ul class="simple">
+<li><p>index - 1 to N, where N is the number of stations you have to process</p></li>
+<li><p>id - ID for that station, may be a letter or string, that is used by the network</p></li>
+<li><p>station_name - Name of that station</p></li>
+<li><p>latitude - Latitude of the station</p></li>
+<li><p>longitude - Longitude of the station</p></li>
+<li><p>elev_m - Elevation of the station in meters</p></li>
+<li><p>anemom_height_m - Height in meters of the station’s anemometer</p></li>
+<li><p>input_path - path to the data file for the station, either absolute or relative to the file qaqc_single_station.py</p></li>
+<li><p>run_count - this column should be filled with 0’s before starting. This column is used by the script to track which files have been run.</p></li>
+</ul>
+<p>The following columns are still required within the metadata file, but will be filled out by the software:</p>
+<ul class="simple">
+<li><p>record_start - Date at the start of the data file</p></li>
+<li><p>record_end - Date at the end of the data file</p></li>
+<li><p>output_path - relative path to the output file</p></li>
+<li><p>notes - This is not filled out by the output file, but will hold manually-entered notes when tracking QC procedures.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>pyWeatherQAQC requires that the metadata column names exactly match what is found within the example
+metadata file. In addition, the file will constantly be read from/written to when it is used, so if you have
+the file open in Excel or some alternative the software will fail.</p>
+</div>
+</div>
+<div class="section" id="running-pyweatherqaqc">
+<h2>Running pyWeatherQAQC<a class="headerlink" href="#running-pyweatherqaqc" title="Permalink to this headline">¶</a></h2>
+<p>Now that you have everything all set up, you have three options when running the software:</p>
+<p>Option 1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>This will try to find a config file named, “config.ini” in the same directory as qaqc_single_station.py and read parameters from it.</p>
+<p>Option 2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span> <span class="o">&lt;</span><span class="n">PATH_TO_CONFIG_FILE</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>This will try to open the config file located at the specified path and read parameters from it.</p>
+<p>Option 3:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span> <span class="o">&lt;</span><span class="n">PATH_TO_CONFIG_FILE</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">PATH_TO_METADATA_FILE</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>This will try to open the config file located at the specified path and read parameters from it, while also reading station
+metadata from the metadata file. This final option will allow you to rapidly iterate through your stations as you won’t have
+to edit the config file every time you process a station. (Assuming that all the stations have the same data format.)</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="example_run.html" class="btn btn-neutral float-right" title="Example Run" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="qaqc_setup.html" class="btn btn-neutral float-left" title="pyWeatherQAQC Setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Christian Dunkerly
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -20,10 +20,24 @@ class WeatherQAQC:
         """
             Obtain initial data and put it into a dataframe
         """
-        (self.data_df, self.column_df, self.station_name, self.log_file, self.station_lat, self.station_lon,
-         self.station_elev, self.ws_anemometer_height, self.missing_fill_value, self.script_mode,
-         self.auto_mode, self.fill_mode, self.metadata_mode, self.generate_bokeh, self.metadata_df,
-         metadata_series) = input_functions.obtain_data(self.config_path, self.metadata_path)
+        (self.data_df, self.column_df, self.metadata_df, self.metadata_series, self.config_dict) = \
+            input_functions.obtain_data(self.config_path, self.metadata_path)
+
+        # todo this individual assignment section is only temporary as the config_dict of input functions will be
+        #    referenced though this script eventually
+        self.station_name = self.config_dict['station_name']
+        self.log_file = self.config_dict['log_file_path']
+        self.station_lat = self.config_dict['station_latitude']
+        self.station_lon = self.config_dict['station_longitude']
+        self.station_elev = self.config_dict['station_elevation']
+        self.ws_anemometer_height = self.config_dict['anemometer_height']
+        self.missing_fill_value = self.config_dict['missing_fill_value']
+        self.folder_path = self.config_dict['folder_path']
+
+        self.script_mode = self.config_dict['corr_flag']
+        self.auto_mode = self.config_dict['auto_flag']
+        self.fill_mode = self.config_dict['fill_flag']
+        self.generate_bokeh = self.config_dict['plot_flag']
 
         if self.script_mode == 1:  # correcting data
             self.mc_iterations = 1000  # Number of iters for MC simulation of thornton running solar radiation gen
@@ -48,7 +62,7 @@ class WeatherQAQC:
         self.data_ws = np.array(self.data_df.ws)
         self.data_precip = np.array(self.data_df.precip)
 
-        self.output_file_path = "correction_files/" + self.station_name + "_output" + ".xlsx"
+        self.output_file_path = self.folder_path + "/correction_files/" + self.station_name + "_output" + ".xlsx"
 
     def _calculate_secondary_vars(self):
         """
@@ -81,14 +95,54 @@ class WeatherQAQC:
                                     self.data_rhmin, self.column_df.rhmin, self.data_rhavg, self.column_df.rhavg)
 
         # Calculates secondary temperature values and mean monthly counterparts
-        (self.delta_t, self.mm_delta_t, self.k_not, self.mm_k_not, self.mm_tmin, self.mm_tdew) = data_functions.\
+        (self.delta_t, self.mm_delta_t, self.k_not, self.mm_k_not, self.mm_tmin, self.mm_tdew) = data_functions. \
             calc_temperature_variables(self.data_month, self.data_tmax, self.data_tmin, self.data_tdew)
+
+        '''
+            Tdew_ko will have all missing values of tdew filled in with tmin - Ko curve method, but will keep missing
+            values if the underlying tmin is also missing. Currently it is just a copy of TDew, but filling will occur
+            after temp/humidity has been corrected. If the user does not correct data then this will stay unfilled, but
+            that is an edge case and not the intent of this code
+            
+            Tdew_ko is distinct from complete_tdew in that it only fills in an day's observation if there is a 
+            tmin observation presentfor that day. Complete_tdew has a filled in observation for every day because it is
+            based on a tmin that has been filled with random samples from a normal distribution. Unless the user 
+            specifically asks for this simulated data to be saved then it is only used to create a complete record of 
+            Rso for Rs correction and then is discarded.
+        '''
+        self.data_tdew_ko = np.array(self.data_tdew)
+
+        '''
+            This script uses multiple vapor pressure (ea) variables. As a reference for readability:
+    
+            data_ea = either ea data provided by the station or ea that has been calculated by whatever the 'best'
+                      humidity variable was in the input file. If it is the latter, this ea will have all the gaps and
+                      issues (like drift) that the underlying variable had.
+    
+            compiled_ea = the script creates as complete a record as possible of ea values by calculating ea from 
+                       'worse' variables should there be gaps in the more preferred ones. It only samples from data 
+                       that has been provided by the dataset. By the end of this process, the only gaps that will exist 
+                       will match the gaps that exist within Tmin. The preference is as follows:
+    
+                       (provided) Ea > (provided) TDew > RH Max and Min > RH Avg > TDew generated from TMin - Ko curve
+    
+            complete_ea = this is compiled ea but with all of the gaps filled in with TDew generated from 
+                       TMin - Ko Curve, and all gaps in TMin filled in by sampling from a monthly normal distribution
+                       of values. Unless the user specifically wants to export this day (option is in config file)
+                       then this data is only used to create a complete record of Rso values for Rs correction,
+                       and then is discarded at the end.
+        '''
+        self.compiled_ea = data_functions.compile_ea(self.data_tmax, self.data_tmin, self.data_tavg,
+                                                     self.data_ea, self.data_tdew, self.column_df.tdew,
+                                                     self.data_rhmax, self.column_df.rhmax, self.data_rhmin,
+                                                     self.column_df.rhmin, self.data_rhavg,
+                                                     self.column_df.rhavg, self.data_tdew_ko)
 
         # Calculates rso and grass/alfalfa reference evapotranspiration from refet package
         np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans
         (self.rso, self.mm_rs, self.eto, self.etr, self.mm_eto, self.mm_etr) = data_functions.\
             calc_rso_and_refet(self.station_lat, self.station_elev, self.ws_anemometer_height, self.data_doy,
-                               self.data_month, self.data_tmax, self.data_tmin, self.data_ea, self.data_ws,
+                               self.data_month, self.data_tmax, self.data_tmin, self.compiled_ea, self.data_ws,
                                self.data_rs)
         np.warnings.resetwarnings()  # reset warning filter to default
 
@@ -100,6 +154,7 @@ class WeatherQAQC:
         self.original_df['rso'] = self.rso
         self.original_df['etr'] = self.etr
         self.original_df['eto'] = self.eto
+        self.original_df['compiled_ea'] = self.compiled_ea
 
         # Create datetime variables that will be used by bokeh plot and correction functions
         self.dt_array = []
@@ -123,10 +178,13 @@ class WeatherQAQC:
         else:
             print("\nSystem: Skipping data correction and plotting raw data.")
 
+        # create a flag to check if composite ea has been adjusted or not before correcting solar radiation
+        self.humidity_adjusted = False
+
         # Complete_vars are going to be filled for the whole record, which may be put into output file if user requests
         self.complete_tmax = np.array(self.data_tmax)
         self.complete_tmin = np.array(self.data_tmin)
-        self.complete_ea = np.array(self.data_ea)
+        self.complete_ea = np.array(self.compiled_ea)
         self.complete_tdew = np.array(self.data_tdew)
 
         # Create arrays that will track which values have been filled (replace missing data) by the script
@@ -143,23 +201,58 @@ class WeatherQAQC:
             reset_output()  # clears bokeh output, prevents ballooning file sizes
             print('\nPlease select which of the following variables you want to correct'
                   '\n   Enter 1 for TMax and TMin.'
-                  '\n   Enter 2 for TMin and TDew.'
+                  '\n   Enter 2 for TMin and TDew, if TDew was provided.'
                   '\n   Enter 3 for Windspeed.'
                   '\n   Enter 4 for Precipitation.'
-                  '\n   Enter 5 for Rs.'
-                  '\n   Enter 6 for Humidity Measurements (Vapor Pressure, RHMax and RHmin, or RHAvg.)'
-                  '\n   Enter 7 to stop applying corrections.'
+                  '\n   Enter 5 for Solar Radiation (Rs).'
+                  '\n   Enter 6 for Vapor Pressure (Ea), if it was provided.'
+                  '\n   Enter 7 for RH Maximum and Minimum, if they were provided.'
+                  '\n   Enter 8 for RH Average, if it was provided.'
+                  '\n   Enter 9 to adjust how compiled humidity is sourced.'
+                  '\n   Enter 0 to stop applying corrections.'
                   )
 
             user = int(input("\nEnter your selection: "))
             choice_loop = 1
             while choice_loop:
-                if 1 <= user <= 7:
-                    if user == 6 and \
-                            (self.column_df.ea == -1 and self.column_df.rhmax == -1 and
-                             self.column_df.rhmin == -1 and self.column_df.rhavg == -1):
-                        # User selected option to correct humidity when the only var provided is tdew
-                        print('\nOnly TDew was provided as a humidity variable, which is corrected under option 2.')
+                if 0 <= user <= 9:
+                    # The following if statements check if user tries to correct a variable that was not provided
+                    # or make sure correction is being done in the right manner
+                    if user == 2 and self.column_df.tdew == -1:
+                        print('\nDewpoint temperature was not provided by the file, please choose a different option.')
+                        user = int(input('Specify which variable you would like to correct: '))
+
+                    elif user == 5 and not self.humidity_adjusted:
+                        print('\n\nBefore correcting solar radiation, did you want to adjust compiled humidity?.')
+                        print('Doing so may allow you to get the best possible humidity record for Rs correction.')
+                        print('\nEnter 1 to adjust compiled humidity or 0 to skip.')
+
+                        humid_loop = 1
+                        while humid_loop:
+                            humid_choice = int(input('Enter your selection: '))
+                            if humid_choice == 0:
+                                # user is choosing to skip humidity adjustment so nothing needs to be done.
+                                humid_loop = 0
+                            elif humid_choice == 1:
+                                # change original choice to the adjust humidity option
+                                user = 9
+                                humid_loop = 0
+                            else:
+                                # non valid choice entered
+                                print('\nPlease enter a valid option.')
+
+                        choice_loop = 0
+
+                    elif user == 6 and self.column_df.ea == -1:
+                        print('\nVapor Pressure was not provided by the file, please choose a different option.')
+                        user = int(input('Specify which variable you would like to correct: '))
+
+                    elif user == 7 and (self.column_df.rhmax == -1 or self.column_df.rhmin == -1):
+                        print('\nRHMax and RHMin were not provided by the file, please choose a different option.')
+                        user = int(input('Specify which variable you would like to correct: '))
+
+                    elif user == 8 and self.column_df.rhavg == -1:
+                        print('\nRHAvg was not provided by the file, please choose a different option.')
                         user = int(input('Specify which variable you would like to correct: '))
                     else:
                         choice_loop = 0
@@ -172,61 +265,78 @@ class WeatherQAQC:
             # Correcting Max/Min Temperature data
             if user == 1:
                 (self.data_tmax, self.data_tmin) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_tmax, self.data_tmin, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_tmax, self.data_tmin, self.dt_array,
                                self.data_month, self.data_year, 1, self.auto_mode)
             # Correcting Min/Dew Temperature data
             elif user == 2:
                 (self.data_tmin, self.data_tdew) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_tmin, self.data_tdew, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_tmin, self.data_tdew, self.dt_array,
                                self.data_month, self.data_year, 2, self.auto_mode)
             # Correcting Windspeed
             elif user == 3:
                 (self.data_ws, self.data_null) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_ws, self.data_null, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_ws, self.data_null, self.dt_array,
                                self.data_month, self.data_year, 3, self.auto_mode)
             # Correcting Precipitation
             elif user == 4:
                 (self.data_precip, self.data_null) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_precip, self.data_null, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_precip, self.data_null, self.dt_array,
                                self.data_month, self.data_year, 4, self.auto_mode)
             # Correcting Solar radiation
             elif user == 5:
                 (self.data_rs, self.data_null) = qaqc_functions.\
-                    correction(self.station_name, self.log_file, self.data_rs, self.rso, self.dt_array,
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_rs, self.rso, self.dt_array,
                                self.data_month, self.data_year, 5, self.auto_mode)
-            # Correcting Humidity Variable
+            # Correcting Vapor Pressure
             elif user == 6:
-                # Variables passed depends on what variables were provided
-                if self.column_df.ea != -1:
-                    # Vapor Pressure exists
-                    (self.data_ea, self.data_null) = qaqc_functions.\
-                        correction(self.station_name, self.log_file, self.data_ea, self.data_null, self.dt_array,
-                                   self.data_month, self.data_year, 7, self.auto_mode)
+                (self.data_ea, self.data_null) = qaqc_functions.\
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_ea, self.data_null, self.dt_array,
+                               self.data_month, self.data_year, 7, self.auto_mode)
+            # Correcting Relative Humidity Max and Min
+            elif user == 7:
+                (self.data_rhmax, self.data_rhmin) = qaqc_functions.\
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_rhmax, self.data_rhmin, self.dt_array,
+                               self.data_month, self.data_year, 8, self.auto_mode)
+            # Correcting Relative Humidity Average
+            elif user == 8:
+                (self.data_rhavg, self.data_null) = qaqc_functions.\
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_rhavg, self.data_null, self.dt_array,
+                               self.data_month, self.data_year, 9, self.auto_mode)
+            # Adjusting compiled_ea
+            elif user == 9:
+                self.compiled_ea = qaqc_functions.\
+                    compiled_humidity_adjustment(self.station_name, self.log_file, self.folder_path, self.dt_array,
+                                                 self.data_tmax, self.data_tmin, self.data_tavg, self.compiled_ea,
+                                                 self.data_ea, self.column_df.ea, self.data_tdew, self.column_df.tdew,
+                                                 self.data_tdew_ko, self.data_rhmax, self.column_df.rhmax,
+                                                 self.data_rhmin, self.column_df.rhmin,
+                                                 self.data_rhavg, self.column_df.rhavg)
 
-                elif self.column_df.ea == -1 and self.column_df.rhmax != -1 and self.column_df.rhmin != -1:
-                    # No vapor pressure but have rhmax and min
-                    (self.data_rhmax, self.data_rhmin) = qaqc_functions.\
-                        correction(self.station_name, self.log_file, self.data_rhmax, self.data_rhmin, self.dt_array,
-                                   self.data_month, self.data_year, 8, self.auto_mode)
-
-                elif self.column_df.ea == -1 and self.column_df.rhmax == -1 \
-                        and self.column_df.rhmin == -1 and self.column_df.rhavg != -1:
-                    # Only have RHavg
-                    (self.data_rhavg, self.data_null) = qaqc_functions.\
-                        correction(self.station_name, self.log_file, self.data_rhavg, self.data_null, self.dt_array,
-                                   self.data_month, self.data_year, 9, self.auto_mode)
-                else:
-                    # If an unsupported combination of humidity variables is present, raise a value error.
-                    raise ValueError('Humidity correction section encountered an '
-                                     'unexpected combination of humidity inputs.')
+                self.humidity_adjusted = True
             else:
+                # todo make this more explicit and handle user input that isnt strictly int without breaking
                 # user quits, exit out of loop
                 print('\nSystem: Now finishing up corrections.')
-                break  # Break here because all recalculations were done at the end of the last loop iteration
+                # Break here because all recalculations were done at the end of the last loop iteration
+                # also we break as opposed to setting script_mode to 0 because it is used later in the program
+                break
 
-            if user == 1 or user == 2 or user == 6:
+            if 1 <= user <= 2 or 6 <= user <= 8:
                 if user == 1:  # User has corrected temperature, so fill all missing values with a normal distribution
 
+                    # Reset 'complete' vars as the underlying var has been changed.
+                    self.complete_tmax = np.array(self.data_tmax)
+                    self.complete_tmin = np.array(self.data_tmin)
+
+                    # todo the below line erases any real measured tavg from the data, check if this is okay
                     # Recalculate TAvg after outliers have been removed from TMax and TMin
                     self.data_tavg = np.array((self.data_tmax + self.data_tmin) / 2.0)
 
@@ -259,32 +369,36 @@ class WeatherQAQC:
                             self.fill_tmin[i] = self.complete_tmin[i]
                         else:
                             pass
+
                         if (self.complete_tmax[i] <= self.complete_tmin[i]) or \
                                 (self.complete_tmax[i] - self.complete_tmin[i] <= 3):
                             # This is a logical check to make sure that tmax is sufficiently distant from tmin once
-                            # they have been filled in
-                            # This is not realistic, tmax needs to be warmer than tmin and daily temp isn't constant
+                            # they have been filled in, tmax needs to be warmer than tmin and daily temp isn't constant
+                            # so there should be at least a small difference in tmax-tmin
+
+                            # todo the below lines always provide a higher than average tmax
+                            #   and a lower than average tmin, this can be improved
                             # Fill this observation in with  mm observation with the difference of 1/2 of mm delta t
                             self.complete_tmax[i] = self.mm_tmax[self.data_month[i] - 1] + \
                                                     (0.5 * self.mm_delta_t[self.data_month[i] - 1])
                             self.fill_tmax[i] = self.complete_tmax[i]
 
                             self.complete_tmin[i] = self.mm_tmin[self.data_month[i] - 1] - \
-                                                    (0.5 * self.mm_delta_t[self.data_month[i] - 1])
+                                (0.5 * self.mm_delta_t[self.data_month[i] - 1])
                             self.fill_tmin[i] = self.complete_tmin[i]
                         else:
                             # data is different enough to appear valid
                             pass
 
-                        if self.fill_mode:
-                            # we are filling in data, so copy all of the filled versions onto the original temperature
-                            self.data_tmax = np.array(self.complete_tmax)
-                            self.data_tmin = np.array(self.complete_tmin)
-                        else:
-                            # if we are not filling, we will hold the copies to later fill in rso, but will reset fill
-                            # tracking variables
-                            self.fill_tmax = np.zeros(self.data_length)
-                            self.fill_tmin = np.zeros(self.data_length)
+                    if self.fill_mode:
+                        # we are filling in data, so copy all of the filled versions onto the original temperature
+                        self.data_tmax = np.array(self.complete_tmax)
+                        self.data_tmin = np.array(self.complete_tmin)
+                    else:
+                        # if we are not filling, we will hold the copies to later fill in rso, but will reset fill
+                        # tracking variables
+                        self.fill_tmax = np.zeros(self.data_length)
+                        self.fill_tmin = np.zeros(self.data_length)
                 else:
                     # user did not correct option 1
                     pass
@@ -304,52 +418,120 @@ class WeatherQAQC:
                     data_functions.calc_temperature_variables(self.data_month, self.data_tmax,
                                                               self.data_tmin, self.data_tdew)
 
-                if user == 2 or user == 6:
-                    #####
-                    # Fill in any missing tdew data with tmin - k0 curve.
-                    # Once TDew is filled, if that filled index is also empty for ea, then we use filled tdew to calc ea
-                    # If ea is given and NOT empty at that index we do nothing to avoid overwriting actual data
-                    # and the now filled TDew sections are used to calculate ea for those filled indices.
-                    # Nothing occurs if this fill code is run a second time because vars are already filled unless
-                    # correction methods throw out data.
+                # Since we are recalculating humidity variables, we also need to reset tdew_ko to ensure it matches the
+                # underlying unfilled tdew. It is filled later after this once the user corrects a humidity var
+                # so this reset is acceptable
+                self.data_tdew_ko = np.array(self.data_tdew)
+
+                if user == 2 or 6 <= user <= 8:
+
+                    # Reset 'complete' version as underlying variable may have changed
+                    self.complete_tdew = np.array(self.data_tdew)
+                    '''
+                        Fill in any missing tdew data with tmin - k0 curve.
+                        
+                        As detailed above, data_tdew_ko only fills in missing tdew observations with real tmin obs,
+                        while complete_tdew is a full record filled in using a filled in tmin.
+                        
+                        Nothing occurs if this fill code is run a second time because vars are already filled unless
+                        correction methods throw out data, in which case we need to refill for the complete record
+                        that Rs correction requires.
+                    '''
                     for i in range(self.data_length):
                         if np.isnan(self.data_tdew[i]):
+
+                            # Tdew_ko will have gaps that match gaps in Tmin
+                            # Complete_tdew will match complete_tmin in having no gaps
+                            self.data_tdew_ko[i] = self.data_tmin[i] - self.mm_k_not[self.data_month[i] - 1]
                             self.complete_tdew[i] = self.complete_tmin[i] - self.mm_k_not[self.data_month[i] - 1]
                             self.fill_tdew[i] = self.complete_tdew[i]
-
-                            if self.column_df.ea == -1 or (self.column_df.ea != -1 and np.isnan(self.data_ea[i])):
-                                # Either Ea not provided, OR Ea is provided and this index is empty and can be filled
-                                self.complete_ea[i] = (0.6108 * np.exp((17.27 * self.complete_tdew[i])
-                                                                       / (self.complete_tdew[i] + 237.3)))
-                                self.complete_ea[i] = self.complete_ea[i]
-                            else:
-                                # Ea is provided and the index is not empty, do nothing to avoid overwriting actual data
-                                pass
                         else:
                             # If TDew isn't empty then nothing is required to be done.
                             pass
 
-                        if self.fill_mode:
-                            # we are filling in data, so copy all of the filled versions onto the original arrays
-                            self.data_tdew = np.array(self.complete_tdew)
-                            self.data_ea = np.array(self.complete_ea)
-                        else:
-                            # if we are not filling, we will hold the copies to later fill in rso, but will reset fill
-                            # tracking variables
-                            self.fill_tdew = np.zeros(self.data_length)
-                            self.fill_ea = np.zeros(self.data_length)
+                    if self.fill_mode:
+                        # we are filling in data, so copy all of the filled versions onto the original arrays
+                        self.data_tdew = np.array(self.complete_tdew)
+                    else:
+                        # if we are not filling, we will hold the copies to later fill in rso, but will reset fill
+                        # tracking variables
+                        self.fill_tdew = np.zeros(self.data_length)
                 else:
-                    # user did not select option 2 or 6
+                    # user did not select option 2 or 6-8
                     pass
+
+                '''
+                    Recreate the 'compiled' ea as temperature or humidity vars were corrected and may have changed the
+                    data underlying the compiled ea. Once that is done we will fill in all the gaps with the 
+                    variable 'complete_tdew' so that a complete record of ea exists for rs correction
+                    
+                    The gaps in compiled_ea are reset every time temperature or humidity is corrected so this code is 
+                    okay to run multiple times
+                '''
+                self.compiled_ea = data_functions.compile_ea(self.data_tmax, self.data_tmin, self.data_tavg,
+                                                             self.data_ea, self.data_tdew, self.column_df.tdew,
+                                                             self.data_rhmax, self.column_df.rhmax, self.data_rhmin,
+                                                             self.column_df.rhmin, self.data_rhavg,
+                                                             self.column_df.rhavg, self.data_tdew_ko)
+
+                # Reset 'complete' version as underlying variable may have changed.
+                self.complete_ea = np.array(self.compiled_ea)
+
+                for i in range(self.data_length):
+                    if np.isnan(self.compiled_ea[i]):
+                        self.complete_ea[i] = (0.6108 * np.exp((17.27 * self.complete_tdew[i]) / (self.complete_tdew[i]
+                                                                                                  + 237.3)))
+                        self.fill_ea[i] = self.complete_ea[i]
+                else:
+                    # Ea is provided and the index is not empty, do nothing to avoid overwriting actual data
+                    pass
+
+                if self.fill_mode:
+                    # we are filling in data, so copy all of the filled versions onto the original arrays
+                    self.data_ea = np.array(self.complete_ea)
+                    self.compiled_ea = np.array(self.complete_ea)
+                else:
+                    # if we are not filling, we will hold the copies to later fill in rso, but will reset fill
+                    # tracking variables
+                    self.fill_ea = np.zeros(self.data_length)
+
+            elif user == 9:  # User has adjusted how the compiled humidity is sourced, recreate complete_ea
+                self.complete_ea = np.array(self.compiled_ea)
+
+                for i in range(self.data_length):
+                    if np.isnan(self.compiled_ea[i]):
+                        self.complete_ea[i] = (0.6108 * np.exp((17.27 * self.complete_tdew[i]) /
+                                                               (self.complete_tdew[i] + 237.3)))
+                        self.fill_ea[i] = self.complete_ea[i]
+                else:
+                    # the index is not empty, do nothing to avoid overwriting actual data
+                    pass
+
+                if self.fill_mode:
+                    # we are filling in data, so copy all of the filled versions onto the original arrays
+                    self.data_ea = np.array(self.complete_ea)
+                    self.compiled_ea = np.array(self.complete_ea)
+                else:
+                    # if we are not filling, we will hold the copies to later fill in rso, but will reset fill
+                    # tracking variables
+                    self.fill_ea = np.zeros(self.data_length)
             else:
-                # user did not select options 1,2, or 6
+                # user did not select options 1,2, 6, 7, 8, or 9.
                 pass
 
-            # Even if the user doesn't want to put filled data into their output file, we still need to use complete
-            # records to get a complete record of Rso for use in Rs correction
+            '''
+                Even if the user doesn't want to put filled data into their output file, we still need to use complete
+                records to get a complete record of Rso for use in Rs correction. This completed rso is only used for 
+                this step and is not written as data to the output file
+            '''
             if self.fill_mode:
-                # user wants to use filled variables, proceed as normal
-                # Recalculates rso and grass/alfalfa reference evapotranspiration from refet package
+                '''                  
+                    This recalculates Rso and ETr values using the filled 'completed_' versions to provide a complete
+                    record of ETr values.
+                    
+                    If this code is executing then 'data_' vars have already been replaced by their 'completed_' 
+                    versions so the code is accurate in calling them 'data_'
+                '''
                 np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning, nans
                 (self.rso, self.mm_rs, self.eto, self.etr, self.mm_eto, self.mm_etr) = data_functions. \
                     calc_rso_and_refet(self.station_lat, self.station_elev, self.ws_anemometer_height, self.data_doy,
@@ -357,9 +539,11 @@ class WeatherQAQC:
                                        self.data_rs)
                 np.warnings.resetwarnings()
             else:
-                # user doesn't want to fill in variables, create a filled copy of rso
-
-                # Recalculates rso and grass/alfalfa reference evapotranspiration from refet package
+                '''
+                    User doesn't want to keep filled in data, so use complete versions to create a filled version of
+                    rso while saving the other outputs of calc_rso_and_refet as temporary names which are unused to 
+                    prevent them from impacting later calculations
+                '''
                 np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning, nans
                 (self.rso, self._mm_rs, self._eto, self._etr, self._mm_eto, self._mm_etr) = \
                     data_functions.calc_rso_and_refet(self.station_lat, self.station_elev, self.ws_anemometer_height,
@@ -367,16 +551,25 @@ class WeatherQAQC:
                                                       self.complete_tmin, self.complete_ea, self.data_ws, self.data_rs)
                 np.warnings.resetwarnings()
 
-        #########################
-        # Final calculations
-        # We calculate both original and optimized thornton running solar radiation, and then if we are correcting data
-        # we fill in missing observations of solar radiation with optimized thornton running solar
-        # then we fill in missing windspeed data with an exponential random distribution
-        # finally recalculate reference evapotranspiration with the filled data_rs and data_ws
+        '''
+            At this point the user has finished correcting all variables they want to.
+            
+            We calculate both original and optimized thornton running solar radiation using a monte carlo approach
+            The number of MC iterations is defined by script_mode. Additionally, if the user is electing to fill data 
+            then we fill in all gaps of data_rs with the optimized thornton running solar radiation.
+            
+            Also, only if the user wants, we fill in all gaps of wind data using samples from a normal distribution.
+            
+            Finally, we do one final calculation of Rso/ETr with all the final versions of variables. If the user does
+            NOT want to fill in data, this final calculation of Rso will replace the filled one used for Solar
+            Radiation correction with one using only real data.
+        '''
+
         (self.orig_rs_tr, self.mm_orig_rs_tr, self.opt_rs_tr, self.mm_opt_rs_tr) = data_functions. \
             calc_org_and_opt_rs_tr(self.mc_iterations, self.log_file, self.data_month, self.delta_t, self.mm_delta_t,
                                    self.data_rs, self.rso)
 
+        # todo this section of code is out of place, currently we are not filling data but it could be situated better
         if self.script_mode == 1:
             self.mm_ws = np.zeros(12)
             self.std_ws = np.zeros(12)
@@ -417,9 +610,11 @@ class WeatherQAQC:
 
             (self.rso, self.mm_rs, self.eto, self.etr, self.mm_eto, self.mm_etr) = data_functions. \
                 calc_rso_and_refet(self.station_lat, self.station_elev, self.ws_anemometer_height, self.data_doy,
-                                   self.data_month, self.data_tmax, self.data_tmin, self.data_ea,
+                                   self.data_month, self.data_tmax, self.data_tmin, self.compiled_ea,
                                    self.data_ws, self.data_rs)
         else:
+            # script_mode == 0 so we are not correcting data and we do not generate filled versions or need to recalc
+            # secondary vars
             pass
 
     def _create_plots(self):
@@ -430,7 +625,7 @@ class WeatherQAQC:
         # Histograms of original data
         # Generates composite plot of specific variables before correction
         # We fill these variables by sampling a normal distribution, so we use this plot mainly as evidence for that.
-        if self.generate_bokeh:
+        if self.generate_bokeh and self.script_mode == 0:
             ws_hist = plotting_functions.histogram_plot(self.data_ws[~np.isnan(self.data_ws)],
                                                         'Windspeed', 'black', 'm/s')
             tmax_hist = plotting_functions.histogram_plot(self.data_tmax[~np.isnan(self.data_tmax)],
@@ -444,7 +639,7 @@ class WeatherQAQC:
             k_not_hist = plotting_functions.histogram_plot(self.k_not[~np.isnan(self.k_not)],
                                                            'Ko', 'black', 'degrees C')
 
-            output_file("correction_files/" + self.station_name + '_histograms.html',
+            output_file(self.folder_path + "/correction_files/histograms/" + self.station_name + '_histograms.html',
                         title=self.station_name + ' histograms')
 
             save(gridplot([ws_hist, tmax_hist, tmin_hist, tavg_hist, tdew_hist, k_not_hist], ncols=2,
@@ -462,10 +657,10 @@ class WeatherQAQC:
             y_size = 350
 
             if self.script_mode == 0:
-                output_file("correction_files/before_graphs/" + self.station_name +
+                output_file(self.folder_path + "/correction_files/before_graphs/" + self.station_name +
                             "_before_corrections_composite_graph.html")
             elif self.script_mode == 1:
-                output_file("correction_files/after_graphs/" + self.station_name +
+                output_file(self.folder_path + "/correction_files/after_graphs/" + self.station_name +
                             "_after_corrections_composite_graph.html")
             else:
                 # Incorrect setup of script mode variable, raise an error
@@ -480,35 +675,28 @@ class WeatherQAQC:
                                                           self.data_tdew, 2, '', plot_tmax_tmin)
             plot_list.append(plot_tmin_tdew)
 
-            # Subplot 3 changes based on what variables are provided
-            if self.column_df.ea != -1:  # Vapor pressure was provided
-                plot_humid = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_ea, self.data_null,
-                                                          7, 'Provided ', plot_tmax_tmin)
+            # 'Completed' vapor pressure plot
+            plot_comp_ea = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.compiled_ea, self.data_null,
+                                                        7, 'Composite ', plot_tmax_tmin)
+            plot_list.append(plot_comp_ea)
 
-            elif self.column_df.ea == -1 and self.column_df.tdew != -1:  # Tdew was provided, show calculated ea
-                plot_humid = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_ea, self.data_null,
-                                                          7, 'Calculated ', plot_tmax_tmin)
+            # vapor pressure plot that was just the provided dataset
+            if self.column_df.ea != -1:
+                plot_data_ea = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_ea, self.data_null,
+                                                            7, 'Provided ', plot_tmax_tmin)
+                plot_list.append(plot_data_ea)
 
-            elif self.column_df.ea == -1 and self.column_df.tdew == -1 and \
-                    self.column_df.rhmax != -1 and self.column_df.rhmin != -1:  # RH max and RH min
-                plot_humid = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_rhmax,
-                                                          self.data_rhmin, 8, '', plot_tmax_tmin)
+            # rh max and rh min plot if it was provided in dataset
+            if self.column_df.rhmax != -1 and self.column_df.rhmin != -1:  # RH max and RH min
+                plot_rhmax_rhmin = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_rhmax,
+                                                                self.data_rhmin, 8, '', plot_tmax_tmin)
+                plot_list.append(plot_rhmax_rhmin)
 
-            elif self.column_df.ea == -1 and self.column_df.tdew == -1 and \
-                    self.column_df.rhmax == -1 and self.column_df.rhavg != -1:  # RH Avg
-                plot_humid = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_rhavg,
+            # rh avg if it was provided in the dataset
+            if self.column_df.rhavg != -1:  # RH Avg
+                plot_rhavg = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_rhavg,
                                                           self.data_null, 9, '', plot_tmax_tmin)
-            else:
-                # If an unsupported combination of humidity variables is present, raise a value error.
-                raise ValueError('Bokeh figure generation encountered an unexpected combination of humidity inputs.')
-
-            plot_list.append(plot_humid)
-
-            # If both ea and rhmax/rhmin are provided, generate a supplementary rhmax/min graph
-            if self.column_df.rhmax != -1 and self.column_df.rhmin != -1 and self.column_df.ea != -1:
-                plot_supplemental_rh = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_rhmax,
-                                                                    self.data_rhmin, 8, '', plot_tmax_tmin)
-                plot_list.append(plot_supplemental_rh)
+                plot_list.append(plot_rhavg)
 
             # Mean Monthly Temperature Minimum and Dewpoint
             plot_mm_tmin_tdew = plotting_functions.line_plot(x_size, y_size, self.mm_dt_array, self.mm_tmin,
@@ -571,21 +759,19 @@ class WeatherQAQC:
 
         #########################
         # Create necessary variables for generic metadata file, as well as
-        # generate and fill metadata file, if user wants it
+        # generate and fill metadata file
         record_start = pd.to_datetime(self.dt_array[0]).date()
         record_end = pd.to_datetime(self.dt_array[-1]).date()
 
-        if self.metadata_mode == 1 and self.script_mode == 1:
-            # user wants to fill metadata and it is the correct mode
-
+        if self.script_mode == 1:  # only need to generate metadata if we are correcting it
             # First check to see if metadata file already exists
             if not os.path.isfile('correction_metadata.xlsx'):
                 # file does not exist, create new one
-                metadata_info = pd.DataFrame({'station_name': self.station_name, 'station_lat': self.station_lat,
-                                              'station_lon': self.station_lon, 'station_elev_m': self.station_elev,
+                metadata_info = pd.DataFrame({'Station': self.station_name, 'Latitude': self.station_lat,
+                                              'Longitude': self.station_lon, 'station_elev_m': self.station_elev,
                                               'record_start': record_start, 'record_end': record_end,
                                               'anemom_height_m': self.ws_anemometer_height,
-                                              'output_file_path': self.output_file_path}, index=np.array([1]))
+                                              'Filename': self.output_file_path}, index=np.array([1]))
 
                 with pd.ExcelWriter('correction_metadata.xlsx', date_format='YYYY-MM-DD',
                                     datetime_format='YYYY-MM-DD HH:MM:SS', engine='openpyxl', mode='w') as writer:
@@ -596,11 +782,11 @@ class WeatherQAQC:
                 metadata_info = pd.read_excel('correction_metadata.xlsx', sheet_name=0, index_col=None, engine='xlrd',
                                               keep_default_na=False, verbose=True, skip_blank_lines=True)
 
-                new_meta_info = pd.DataFrame({'station_name': self.station_name, 'station_lat': self.station_lat,
-                                              'station_lon': self.station_lon, 'station_elev_m': self.station_elev,
+                new_meta_info = pd.DataFrame({'Station': self.station_name, 'Latitude': self.station_lat,
+                                              'Longitude': self.station_lon, 'station_elev_m': self.station_elev,
                                               'record_start': record_start, 'record_end': record_end,
                                               'anemom_height_m': self.ws_anemometer_height,
-                                              'output_file_path': self.output_file_path}, index=np.array([1]))
+                                              'Filepath': self.output_file_path}, index=np.array([1]))
 
                 output_metadata = pd.concat([metadata_info, new_meta_info], ignore_index=True)
 
@@ -656,14 +842,19 @@ class WeatherQAQC:
         diff_etr = np.array(self.etr - self.original_df.etr)
         diff_eto = np.array(self.eto - self.original_df.eto)
 
+        # Create k0 array to output values
+        k_not_vals = np.zeros(self.data_length)
+        k_not_vals[0:12] = self.mm_k_not[0:12]
+
         # Create datetime for output dataframe
         datetime_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month, 'day': self.data_day})
         datetime_df = pd.to_datetime(datetime_df[['month', 'day', 'year']])
 
         # Create output dataframe
-        output_df = pd.DataFrame({'date': datetime_df, 'year': self.data_year, 'month': self.data_month,
+        output_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month,
                                   'day': self.data_day, 'TAvg (C)': self.data_tavg, 'TMax (C)': self.data_tmax,
                                   'TMin (C)': self.data_tmin, 'TDew (C)': self.data_tdew,
+                                  'Compiled Ea (kPa)': self.compiled_ea,
                                   'Vapor Pres (kPa)': self.data_ea, 'RHAvg (%)': self.data_rhavg,
                                   'RHMax (%)': self.data_rhmax, 'RHMin (%)': self.data_rhmin, 'Rs (w/m2)': self.data_rs,
                                   'Opt_Rs_TR (w/m2)': self.opt_rs_tr, 'Rso (w/m2)': self.rso,
@@ -672,7 +863,7 @@ class WeatherQAQC:
                                  index=datetime_df)
 
         # Creating difference dataframe to track amount of correction
-        delta_df = pd.DataFrame({'date': datetime_df, 'year': self.data_year, 'month': self.data_month,
+        delta_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month,
                                  'day': self.data_day, 'TAvg (C)': diff_tavg, 'TMax (C)': diff_tmax,
                                  'TMin (C)': diff_tmin, 'TDew (C)': diff_tdew,
                                  'Vapor Pres (kPa)': diff_ea, 'RHAvg (%)': diff_rhavg, 'RHMax (%)': diff_rhmax,
@@ -681,12 +872,14 @@ class WeatherQAQC:
                                  'ETr (mm)': diff_etr, 'ETo (mm)': diff_eto}, index=datetime_df)
 
         # Creating a fill dataframe that tracks where missing data was filled in
-        fill_df = pd.DataFrame({'date': datetime_df, 'year': self.data_year, 'month': self.data_month,
+        fill_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month,
                                 'day': self.data_day, 'TMax (C)': self.fill_tmax, 'TMin (C)': self.fill_tmin,
                                 'TDew (C)': self.fill_tdew, 'Vapor Pres (kPa)': self.fill_ea, 'Rs (w/m2)': self.fill_rs,
-                                'Complete Record Rso (w/m2)': self.fill_rso},
+                                'Complete Record Rso (w/m2)': self.fill_rso, 'mm k0 values': k_not_vals},
                                index=datetime_df)
-
+        output_df.index.name = 'date'
+        delta_df.index.name = 'date'
+        fill_df.index.name = 'date'
         # Open up pandas excel writer
         output_writer = pd.ExcelWriter(self.output_file_path, engine='xlsxwriter')
         # Convert data frames to xlsxwriter excel objects

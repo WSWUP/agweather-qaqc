@@ -1,262 +1,347 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Example Run &#8212; pyWeather QAQC 0.2.1 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Example Run &mdash; PyWeatherQAQC 0.3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Common Data Issues" href="data_issues.html" />
-    <link rel="prev" title="Setting Up The Data" href="data_setup.html" />
+    <link rel="next" title="Correction Methods" href="correction_methods.html" />
+    <link rel="prev" title="Data Preparation" href="data_preparation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
    
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
           
 
-          <div class="body" role="main">
+          
+            <a href="index.html" class="icon icon-home"> PyWeatherQAQC
+          
+
+          
+          </a>
+
+          
             
-  <div class="section" id="example-run">
-<h1>Example Run<a class="headerlink" href="#example-run" title="Permalink to this headline">¶</a></h1>
-<p>Running pyWeatherQAQC happens in two iterations, first is to generate a graph of all the data for your inspection, and the second is to correct any data that appears faulty, wrong, or suspicious.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The directions here assume that your config.ini file and directory structure have been unchanged from when you cloned the Github repository.</p>
-</div>
-<div class="section" id="step-1-visualizing-the-data">
-<h2>Step 1: Visualizing the Data<a class="headerlink" href="#step-1-visualizing-the-data" title="Permalink to this headline">¶</a></h2>
-<p>Everything is already setup for you, so point the command prompt/terminal window to the directory containing <strong>QAQC_Master.py</strong> and type:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">QAQC_Master</span><span class="o">.</span><span class="n">py</span>
-</pre></div>
-</div>
-<p>This will start the script to and it will automatically start reading parameters from the file ‘config.ini’.</p>
-<p>If you have multiple configuration files, you can ask the script to read from a specific one by typing:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">QAQC_Master</span><span class="o">.</span><span class="n">py</span> <span class="o">&lt;</span><span class="n">CONFIGUATION_FILE_PATH_HERE</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-<p>Regardless of which method you chose, there is nothing more to do for this iteration. The script will generate some text and then end.</p>
-<a class="reference internal image-reference" href="_images/initial_run.png"><img alt="Text output from initial run on example data file." class="align-center" src="_images/initial_run.png" style="width: 525px; height: 250px;" /></a>
-<div class="admonition caution">
-<p class="first admonition-title">Caution</p>
-<p class="last">If you are using Python 3.7, you may receive a DepreciationWarning. It can be safely ignored.</p>
-</div>
-<p>If you open the directory of the data file, you’ll see that several new files have been generated (here indicated by the blue box).</p>
-<a class="reference internal image-reference" href="_images/initial_run_folder.png"><img alt="Output files from initial run on example data file." class="align-center" src="_images/initial_run_folder.png" style="width: 500px; height: 250px;" /></a>
-<p>Of these new files, we are only interested in <strong>example_station_before_corrections_composite_graph.html</strong>. It contains graphs of all of provided different variables in an easy to view format.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">You can click these images to view a larger version.</p>
-</div>
-<a class="reference internal image-reference" href="_images/pre_corr_figures.png"><img alt="A section of the 'before_correction_composite_graph' output file." class="align-center" src="_images/pre_corr_figures.png" style="width: 650px; height: 350px;" /></a>
-<p>All the variables are provided side-by-side for comparision, however at this scale it’s difficult to see the details. You can use the tools in bokeh (green box) to get a closer view:</p>
-<a class="reference internal image-reference" href="_images/pre_corr_zoom.png"><img alt="A zoomed section of the 'before_correction_composite_graph' output file." class="align-center" src="_images/pre_corr_zoom.png" style="width: 650px; height: 350px;" /></a>
-<p>The different variable plots are linked together, so zooming in on one will cause the others to behave the same way. In addition, if you hover the cursor over individual data points a pop-up will tell you the value and index of it.</p>
-<p>Looking at these variables for this time period, we have a couple issues:</p>
-<ol class="arabic simple">
-<li>For the year of 1996/1997 relative humidity never quite reaches 100%, indicating some possible sensor drift.</li>
-<li>For that same period, actual solar radiation is higher than the theoretical clear-sky solar radiation, indicating the sensor may not have been calibrated correctly.</li>
-</ol>
-<p>If we pan through the entire record, we see these two issues occur fairly consistently, with relative humidity appearing particularly bad in the years 2007-2009. Next, we’ll rerun the script to correct these issues.</p>
-</div>
-<div class="section" id="step-2-correcting-the-data">
-<h2>Step 2: Correcting the Data<a class="headerlink" href="#step-2-correcting-the-data" title="Permalink to this headline">¶</a></h2>
-<p>In order to indicate to pyWeatherQAQC that we’re correcting the data, we need to change the appropriate parameter in the config.ini file (blue box):</p>
-<a class="reference internal image-reference" href="_images/ini_mode_change.png"><img alt="Changing the script_mode parameter switches to correcting data." class="align-center" src="_images/ini_mode_change.png" style="width: 650px; height: 250px;" /></a>
-<p>We’re now going to correct this data. If you’re curious as to exactly how we correct the different variables and why, please see the see <a class="reference internal" href="correction_process.html"><span class="doc">Correction Process</span></a> writeup.</p>
-<p>First, run the script again with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">QAQC_Master</span><span class="o">.</span><span class="n">py</span>
-</pre></div>
-</div>
-<p>Once that’s done, some text will generate and then the script will prompt you with a choice:</p>
-<a class="reference internal image-reference" href="_images/corr_prompt.png"><img alt="Correction menu present in the second run." class="align-center" src="_images/corr_prompt.png" style="width: 450px; height: 250px;" /></a>
-<p>Correcting data works as a loop:</p>
-<ol class="arabic simple">
-<li>You pick a variable and correct it.</li>
-<li>All secondary variables that may depend on that corrected variable are recalculated.</li>
-<li>You pick the next variable for correction.</li>
-<li>Once you have iterated through all variables you wanted to correct, the script does one final recalculation, saves its outputs, and ends.</li>
-</ol>
-<p>We don’t want to correct a variable, then have it later be affected by correcting another variable. An example of this would be correcting solar radiation first, which is corrected using clear-sky solar radiation values, and then later correct humidity data, which is used in the calculation of clear-sky solar radiation. To avoid this, it is important to correct in the following order:</p>
-<ol class="arabic simple">
-<li>Correct maximum and minimum temperature data</li>
-<li>Correct wind speed and precipitation data</li>
-<li>Correct the best humidity variable that has been provided</li>
-<li>Correct solar radiation</li>
-<li>Exit the script and save the outputs</li>
-</ol>
-<p>Enter ‘1’ for temperature data and you should be presented with another figure:</p>
-<a class="reference internal image-reference" href="_images/temp_data.png"><img alt="Dedicated temperature plot generated by pyWeatherQAQC" class="align-center" src="_images/temp_data.png" style="width: 550px; height: 750px;" /></a>
-<p>When you correct a variable, the script generates a bokeh plot for that variable that contains four subplots:</p>
-<ol class="arabic simple">
-<li>The original data before correction</li>
-<li>The latest corrected data</li>
-<li>The deltas of Corrected - Original Values</li>
-<li>The percent change of ( Corrected - Original ) / Original</li>
-</ol>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">A data point that is missing, either from missing within the record or because you have removed it yourself, shows up as a blank spot in the bokeh plots.</p>
-</div>
-<p>Right now they aren’t that helpful because we haven’t changed the data. We also see that the terminal window has given us more choices:</p>
-<a class="reference internal image-reference" href="_images/temp_prompt.png"><img alt="Terminal window text for correcting temperature" class="align-center" src="_images/temp_prompt.png" style="width: 650px; height: 350px;" /></a>
-<p>The <strong>Dark Blue</strong> section is the first prompt, where you indicate what section of the data series you want to modify. In this example I have entered <strong>-1</strong> to select the entire data series. If I wanted to correct only a specific section, I would enter the index of the start of that section and then the script would prompt me to enter the ending index of that section.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">You can hover your cursor over a data point in the bokeh charts to get its index. Use this to accurately mark sections of data.</p>
-</div>
-<p>The <strong>Light Blue</strong> section is the second prompt, where you indicate what method of correction you want to use on the data. In this example, we decide to enter <strong>4</strong> to use the modified z-scores approach to remove outliers. The script performs this method and outputs a few metrics for us to look at.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p>Depending on what variable you correct, you may be presented with different options and multiple prompts to correct the data. In each case the prompt also has a recommended value to enter.</p>
-<p class="last">It’s hard to go wrong following these recommended values.</p>
-</div>
-<p>The <strong>Dark Green</strong> section is the final prompt, where we are asked what we want to do next. We have the option to finish correction, do another iteration, start over, or exit without saving. After each iteration of corrections the bokeh chart is updated to reflect changes.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">It’s bad practice to correct a data point more than once. The most likely course of action you’ll take is to select sections of really bad data, throw those observations out, and then do a final correction for the entire record where you actually correct values.</p>
-</div>
-<p>Once you select option <strong>1</strong> or option <strong>4</strong>, the script prompts you with the previous menu to select a variable for correction.</p>
-<p>Now that we’ve explained the process in depth, the remaining process for this station is:</p>
-<ol class="arabic simple">
-<li>Enter <strong>1</strong> to return to the previous menu.</li>
-<li>Enter <strong>6</strong> to correct your provided humidity variable, which in this case was <strong>RHMax</strong> and <strong>RHMin</strong></li>
-<li>Select the full data series with <strong>-1</strong>, then select <strong>4</strong> for a year-based percentile correction, using the <strong>99</strong>-th percentile.</li>
-<li>Enter <strong>1</strong> to return to the previous menu and select <strong>5</strong> to select solar radiation.</li>
-<li>Select the full data series with <strong>-1</strong>, then select <strong>4</strong> for a period-based percentile correction, using <strong>99, 60, and 90</strong> as parameters.</li>
-<li>Now, <strong>just as an exercise in using the script</strong>, enter <strong>2</strong> to do another iteration, starting the interval at index <strong>6550</strong> and ending it at <strong>6940</strong>. Finally, select <strong>3</strong> to remove that data.</li>
-<li>Enter <strong>1</strong> to return to the previous menu and enter <strong>7</strong> to do the final calculations and then close.</li>
-</ol>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">On this particular station there are no issues with either precipitation or wind speed data. If there were issues present, we would ideally correct them between steps 1 and 2 above.</p>
-</div>
-<div class="admonition caution">
-<p class="first admonition-title">Caution</p>
-<p class="last">The final calculations include some computationally-intensive activities. Depending on your hardware and size of data set it may take a few moments to finish.</p>
-</div>
-</div>
-<div class="section" id="step-3-output-files">
-<h2>Step 3: Output Files<a class="headerlink" href="#step-3-output-files" title="Permalink to this headline">¶</a></h2>
-<p>Once the script has ended, reopen the directory containing the station data and you’ll see several new files:</p>
-<a class="reference internal image-reference" href="_images/corr_run_folder.png"><img alt="Contents of data folder after script has been run twice." class="align-center" src="_images/corr_run_folder.png" style="width: 550px; height: 250px;" /></a>
-<p>The <strong>Dark Blue</strong> file is a composite output graph that mirrors the composition of the ‘before_corrections_composite_graph.’</p>
-<p>The <strong>Light Blue</strong> file is the log file that documents what order the variables were changed in and how, for accountability.</p>
-<dl class="docutils">
-<dt>The <strong>Dark Green</strong> file is the actual output file of all the data. It contains three sheets:</dt>
-<dd><ul class="first last simple">
-<li>The first sheet contains the actual corrected data.</li>
-<li>The second sheet contains the deltas of final values and original values.</li>
-<li>The third sheet tracks any missing values that were filled in by the script.</li>
-</ul>
-</dd>
-</dl>
-<p>The <strong>Light Green</strong> files are the individual variable graphs that we saw when correcting, such as in the temperature example above.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Notice how in the individual variable graph for solar radiation the year 2010 is missing observations (because we chose to remove them), yet on the composite graph there are no missing observations. This discrepancy is due to the script filling in missing solar data with the Thornton-Running model during the final calculations.</p>
-</div>
-<p>With that, <strong>you’re done.</strong> Congratulations on correcting your first station of data.</p>
-</div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
 </div>
 
-
-          </div>
           
         </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">pyWeather QAQC</a></h1>
 
-
-
-
-
-
-
-
-<h3>Navigation</h3>
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="about_project.html">About pyWeatherQAQC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="python_setup.html">Installing Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qaqc_setup.html">pyWeatherQAQC Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data_setup.html">Setting Up The Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_preparation.html">Data Preparation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Example Run</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#step-1-visualizing-the-data">Step 1: Visualizing the Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#step-2-correcting-the-data">Step 2: Correcting the Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#step-3-output-files">Step 3: Output Files</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="data_issues.html">Common Data Issues</a></li>
-<li class="toctree-l1"><a class="reference internal" href="correction_process.html">Correction Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="problems.html">Problems?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="correction_methods.html">Correction Methods</a></li>
 </ul>
 
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="data_setup.html" title="previous chapter">Setting Up The Data</a></li>
-      <li>Next: <a href="data_issues.html" title="next chapter">Common Data Issues</a></li>
-  </ul></li>
-</ul>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyWeatherQAQC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Example Run</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/example_run.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
 </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="example-run">
+<h1>Example Run<a class="headerlink" href="#example-run" title="Permalink to this headline">¶</a></h1>
+<p>Running pyWeatherQAQC happens in two iterations, first is to generate a graph of all the data for your inspection, and the second is to correct any data that appears faulty, wrong, or suspicious.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The directions here assume that your config.ini file and directory structure have been unchanged from when you cloned the Github repository.</p>
+</div>
+<div class="section" id="step-1-visualizing-the-data">
+<h2>Step 1: Visualizing the Data<a class="headerlink" href="#step-1-visualizing-the-data" title="Permalink to this headline">¶</a></h2>
+<p>Everything is already setup for you, so point the command prompt/terminal window to the directory containing <strong>QAQC_Master.py</strong> and type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>This will start the script to and it will automatically start reading parameters from the file ‘config.ini’.</p>
+<p>There’s nothing more to do for this first iteration. The software will start and end automatically. When it’s finished,
+you’ll notice a folder called “correction_files” has appeared in the same directory as the data file. If you look inside
+that you will see the following:</p>
+<a class="reference internal image-reference" href="_images/correction_files_view.png"><img alt="Directory of correction_files after an initial run." class="align-center" src="_images/correction_files_view.png" style="width: 525px; height: 200px;" /></a>
+<p>This directory and its subfolders contain the various output files that the script will generate. For now, we’re mainly
+interested in the file <strong>test_data_before_corrections_composite_graph.html</strong>, which is contained within the folder <strong>before_graphs</strong>.</p>
+<a class="reference internal image-reference" href="_images/pre_corr_figures.png"><img alt="A section of the 'before_correction_composite_graph' output file." class="align-center" src="_images/pre_corr_figures.png" style="width: 650px; height: 400px;" /></a>
+<p>As you can see above, all the variables are provided side-by-side for comparision, however at this scale it’s difficult to see the details. You can use the tools in bokeh to get a closer view:</p>
+<a class="reference internal image-reference" href="_images/pre_corr_zoom.png"><img alt="A zoomed section of the 'before_correction_composite_graph' output file." class="align-center" src="_images/pre_corr_zoom.png" style="width: 650px; height: 350px;" /></a>
+<p>The different variable plots are linked together, so zooming in on one will cause the others to behave the same way. In addition, if you hover the cursor over individual data points a pop-up will tell you the value and index of it.</p>
+<p>Looking at these variables for this time period, we have a couple issues:</p>
+<ol class="arabic simple">
+<li><p>For the middle period of record RH Maximum never approaches 100%, and the slow decline indicates possible sensor drift.</p></li>
+<li><p>For most of the period, actual solar radiation is higher than the theoretical clear-sky solar radiation, indicating the sensor may not have been calibrated correctly.</p></li>
+</ol>
+<p>If we pan through the entire record, we see these two issues occur fairly consistently. Next, we’ll rerun the script to correct these issues.</p>
+</div>
+<div class="section" id="step-2-correcting-the-data">
+<h2>Step 2: Correcting the Data<a class="headerlink" href="#step-2-correcting-the-data" title="Permalink to this headline">¶</a></h2>
+<p>In order to indicate to pyWeatherQAQC that we’re correcting the data, we need to change the appropriate parameter, <strong>correction_option</strong>
+from a 0 to a 1, indicating that now we actually want to correct the data.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you’re using a metadata file, this step has been done for you within the metadata file itself. You can see that run_count
+has incremented from 0 to 1.</p>
+</div>
+<p>We’re now going to correct this data. If you’re curious as to exactly how we correct the different variables and why, please see the see <a class="reference internal" href="correction_methods.html"><span class="doc">correction methods</span></a> writeup.</p>
+<p>First, run the script again with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>Once that’s done, some text will generate and then the script will prompt you with a choice:</p>
+<a class="reference internal image-reference" href="_images/corr_prompt.png"><img alt="Correction menu present in the second run." class="align-center" src="_images/corr_prompt.png" style="width: 450px; height: 250px;" /></a>
+<p>Correcting data works as a loop:</p>
+<ol class="arabic simple">
+<li><p>You pick a variable and correct it.</p></li>
+<li><p>All secondary variables that may depend on that corrected variable are recalculated.</p></li>
+<li><p>You pick the next variable for correction.</p></li>
+<li><p>Once you have iterated through all variables you wanted to correct, the script does one final recalculation, saves its outputs, and ends.</p></li>
+</ol>
+<p>We don’t want to correct a variable, then have it later be affected by correcting another variable. An example of this would be correcting solar radiation first, which is corrected using clear-sky solar radiation values, and then later correct humidity data, which is used in the calculation of clear-sky solar radiation. To avoid this, it is important to correct in the following order:</p>
+<ol class="arabic simple">
+<li><p>Correct maximum and minimum temperature data</p></li>
+<li><p>Correct wind speed and precipitation data</p></li>
+<li><p>Correct the best humidity variable that has been provided</p></li>
+<li><p>Correct solar radiation</p></li>
+<li><p>Exit the script and save the outputs</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>One of the options in the config file, <strong>automatic_option</strong>, will cause the script to do the recommended QC action
+automatically, then give you a chance to review. This will save time when the data is of decent quality but may cost
+time when the data is of poor quality. It is disable in the example files.</p>
+</div>
+<p>Enter ‘1’ for temperature data and you should be presented with another figure:</p>
+<a class="reference internal image-reference" href="_images/temp_data.png"><img alt="Dedicated temperature plot generated by pyWeatherQAQC" class="align-center" src="_images/temp_data.png" style="width: 550px; height: 750px;" /></a>
+<p>When you correct a variable, the script generates a bokeh plot for that variable that contains four subplots:</p>
+<ol class="arabic simple">
+<li><p>The original data before correction</p></li>
+<li><p>The latest corrected data</p></li>
+<li><p>The deltas of Corrected - Original Values</p></li>
+<li><p>The percent change of ( Corrected - Original ) / Original</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A data point that is missing, either from missing within the record or because you have removed it yourself, shows up as a blank spot in the bokeh plots.</p>
+</div>
+<p>Right now they aren’t that helpful because we haven’t changed the data. We also see that the terminal window has given us more choices:</p>
+<a class="reference internal image-reference" href="_images/temp_prompt.png"><img alt="Terminal window text for correcting temperature" class="align-center" src="_images/temp_prompt.png" style="width: 650px; height: 350px;" /></a>
+<p>The <strong>Dark Blue</strong> section is the first prompt, where you indicate what section of the data series you want to modify. In this example I have entered <strong>-1</strong> to select the entire data series. If I wanted to correct only a specific section, I would enter the index of the start of that section and then the script would prompt me to enter the ending index of that section.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can hover your cursor over a data point in the bokeh charts to get its index. Use this to accurately mark sections of data.</p>
+</div>
+<p>The <strong>Light Blue</strong> section is the second prompt, where you indicate what method of correction you want to use on the data. In this example, we decide to enter <strong>4</strong> to use the modified z-scores approach to remove outliers. The script performs this method and outputs a few metrics for us to look at.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Depending on what variable you correct, you may be presented with different options and multiple prompts to correct the data. In each case the prompt also has a recommended value to enter.</p>
+<p>It’s hard to go wrong following these recommended values.</p>
+</div>
+<p>The <strong>Dark Green</strong> section is the final prompt, where we are asked what we want to do next. We have the option to finish correction, do another iteration, start over, or exit without saving. After each iteration of corrections the bokeh chart is updated to reflect changes.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It’s bad practice to correct a data point more than once. The most likely course of action you’ll take is to select sections of really bad data, throw those observations out, and then do a final correction for the entire record where you actually correct values.</p>
+</div>
+<p>Once you select option <strong>1</strong> or option <strong>4</strong>, the script prompts you with the previous menu to select a variable for correction.</p>
+<p>Now that we’ve explained the process in depth, the remaining process for this station is:</p>
+<ol class="arabic simple">
+<li><p>Enter <strong>1</strong> to return to the previous menu.</p></li>
+<li><p>Enter <strong>7</strong> to correct your provided humidity variable, which in this case was <strong>RHMax</strong> and <strong>RHMin</strong></p></li>
+<li><p>Select the full data series with <strong>-1</strong>, then select <strong>4</strong> for a year-based percentile correction, using the <strong>99</strong>-th percentile.</p></li>
+<li><p>Enter <strong>1</strong> to return to the previous menu and select <strong>5</strong> to select solar radiation.</p></li>
+<li><p>Select the full data series with <strong>-1</strong>, then select <strong>4</strong> for a period-based percentile correction, using <strong>99, 60, and 90</strong> as parameters.</p></li>
+<li><p>Now, <strong>just as an exercise in using the script and to try multiple iterations</strong>, enter <strong>2</strong> to do another iteration, starting the interval at index <strong>5861</strong> and ending it at <strong>6226</strong>. Finally, select <strong>3</strong> to remove that data.</p></li>
+<li><p>Enter <strong>1</strong> to return to the previous menu and enter <strong>7</strong> to do the final calculations and then close.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On this particular station there are no issues with either precipitation or wind speed data. If there were issues present, we would ideally correct them between steps 1 and 2 above.</p>
+</div>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>The final calculations include some computationally-intensive activities. Depending on your hardware and size of data set it may take a few moments to finish.</p>
+</div>
+<p>TODO: put compiled humidity example in here and double check auto_option has been disabled</p>
+</div>
+<div class="section" id="step-3-output-files">
+<h2>Step 3: Output Files<a class="headerlink" href="#step-3-output-files" title="Permalink to this headline">¶</a></h2>
+<p>Once the script has ended, reopen the directory containing the station data and you’ll see several new files. Although
+these new files might be placed within the subdirectories, I have gathered them all here for ease of viewing:</p>
+<a class="reference internal image-reference" href="_images/corr_run_folder.png"><img alt="Contents of data folder after script has been run twice." class="align-center" src="_images/corr_run_folder.png" style="width: 550px; height: 250px;" /></a>
+<p>The <strong>Dark Blue</strong> file is a composite output graph that mirrors the composition of the ‘before_corrections_composite_graph.’</p>
+<p>The <strong>Light Blue</strong> file is the log file that documents what order the variables were changed in and how, for accountability.</p>
+<dl class="simple">
+<dt>The <strong>Dark Green</strong> file is the actual output file of all the data. It contains three sheets:</dt><dd><ul class="simple">
+<li><p>The first sheet contains the actual corrected data.</p></li>
+<li><p>The second sheet contains the deltas of final values and original values.</p></li>
+<li><p>The third sheet tracks any missing values that were filled in by the script.</p></li>
+</ul>
+</dd>
+</dl>
+<p>The <strong>Light Green</strong> files are the individual variable graphs that we saw when correcting, such as in the temperature example above.</p>
+<p>With that, you’re done, and you can begin the next station.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="correction_methods.html" class="btn btn-neutral float-right" title="Correction Methods" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="data_preparation.html" class="btn btn-neutral float-left" title="Data Preparation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  
 
+  <hr/>
 
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Christian Dunkerly
 
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-
-
-
+</footer>
 
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2019, Christian Dunkerly.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/example_run.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
     
-  </body>
+   
+
+</body>
 </html>

@@ -2,5 +2,8 @@ bokeh
 configparser
 datetime
 numpy
+openpyxl
 pandas
+pytest
 refet
+xlrd

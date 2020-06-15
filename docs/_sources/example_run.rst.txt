@@ -12,45 +12,30 @@ Step 1: Visualizing the Data
 
 Everything is already setup for you, so point the command prompt/terminal window to the directory containing **QAQC_Master.py** and type::
 
-    >python QAQC_Master.py
+    >python qaqc_single_station.py
 
 This will start the script to and it will automatically start reading parameters from the file 'config.ini'.
 
-If you have multiple configuration files, you can ask the script to read from a specific one by typing::
+There's nothing more to do for this first iteration. The software will start and end automatically. When it's finished,
+you'll notice a folder called "correction_files" has appeared in the same directory as the data file. If you look inside
+that you will see the following:
 
-   >python QAQC_Master.py <CONFIGUATION_FILE_PATH_HERE>
-
-Regardless of which method you chose, there is nothing more to do for this iteration. The script will generate some text and then end.
-
-.. image:: images/initial_run.png
+.. image:: images/correction_files_view.png
     :width: 525px
     :align: center
-    :height: 250px
-    :alt: Text output from initial run on example data file.
+    :height: 200px
+    :alt: Directory of correction_files after an initial run.
 
-.. caution::
-   If you are using Python 3.7, you may receive a DepreciationWarning. It can be safely ignored.
-
-If you open the directory of the data file, you'll see that several new files have been generated (here indicated by the blue box).
-
-.. image:: images/initial_run_folder.png
-    :width: 500px
-    :align: center
-    :height: 250px
-    :alt: Output files from initial run on example data file.
-
-Of these new files, we are only interested in **example_station_before_corrections_composite_graph.html**. It contains graphs of all of provided different variables in an easy to view format.
-
-.. note::
-   You can click these images to view a larger version.
+This directory and its subfolders contain the various output files that the script will generate. For now, we're mainly
+interested in the file **test_data_before_corrections_composite_graph.html**, which is contained within the folder **before_graphs**.
 
 .. image:: images/pre_corr_figures.png
     :width: 650px
     :align: center
-    :height: 350px
+    :height: 400px
     :alt: A section of the 'before_correction_composite_graph' output file.
 
-All the variables are provided side-by-side for comparision, however at this scale it's difficult to see the details. You can use the tools in bokeh (green box) to get a closer view:
+As you can see above, all the variables are provided side-by-side for comparision, however at this scale it's difficult to see the details. You can use the tools in bokeh to get a closer view:
 
 .. image:: images/pre_corr_zoom.png
     :width: 650px
@@ -62,27 +47,26 @@ The different variable plots are linked together, so zooming in on one will caus
 
 Looking at these variables for this time period, we have a couple issues:
 
-1. For the year of 1996/1997 relative humidity never quite reaches 100%, indicating some possible sensor drift.
-2. For that same period, actual solar radiation is higher than the theoretical clear-sky solar radiation, indicating the sensor may not have been calibrated correctly.
+1. For the middle period of record RH Maximum never approaches 100%, and the slow decline indicates possible sensor drift.
+2. For most of the period, actual solar radiation is higher than the theoretical clear-sky solar radiation, indicating the sensor may not have been calibrated correctly.
 
-If we pan through the entire record, we see these two issues occur fairly consistently, with relative humidity appearing particularly bad in the years 2007-2009. Next, we'll rerun the script to correct these issues.
+If we pan through the entire record, we see these two issues occur fairly consistently. Next, we'll rerun the script to correct these issues.
 
 Step 2: Correcting the Data
 ============================
 
-In order to indicate to pyWeatherQAQC that we're correcting the data, we need to change the appropriate parameter in the config.ini file (blue box):
+In order to indicate to pyWeatherQAQC that we're correcting the data, we need to change the appropriate parameter, **correction_option**
+from a 0 to a 1, indicating that now we actually want to correct the data.
 
-.. image:: images/ini_mode_change.png
-    :width: 650px
-    :align: center
-    :height: 250px
-    :alt: Changing the script_mode parameter switches to correcting data.
+.. note::
+   If you're using a metadata file, this step has been done for you within the metadata file itself. You can see that run_count
+   has incremented from 0 to 1.
 
-We're now going to correct this data. If you're curious as to exactly how we correct the different variables and why, please see the see :doc:`Correction Process<correction_process>` writeup.
+We're now going to correct this data. If you're curious as to exactly how we correct the different variables and why, please see the see :doc:`correction methods<correction_methods>` writeup.
 
 First, run the script again with::
 
-    >python QAQC_Master.py
+    >python qaqc_single_station.py
 
 Once that's done, some text will generate and then the script will prompt you with a choice:
 
@@ -106,6 +90,13 @@ We don't want to correct a variable, then have it later be affected by correctin
 3. Correct the best humidity variable that has been provided
 4. Correct solar radiation
 5. Exit the script and save the outputs
+
+
+.. note::
+   One of the options in the config file, **automatic_option**, will cause the script to do the recommended QC action
+   automatically, then give you a chance to review. This will save time when the data is of decent quality but may cost
+   time when the data is of poor quality. It is disable in the example files.
+
 
 Enter '1' for temperature data and you should be presented with another figure:
 
@@ -156,11 +147,11 @@ Once you select option **1** or option **4**, the script prompts you with the pr
 Now that we've explained the process in depth, the remaining process for this station is:
 
 1. Enter **1** to return to the previous menu.
-2. Enter **6** to correct your provided humidity variable, which in this case was **RHMax** and **RHMin**
+2. Enter **7** to correct your provided humidity variable, which in this case was **RHMax** and **RHMin**
 3. Select the full data series with **-1**, then select **4** for a year-based percentile correction, using the **99**-th percentile.
 4. Enter **1** to return to the previous menu and select **5** to select solar radiation.
 5. Select the full data series with **-1**, then select **4** for a period-based percentile correction, using **99, 60, and 90** as parameters.
-6. Now, **just as an exercise in using the script**, enter **2** to do another iteration, starting the interval at index **6550** and ending it at **6940**. Finally, select **3** to remove that data.
+6. Now, **just as an exercise in using the script and to try multiple iterations**, enter **2** to do another iteration, starting the interval at index **5861** and ending it at **6226**. Finally, select **3** to remove that data.
 7. Enter **1** to return to the previous menu and enter **7** to do the final calculations and then close.
 
 .. note::
@@ -169,10 +160,13 @@ Now that we've explained the process in depth, the remaining process for this st
 .. caution::
    The final calculations include some computationally-intensive activities. Depending on your hardware and size of data set it may take a few moments to finish.
 
+TODO: put compiled humidity example in here and double check auto_option has been disabled
+
 Step 3: Output Files
 ====================
 
-Once the script has ended, reopen the directory containing the station data and you'll see several new files:
+Once the script has ended, reopen the directory containing the station data and you'll see several new files. Although
+these new files might be placed within the subdirectories, I have gathered them all here for ease of viewing:
 
 .. image:: images/corr_run_folder.png
     :width: 550px
@@ -191,7 +185,4 @@ The **Dark Green** file is the actual output file of all the data. It contains t
 
 The **Light Green** files are the individual variable graphs that we saw when correcting, such as in the temperature example above.
 
-.. note::
-   Notice how in the individual variable graph for solar radiation the year 2010 is missing observations (because we chose to remove them), yet on the composite graph there are no missing observations. This discrepancy is due to the script filling in missing solar data with the Thornton-Running model during the final calculations.
-
-With that, **you're done.** Congratulations on correcting your first station of data.
+With that, you're done, and you can begin the next station.

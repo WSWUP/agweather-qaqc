@@ -2,12 +2,48 @@
 pyWeatherQAQC Setup
 ###################
 
-Downloading the Code
+This page details the process for installing pyWeatherQAQC. This excludes the process for configuring and
+then processing data, which is detailed in :doc:`Data Preparation. <data_preparation>`
+
+Installing Python
+=================
+
+If you're unfamiliar with Python, it's recommended that you install Anaconda.
+
+Anaconda is a free and open-source distribution of Python that, in exchange for a larger download, will simplify your setup experience. It also comes pre-installed with the majority of the package requirements for pyWeatherQAQC.
+
+Visit the `Anaconda website <https://www.anaconda.com/download/>`_ to download the correct Anaconda 3.X version for your operating system, and then follow the prompts to install it.
+
+Once you're done installing Anaconda, open the command prompt or terminal window and type::
+
+    >conda info
+
+You should see some text regarding the version of Anaconda you've installed. If you get an error, you may have made a mistake during the installation.
+
+Using an Environment
 ====================
+
+One of the best features of Anaconda is the ease of setting up an environment, which is a dedicated space where you can setup and run code without having to worry about version and installation conflicts with any other software you may have to run.
+
+If you're doing any other work with Python code, it's recommended to take the extra steps to set this up and avoid potential issues later on.
+
+**To create an environment, type**::
+
+    >conda create -n pyweatherqaqc python=3.7 anaconda
+
+**Once that is done, activate your environment by typing**::
+
+    >activate pyweatherqaqc
+
+.. note::
+   You will have to activate your environment whenever you close the command prompt/terminal window.
+
+Downloading the Repository
+==========================
 
 This script is self-contained and is run locally, so the directory can be placed wherever you want it.
 
-You will run the code by directing the command prompt or terminal window to the location of the file **QAQC_Master.py** and running it from there.
+You will run the code by directing the command prompt or terminal window to the location of the file **qaqc_single_station.py** and running it from there.
 
 Download pyWeatherQAQC by cloning its `Github Repository <https://github.com/WSWUP/pyWeatherQAQC>`_ or by `clicking here. <https://github.com/WSWUP/pyWeatherQAQC/archive/master.zip>`_
 
@@ -15,16 +51,11 @@ Download pyWeatherQAQC by cloning its `Github Repository <https://github.com/WSW
 Installing Dependencies
 =======================
 .. note::
-   If you're using an Anaconda environment, make sure it is set up and activated before proceeding.
+   If you're using an Anaconda environment, make sure it is activated before proceeding.
 
-Once you've downloaded the code and directed the command prompt/terminal window to the directory containing the file **QAQC_Master.py**, type::
+Once the repository has been downloaded and the command prompt/terminal window is located in the directory
+containing the file **qaqc_single_station.py**, type::
 
    >pip install -r requirements.txt
 
 This will check for and install all missing dependencies that pyWeatherQAQC needs to run.
-
-**Next**, see :doc:`Setting up the Data <data_setup>` to configure the script to handle your data.
-
-
-
-

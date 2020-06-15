@@ -206,7 +206,7 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
     return subplot
 
 
-def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two, corr_var_two, code):
+def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two, corr_var_two, code, folder_path):
     x_size = 800
     y_size = 350
     reset_output()  # clears bokeh output, prevents ballooning file sizes
@@ -220,7 +220,7 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
 
     # Obtain title based on variables passed for file name
     (units, title, var_one_name, var_one_color, var_two_name, var_two_color) = generate_line_plot_features(code, '')
-    output_file("correction_files/" + station + "_" + title + "_correction_plots.html")
+    output_file(folder_path + "/correction_files/" + station + "_" + title + "_correction_plots.html")
 
     original_plot = line_plot(x_size, y_size, dt_array, var_one, var_two, code, station + ' Original ', link_plot=None)
 
@@ -236,6 +236,54 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
     corr_fig = gridplot([[original_plot], [corrected_plot], [delta_plot], [percent_plot]],
                         toolbar_location="left")
     return corr_fig
+
+
+def humidity_adjustment_plots(station, dt_array, comp_ea, ea, ea_col, tmin, tdew, tdew_col, rhmax, rhmax_col,
+                              rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko, folder_path):
+
+    x_size = 800
+    y_size = 350
+    humidity_plot_list = []
+    reset_output()  # clears bokeh output, prevents ballooning file sizes
+
+    output_file(folder_path + "/correction_files/" + station + "_humidity_adjustment_plots.html")
+
+    ea_comp_plot = line_plot(x_size, y_size, dt_array, comp_ea, None, 7, station + ' Composite ', link_plot=None)
+    humidity_plot_list.append(ea_comp_plot)
+
+    if ea_col != -1:
+        ea_provided_plot = line_plot(x_size, y_size, dt_array, ea, None, 7, 'Provided ', link_plot=ea_comp_plot)
+        humidity_plot_list.append(ea_provided_plot)
+
+    if tdew_col != -1:
+        tdew_provided_plot = line_plot(x_size, y_size, dt_array, tmin, tdew, 2, 'Provided ', link_plot=ea_comp_plot)
+        humidity_plot_list.append(tdew_provided_plot)
+
+    if rhmax_col != -1 and rhmin_col != -1:
+        rh_max_min_plot = line_plot(x_size, y_size, dt_array, rhmax, rhmin, 8, '', link_plot=ea_comp_plot)
+        humidity_plot_list.append(rh_max_min_plot)
+
+    if rhavg_col != -1:
+        rh_avg_plot = line_plot(x_size, y_size, dt_array, rhavg, None, 9, '', link_plot=ea_comp_plot)
+        humidity_plot_list.append(rh_avg_plot)
+
+    tdew_ko_filled_plot = line_plot(x_size, y_size, dt_array, tmin, tdew_ko, 2, 'Ko curve ', link_plot=ea_comp_plot)
+    humidity_plot_list.append(tdew_ko_filled_plot)
+
+    # Now construct grid plot out of all of the subplots
+    number_of_plots = len(humidity_plot_list)
+    humid_grid_of_plots = [([None] * 1) for i in range(number_of_plots)]
+
+    for i in range(number_of_plots):
+        for j in range(1):
+            if len(humidity_plot_list) > 0:
+                humid_grid_of_plots[i][j] = humidity_plot_list.pop(0)
+            else:
+                pass
+
+    humidity_fig = gridplot(humid_grid_of_plots, toolbar_location='left')
+
+    return humidity_fig
 
 
 # This is never run by itself
