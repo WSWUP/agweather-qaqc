@@ -86,6 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="example_run.html">Example Run</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Correction Methods</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#limits-on-data">Limits on Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#suggested-correction-parameters">Suggested Correction Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#temperature-correction">Temperature Correction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wind-and-precipitation">Wind and Precipitation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#relative-humidity-max-min-correction">Relative Humidity Max/Min Correction</a><ul>
@@ -176,14 +177,31 @@
 </ul>
 <p>The number of points from each variable removed by these limits are saved in the log file.</p>
 </div>
+<div class="section" id="suggested-correction-parameters">
+<h2>Suggested Correction Parameters<a class="headerlink" href="#suggested-correction-parameters" title="Permalink to this headline">¶</a></h2>
+<p>When using this software, you will be asked for what correction parameters you want, which will
+change how the correction factors are calculated and applied. In the process of developing this software,
+certain parameters were found to provide good results. Those parameters are listed here, and appear in the
+documentation below. <strong>You are able to use whatever parameters you want when using this software, you are not
+restricted to the values provided below.</strong></p>
+<p>We suggest the following parameters when using this software:</p>
+<p><strong>Relative Humidity</strong>
+We recommend using the top 1% of data points in each year to calculate the correction ratio. Information about
+the climate of the station may allow you to go higher, but if it is an arid station you should pick a small number to
+avoid simulating days with rainfall that may not have occurred.</p>
+<p><strong>Solar Radiation</strong>
+We recommend dividing the record into 60 day periods and then using the largest 6 solar radiation/clear-sky solar ratios
+to calculate the correction ratio. The period should be sufficiently large enough to allow for a good sampling period,
+but it shouldn’t be so long as to sampling across winter/summer seasons.  The number of datapoints should be large
+enough to get an accurate sampling of variations within the period but it should not be so large as to force
+a correction that would force cloudy days to represent clear days.</p>
+</div>
 <div class="section" id="temperature-correction">
 <h2>Temperature Correction<a class="headerlink" href="#temperature-correction" title="Permalink to this headline">¶</a></h2>
 <p>Temperature correction is done by removing outliers using a modified z-score approach based on median absolute deviation as described in:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;Boris Iglewicz and David Hoaglin (1993)</span>
- <span class="n">Volume</span> <span class="mi">16</span><span class="p">:</span> <span class="n">How</span> <span class="n">to</span> <span class="n">Detect</span> <span class="ow">and</span> <span class="n">Handle</span> <span class="n">Outliers</span><span class="p">,</span>
- <span class="n">The</span> <span class="n">ASQC</span> <span class="n">Basic</span> <span class="n">References</span> <span class="ow">in</span> <span class="n">Quality</span> <span class="n">Control</span><span class="p">:</span> <span class="n">Statistical</span> <span class="n">Techniques</span><span class="s2">&quot;</span>
-</pre></div>
-</div>
+<p>Boris Iglewicz and David Hoaglin (1993)
+Volume 16: How to Detect and Handle Outliers,
+The ASQC Basic References in Quality Control: Statistical Techniques</p>
 <p>The process occurs in the following steps:</p>
 <ol class="arabic simple">
 <li><p>Temperature values are divided into subgroups based on what month they occur in.</p></li>
