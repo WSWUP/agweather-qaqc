@@ -288,47 +288,52 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
             print('\nSystem: processing Thornton-Running iteration: {}'.format(i))
         else:
             pass
+    try:
+        # Now that we've iterated through all variations, find the best one
+        min_rmse_index = np.nanargmin(mc_rmse)
+        # Calculate RMSE of original rs_tr B coefficients
+        orig_rmse = np.sqrt(np.nanmean((orig_rs_tr - rs) ** 2))
 
-    # Now that we've iterated through all variations, find the best one
-    min_rmse_index = np.nanargmin(mc_rmse)
-    # Calculate RMSE of original rs_tr B coefficients
-    orig_rmse = np.sqrt(np.nanmean((orig_rs_tr - rs) ** 2))
+        print('\nSystem: original coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.format(orig_rmse))
+        print('System: optimized coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.
+            format(mc_rmse[min_rmse_index]))
 
-    print('\nSystem: original coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.format(orig_rmse))
-    print('System: optimized coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.
-          format(mc_rmse[min_rmse_index]))
+        # Calculate the optimized rs_tr using the B coefficients that caused the lowest rmse
+        (opt_rs_tr, mm_opt_rs_tr) = calc_rs_tr(month, rso, delta_t, mm_delta_t, b_zero[min_rmse_index],
+                                            b_one[min_rmse_index], b_two[min_rmse_index])
 
-    # Calculate the optimized rs_tr using the B coefficients that caused the lowest rmse
-    (opt_rs_tr, mm_opt_rs_tr) = calc_rs_tr(month, rso, delta_t, mm_delta_t, b_zero[min_rmse_index],
-                                           b_one[min_rmse_index], b_two[min_rmse_index])
+        # Write the b coefficients used to the log file then close it
+        log.basicConfig()
+        corr_log = open(log_path, 'a')
+        corr_log.write('\n\nThornton-Running Solar Radiation Optimization')
+        corr_log.write('\nMonte Carlo simulation with %s iterations produced the coefficients:' % mc_iterations)
+        corr_log.write('\nb_zero = {0:.4f}, b_one = {1:.4f}, b_two = {2:.4f}'.
+                    format(b_zero[min_rmse_index], b_one[min_rmse_index], b_two[min_rmse_index]))
+        corr_log.write('\nOptimized coefficients RMSE against observed solar radiation was: {0:.4f}'.
+                    format(mc_rmse[min_rmse_index]))
+        corr_log.write('\nOriginal coefficients RMSE against observed solar radiation was: {0:.4f} \n\n'
+                    .format(orig_rmse))
+        corr_log.close()
 
-    # Write the b coefficients used to the log file then close it
-    log.basicConfig()
-    corr_log = open(log_path, 'a')
-    corr_log.write('\n\nThornton-Running Solar Radiation Optimization')
-    corr_log.write('\nMonte Carlo simulation with %s iterations produced the coefficients:' % mc_iterations)
-    corr_log.write('\nb_zero = {0:.4f}, b_one = {1:.4f}, b_two = {2:.4f}'.
-                   format(b_zero[min_rmse_index], b_one[min_rmse_index], b_two[min_rmse_index]))
-    corr_log.write('\nOptimized coefficients RMSE against observed solar radiation was: {0:.4f}'.
-                   format(mc_rmse[min_rmse_index]))
-    corr_log.write('\nOriginal coefficients RMSE against observed solar radiation was: {0:.4f} \n\n'
-                   .format(orig_rmse))
-    corr_log.close()
+        if orig_rmse < mc_rmse[min_rmse_index] and mc_iterations == 50:
+            # if original was better than optimized, it is likely because we didn't do enough iterations
+            # which is likely because we're not correcting data, so just return original as optimized
+            opt_rs_tr = orig_rs_tr
+            mm_opt_rs_tr = mm_orig_rs_tr
+        elif orig_rmse < mc_rmse[min_rmse_index] and mc_iterations != 50:
+            # this shouldn't happen, as we should have done enough iterations to beat original values, so raise an error
+            raise ValueError('Thornton running optimization failed to beat original coefficient values.' +
+                            ' Try running again, and if this error persists please report it on github.')
+        else:
+            pass
 
-    if orig_rmse < mc_rmse[min_rmse_index] and mc_iterations == 50:
-        # if original was better than optimized, it is likely because we didn't do enough iterations
-        # which is likely because we're not correcting data, so just return original as optimized
-        opt_rs_tr = orig_rs_tr
-        mm_opt_rs_tr = mm_orig_rs_tr
-    elif orig_rmse < mc_rmse[min_rmse_index] and mc_iterations != 50:
-        # this shouldn't happen, as we should have done enough iterations to beat original values, so raise an error
-        raise ValueError('Thornton running optimization failed to beat original coefficient values.' +
-                         ' Try running again, and if this error persists please report it on github.')
-    else:
-        pass
+        # Return both original and optimized rs_tr
+        return orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr
 
-    # Return both original and optimized rs_tr
-    return orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr
+    except ValueError:
+        print('\nSkipping Thornton-Running due to all-NaN slices.\n\n')
+        # Return only original values as optimals could not be calculated
+        return orig_rs_tr, orig_rs_tr, orig_rs_tr, orig_rs_tr
 
 
 def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko):

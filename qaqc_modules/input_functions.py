@@ -74,6 +74,7 @@ def read_config(config_file_path):
     config_dict['auto_flag'] = config_reader['OPTIONS'].getboolean('automatic_option')  # auto first iteration of QAQC
     config_dict['fill_flag'] = config_reader['OPTIONS'].getboolean('fill_option')  # Option to fill in missing data
     config_dict['plot_flag'] = config_reader['OPTIONS'].getboolean('plot_option')  # Option to generate bokeh plots
+    config_dict['clean_nulls'] = config_reader['OPTIONS'].getint('clean_nulls')  # Clean nulls from data
 
     # DATA Section - Data Columns
     config_dict['string_date_col'] = config_reader['DATA'].getint('string_date_col')
@@ -407,6 +408,26 @@ def process_variable(config_dict, raw_data, var_name):
 
     return processed_var, var_col
 
+def clean_nulls(data_file_path):
+    """
+        Opens the file specified, and replaces all null (\x00) characters with empty strings.
+        Preserves original file.
+
+        Args:
+            data_file_path : path to the file we wish to clean
+
+        Returns:
+            path to the cleaned file
+    """
+    (file_name, file_extension) = os.path.splitext(data_file_path)
+    data_file = open(data_file_path, 'rb')
+    data = data_file .read()
+    data_file .close()
+    new_data_file = open(f'{file_name}-nonulls{file_extension}', 'wb')
+    new_data_file.write(data.replace(b'\x00', b''))
+    new_data_file.close()
+
+    return f'{file_name}-nonulls{file_extension}'
 
 def obtain_data(config_file_path, metadata_file_path=None):
     """
@@ -437,6 +458,17 @@ def obtain_data(config_file_path, metadata_file_path=None):
     validate_file(config_file_path, ['ini'])
     config_dict = read_config(config_file_path)
     print('\nSuccessfully opened config file at %s' % config_file_path)
+
+    # If configured clean null (\x00) values out of data
+    if (config_dict['clean_nulls'] == 1):
+        validate_file(config_dict['data_file_path'], ['csv', 'xls', 'xlsx'])
+        (file_name, station_extension) = os.path.splitext(config_dict['data_file_path'])
+        if station_extension in ['.csv', '.xls', '.xlsx']:
+            config_dict['data_file_path'] = clean_nulls(config_dict['data_file_path'])
+        else:
+            # This script is only handles csv and excel files. Validate_file() already catches this case
+            raise IOError('\n\nProvided file was of type \'{}\' but script was expecting type \'{}\'.'
+                          .format(station_extension, ['csv', 'xls', 'xlsx']))
 
     # Open metadata file
     # If a metadata file is provided we will open it and overwrite values in config_dict with its values
