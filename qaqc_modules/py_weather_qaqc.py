@@ -780,7 +780,7 @@ class WeatherQAQC:
                 # file is already created, so we need to read it in, append our new information to the bottom of it
                 # and then save the info
                 metadata_info = pd.read_excel('correction_metadata.xlsx', sheet_name=0, index_col=None, engine='xlrd',
-                                              keep_default_na=False, verbose=True, skip_blank_lines=True)
+                                              keep_default_na=False, verbose=True)
 
                 new_meta_info = pd.DataFrame({'Station': self.station_name, 'Latitude': self.station_lat,
                                               'Longitude': self.station_lon, 'station_elev_m': self.station_elev,

@@ -444,7 +444,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
 
         validate_file(metadata_file_path, ['xls', 'xlsx'])  # Validate file to make sure it exists and is the right type
         metadata_df = pd.read_excel(metadata_file_path, sheet_name=0, index_col=0, engine='xlrd',
-                                    keep_default_na=True, na_filter=True, verbose=True, skip_blank_lines=True)
+                                    keep_default_na=True, na_filter=True, verbose=True)
         print('\nSuccessfully opened metadata file at %s' % metadata_file_path)
 
         current_row = metadata_df.run_count.ne(2).idxmax() - 1
