@@ -336,9 +336,11 @@ class WeatherQAQC:
                     self.complete_tmax = np.array(self.data_tmax)
                     self.complete_tmin = np.array(self.data_tmin)
 
-                    # todo the below line erases any real measured tavg from the data, check if this is okay
-                    # Recalculate TAvg after outliers have been removed from TMax and TMin
-                    self.data_tavg = np.array((self.data_tmax + self.data_tmin) / 2.0)
+                    # Remove corresponding TAvg observations after outliers have been removed from TMax and TMin
+                    tmax_removed_indices = np.array(np.where(np.isnan(self.data_tmax)))  # array of indices of nans
+                    tmin_removed_indices = np.array(np.where(np.isnan(self.data_tmin)))  # array of indices of nans
+                    self.data_tavg[tmax_removed_indices] = np.nan
+                    self.data_tavg[tmin_removed_indices] = np.nan
 
                     # Create mean monthly and standard deviation
                     self.mm_tmax = np.zeros(12)
