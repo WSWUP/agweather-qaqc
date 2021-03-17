@@ -442,8 +442,8 @@ def obtain_data(config_file_path, metadata_file_path=None):
     # If a metadata file is provided we will open it and overwrite values in config_dict with its values
     if metadata_file_path is not None:
 
-        validate_file(metadata_file_path, ['xls', 'xlsx'])  # Validate file to make sure it exists and is the right type
-        metadata_df = pd.read_excel(metadata_file_path, sheet_name=0, index_col=0, engine='xlrd',
+        validate_file(metadata_file_path, 'xlsx')  # Validate file to make sure it exists and is the right type
+        metadata_df = pd.read_excel(metadata_file_path, sheet_name=0, index_col=0, engine='openpyxl',
                                     keep_default_na=True, na_filter=True, verbose=True)
         print('\nSuccessfully opened metadata file at %s' % metadata_file_path)
 
@@ -509,11 +509,17 @@ def obtain_data(config_file_path, metadata_file_path=None):
                                na_values=config_dict['missing_data_value'], keep_default_na=True,
                                na_filter=True, verbose=True, skip_blank_lines=True)
 
-    elif station_extension in ['.xls', '.xlsx']:
+    elif station_extension == '.xlsx':
+        raw_data = pd.read_excel(config_dict['data_file_path'], sheet_name=0, header=config_dict['lines_of_header'],
+                                 index_col=None, engine='openpyxl', skipfooter=config_dict['lines_of_footer'],
+                                 na_values=config_dict['missing_data_value'], keep_default_na=True,
+                                 na_filter=True, verbose=True)
+
+    elif station_extension == '.xls':
         raw_data = pd.read_excel(config_dict['data_file_path'], sheet_name=0, header=config_dict['lines_of_header'],
                                  index_col=None, engine='xlrd', skipfooter=config_dict['lines_of_footer'],
                                  na_values=config_dict['missing_data_value'], keep_default_na=True,
-                                 na_filter=True, verbose=True, skip_blank_lines=True)
+                                 na_filter=True, verbose=True)
 
     else:
         # This script is only handles csv and excel files. Validate_file() already catches this case
