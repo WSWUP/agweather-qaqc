@@ -658,13 +658,9 @@ class WeatherQAQC:
         print("\nSystem: Now creating composite bokeh graph.")
         if self.generate_bokeh:  # Flag to create graphs or not
             plot_list = []
-<<<<<<< Updated upstream
-            x_size = 2000
-            y_size = 3500
-=======
+
             x_size = 1400
             y_size = 350
->>>>>>> Stashed changes
 
             if self.script_mode == 0:
                 output_file(self.folder_path + "/correction_files/before_graphs/" + self.station_name +
@@ -757,12 +753,7 @@ class WeatherQAQC:
                     else:
                         pass
 
-<<<<<<< Updated upstream
-            fig = gridplot(grid_of_plots, toolbar_location='left')
-            fig.sizing_mode = 'scale_both'
-=======
             fig = gridplot(grid_of_plots, toolbar_location='left', sizing_mode='scale_both')
->>>>>>> Stashed changes
             save(fig)
 
             print("\nSystem: Composite bokeh graph has been generated.")

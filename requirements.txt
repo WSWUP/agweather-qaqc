@@ -1,7 +1,7 @@
 bokeh == 2.4.3
 configparser
 datetime
-numpy == 1.23.1
+numpy
 openpyxl
 pandas
 pytest
