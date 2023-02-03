@@ -1,9 +1,10 @@
 bokeh
 configparser
 datetime
-numpy
+numpy == 1.23.1
 openpyxl
 pandas
 pytest
 refet
 xlrd
+xlsxwriter

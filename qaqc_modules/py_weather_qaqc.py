@@ -1,3 +1,4 @@
+import bokeh.plotting
 from bokeh.layouts import gridplot
 from bokeh.plotting import output_file, reset_output, save
 import datetime as dt
@@ -645,7 +646,7 @@ class WeatherQAQC:
                         title=self.station_name + ' histograms')
 
             save(gridplot([ws_hist, tmax_hist, tmin_hist, tavg_hist, tdew_hist, k_not_hist], ncols=2,
-                          plot_width=400, plot_height=400, toolbar_location=None))
+                          width=400, height=400, toolbar_location=None))
 
         #########################
         # Generate bokeh composite plot
@@ -655,8 +656,8 @@ class WeatherQAQC:
         print("\nSystem: Now creating composite bokeh graph.")
         if self.generate_bokeh:  # Flag to create graphs or not
             plot_list = []
-            x_size = 500
-            y_size = 350
+            x_size = 2000
+            y_size = 3500
 
             if self.script_mode == 0:
                 output_file(self.folder_path + "/correction_files/before_graphs/" + self.station_name +
@@ -750,6 +751,7 @@ class WeatherQAQC:
                         pass
 
             fig = gridplot(grid_of_plots, toolbar_location='left')
+            fig.sizing_mode = 'scale_both'
             save(fig)
 
             print("\nSystem: Composite bokeh graph has been generated.")
