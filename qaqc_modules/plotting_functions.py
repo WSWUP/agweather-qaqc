@@ -172,7 +172,7 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
         ('Index', '$index'),
         ('Date', '@date{%F}'),
         ('Value', '$y')]
-    formatters = {'date': 'datetime'}
+    formatters = {'@date': 'datetime'}
 
     if dt_array.size == 12:  # Mean monthly plot
         x_label = 'Month'
@@ -200,7 +200,6 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
         subplot.line(x='date', y='v_two', line_color=var_two_color, legend_label=var_two_name, source=source)
 
     subplot.legend.location = 'bottom_left'
-    subplot.sizing_mode = 'stretch_both'
     subplot.add_tools(HoverTool(tooltips=tooltips, formatters=formatters))
 
     return subplot
@@ -234,7 +233,8 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
                              link_plot=original_plot)
 
     corr_fig = gridplot([[original_plot], [corrected_plot], [delta_plot], [percent_plot]],
-                        toolbar_location="left")
+                        toolbar_location="left", sizing_mode='scale_both')
+    corr_fig.sizing_mode = 'stretch_both'
     return corr_fig
 
 
@@ -282,6 +282,7 @@ def humidity_adjustment_plots(station, dt_array, comp_ea, ea, ea_col, tmin, tdew
                 pass
 
     humidity_fig = gridplot(humid_grid_of_plots, toolbar_location='left')
+    humidity_fig.sizing_mode = 'stretch_both'
 
     return humidity_fig
 

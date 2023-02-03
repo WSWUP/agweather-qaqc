@@ -3,6 +3,7 @@ import math
 import datetime as dt
 import logging as log
 from . import plotting_functions
+import warnings
 
 from bokeh.plotting import save, show
 
@@ -205,9 +206,9 @@ def modified_z_score_outlier_detection(data):
     median_absolute_deviation = np.nanmedian([np.abs(x - median) for x in data])
     modified_z_scores = np.array([0.6745 * (x - median) / median_absolute_deviation for x in data])
 
-    np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans in data
+    warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans in data
     removed_indices = np.array(np.where(np.abs(modified_z_scores) > threshold))  # array of indices for zscore > thresh
-    np.warnings.resetwarnings()  # reset warning filter to default
+    warnings.resetwarnings()  # reset warning filter to default
 
     cleaned_data[removed_indices] = np.nan  # set those indices to nan
     outlier_count = removed_indices.size
@@ -240,8 +241,7 @@ def temp_find_outliers(log_writer, t_var_one, var_one_name, t_var_two, var_two_n
 
     k = 1
     while k <= 12:
-        t_index = np.where(month == k + 1)[0]
-        t_index = np.array(t_index)
+        t_index = np.where(month == k)[0]
 
         (corrected_var_one[t_index], var_one_outlier_count) = modified_z_score_outlier_detection(t_var_one[t_index])
         (corrected_var_two[t_index], var_two_outlier_count) = modified_z_score_outlier_detection(t_var_two[t_index])

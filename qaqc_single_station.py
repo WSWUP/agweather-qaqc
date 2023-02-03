@@ -21,5 +21,4 @@ if __name__ == "__main__":
 
     station_qaqc = WeatherQAQC(config_path, metadata_path, gridplot_columns=1)
     station_qaqc.process_station()
-
     print("\nSystem: Now ending single station QAQC script.")

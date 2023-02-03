@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 import pathlib as pl
+import warnings
 
 
 def validate_file(file_path, expected_extensions):
@@ -258,7 +259,7 @@ def daily_realistic_limits(original_data, log_path, var_type):
     limited_data = np.array(original_data)
     limited_data = limited_data.astype('float')  # np.nan is treated as a float so it needs to go into a float array
 
-    np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans in data
+    warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans in data
 
     if var_type in ['temperature']:
         limited_data[original_data <= -50] = clip_value  # -50 C is -58 F
@@ -292,7 +293,7 @@ def daily_realistic_limits(original_data, log_path, var_type):
     corr_log.write('%s %s values were removed for exceeding realistic limits. \n' % (num_clipped_values, var_type))
     corr_log.close()
 
-    np.warnings.resetwarnings()  # reset warning filter to default
+    warnings.resetwarnings()  # reset warning filter to default
     return limited_data  # Return the limited data
 
 
