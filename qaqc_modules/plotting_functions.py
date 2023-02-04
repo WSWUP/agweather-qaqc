@@ -127,7 +127,7 @@ def histogram_plot(data, title, color, units):
 
     x = np.linspace(float((mean + 3.0 * sigma)), float((mean - 3.0 * sigma)), 1000)
     pdf = 1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(-(x - mean) ** 2 / (2 * sigma ** 2))
-    h_plot.line(x, pdf, line_color="#ff8888", line_width=4, alpha=0.7, legend="PDF")
+    h_plot.line(x, pdf, line_color="#ff8888", line_width=4, alpha=0.7, legend_label="PDF")
 
     h_plot.y_range.start = 0
     h_plot.legend.location = "center_right"
@@ -172,7 +172,7 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
         ('Index', '$index'),
         ('Date', '@date{%F}'),
         ('Value', '$y')]
-    formatters = {'date': 'datetime'}
+    formatters = {'@date': 'datetime'}
 
     if dt_array.size == 12:  # Mean monthly plot
         x_label = 'Month'
@@ -193,14 +193,13 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
             x_axis_label=x_label, y_axis_label=units, title=title,
             tools='pan, box_zoom, undo, reset, save')
 
-    subplot.line(x='date', y='v_one', line_color=var_one_color, legend=var_one_name, source=source)
+    subplot.line(x='date', y='v_one', line_color=var_one_color, legend_label=var_one_name, source=source)
     if var_two_name.lower() == 'null':
         pass
     else:
-        subplot.line(x='date', y='v_two', line_color=var_two_color, legend=var_two_name, source=source)
+        subplot.line(x='date', y='v_two', line_color=var_two_color, legend_label=var_two_name, source=source)
 
     subplot.legend.location = 'bottom_left'
-    subplot.sizing_mode = 'stretch_both'
     subplot.add_tools(HoverTool(tooltips=tooltips, formatters=formatters))
 
     return subplot
@@ -234,7 +233,8 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
                              link_plot=original_plot)
 
     corr_fig = gridplot([[original_plot], [corrected_plot], [delta_plot], [percent_plot]],
-                        toolbar_location="left")
+                        toolbar_location="left", sizing_mode='scale_both')
+    corr_fig.sizing_mode = 'stretch_both'
     return corr_fig
 
 
@@ -282,6 +282,7 @@ def humidity_adjustment_plots(station, dt_array, comp_ea, ea, ea_col, tmin, tdew
                 pass
 
     humidity_fig = gridplot(humid_grid_of_plots, toolbar_location='left')
+    humidity_fig.sizing_mode = 'stretch_both'
 
     return humidity_fig
 

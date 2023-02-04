@@ -1,3 +1,4 @@
+import bokeh.plotting
 from bokeh.layouts import gridplot
 from bokeh.plotting import output_file, reset_output, save
 import datetime as dt
@@ -7,6 +8,7 @@ import os
 import pandas as pd
 from qaqc_modules import data_functions, input_functions, plotting_functions, qaqc_functions
 from refet.calcs import _wind_height_adjust
+import warnings
 
 
 class WeatherQAQC:
@@ -139,12 +141,12 @@ class WeatherQAQC:
                                                      self.column_df.rhavg, self.data_tdew_ko)
 
         # Calculates rso and grass/alfalfa reference evapotranspiration from refet package
-        np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans
+        warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans
         (self.rso, self.mm_rs, self.eto, self.etr, self.mm_eto, self.mm_etr) = data_functions.\
             calc_rso_and_refet(self.station_lat, self.station_elev, self.ws_anemometer_height, self.data_doy,
                                self.data_month, self.data_tmax, self.data_tmin, self.compiled_ea, self.data_ws,
                                self.data_rs)
-        np.warnings.resetwarnings()  # reset warning filter to default
+        warnings.resetwarnings()  # reset warning filter to default
 
         #########################
         # Back up original data
@@ -163,6 +165,7 @@ class WeatherQAQC:
         self.dt_array = np.array(self.dt_array, dtype=np.datetime64)
         self.mm_dt_array = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
         self.data_null = np.empty(self.data_length) * np.nan
+        self.mm_data_null = np.zeros(12) * np.nan
 
     def _correct_data(self):
         """
@@ -534,24 +537,24 @@ class WeatherQAQC:
                     If this code is executing then 'data_' vars have already been replaced by their 'completed_' 
                     versions so the code is accurate in calling them 'data_'
                 '''
-                np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning, nans
+                warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning, nans
                 (self.rso, self.mm_rs, self.eto, self.etr, self.mm_eto, self.mm_etr) = data_functions. \
                     calc_rso_and_refet(self.station_lat, self.station_elev, self.ws_anemometer_height, self.data_doy,
                                        self.data_month, self.data_tmax, self.data_tmin, self.data_ea, self.data_ws,
                                        self.data_rs)
-                np.warnings.resetwarnings()
+                warnings.resetwarnings()
             else:
                 '''
                     User doesn't want to keep filled in data, so use complete versions to create a filled version of
                     rso while saving the other outputs of calc_rso_and_refet as temporary names which are unused to 
                     prevent them from impacting later calculations
                 '''
-                np.warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning, nans
+                warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning, nans
                 (self.rso, self._mm_rs, self._eto, self._etr, self._mm_eto, self._mm_etr) = \
                     data_functions.calc_rso_and_refet(self.station_lat, self.station_elev, self.ws_anemometer_height,
                                                       self.data_doy, self.data_month, self.complete_tmax,
                                                       self.complete_tmin, self.complete_ea, self.data_ws, self.data_rs)
-                np.warnings.resetwarnings()
+                warnings.resetwarnings()
 
         '''
             At this point the user has finished correcting all variables they want to.
@@ -645,7 +648,7 @@ class WeatherQAQC:
                         title=self.station_name + ' histograms')
 
             save(gridplot([ws_hist, tmax_hist, tmin_hist, tavg_hist, tdew_hist, k_not_hist], ncols=2,
-                          plot_width=400, plot_height=400, toolbar_location=None))
+                          width=400, height=400, toolbar_location=None))
 
         #########################
         # Generate bokeh composite plot
@@ -655,7 +658,8 @@ class WeatherQAQC:
         print("\nSystem: Now creating composite bokeh graph.")
         if self.generate_bokeh:  # Flag to create graphs or not
             plot_list = []
-            x_size = 500
+
+            x_size = 1400
             y_size = 350
 
             if self.script_mode == 0:
@@ -707,7 +711,7 @@ class WeatherQAQC:
 
             # Mean Monthly k0 curve (Tmin-Tdew)
             plot_mm_k_not = plotting_functions.line_plot(x_size, y_size, self.mm_dt_array, self.mm_k_not,
-                                                         self.data_null, 10, '', plot_mm_tmin_tdew)
+                                                         self.mm_data_null, 10, '', plot_mm_tmin_tdew)
             plot_list.append(plot_mm_k_not)
 
             # Solar radiation and clear sky solar radiation
@@ -749,7 +753,7 @@ class WeatherQAQC:
                     else:
                         pass
 
-            fig = gridplot(grid_of_plots, toolbar_location='left')
+            fig = gridplot(grid_of_plots, toolbar_location='left', sizing_mode='scale_both')
             save(fig)
 
             print("\nSystem: Composite bokeh graph has been generated.")
@@ -788,7 +792,7 @@ class WeatherQAQC:
                                               'Longitude': self.station_lon, 'station_elev_m': self.station_elev,
                                               'record_start': record_start, 'record_end': record_end,
                                               'anemom_height_m': self.ws_anemometer_height,
-                                              'Filepath': self.output_file_path}, index=np.array([1]))
+                                              'Filename': self.output_file_path}, index=np.array([1]))
 
                 output_metadata = pd.concat([metadata_info, new_meta_info], ignore_index=True)
 
@@ -889,7 +893,7 @@ class WeatherQAQC:
         delta_df.to_excel(output_writer, sheet_name='Delta (Corr - Orig)', na_rep=self.missing_fill_value)
         fill_df.to_excel(output_writer, sheet_name='Filled Data', na_rep=self.missing_fill_value)
         # Save output file
-        output_writer.save()
+        output_writer.close()
 
         logger = open(self.log_file, 'a')
         if self.script_mode == 1 and self.fill_mode == 1:
