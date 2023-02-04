@@ -792,7 +792,7 @@ class WeatherQAQC:
                                               'Longitude': self.station_lon, 'station_elev_m': self.station_elev,
                                               'record_start': record_start, 'record_end': record_end,
                                               'anemom_height_m': self.ws_anemometer_height,
-                                              'Filepath': self.output_file_path}, index=np.array([1]))
+                                              'Filename': self.output_file_path}, index=np.array([1]))
 
                 output_metadata = pd.concat([metadata_info, new_meta_info], ignore_index=True)
 
