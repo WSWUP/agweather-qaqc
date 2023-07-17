@@ -98,6 +98,7 @@ def read_config(config_file_path):
     config_dict['temp_f_flag'] = config_reader['DATA'].getboolean('temp_f_flag')
     config_dict['temp_k_flag'] = config_reader['DATA'].getboolean('temp_k_flag')
     config_dict['uz_mph_flag'] = config_reader['DATA'].getboolean('uz_mph_flag')
+    config_dict['uz_kmh_flag'] = config_reader['DATA'].getboolean('uz_kmh_flag')
     config_dict['uz_wind_run_km_flag'] = config_reader['DATA'].getboolean('uz_wind_run_kilometers_flag')
     config_dict['uz_wind_run_mi_flag'] = config_reader['DATA'].getboolean('uz_wind_run_miles_flag')
     config_dict['pp_inch_flag'] = config_reader['DATA'].getboolean('pp_inch_flag')
@@ -188,17 +189,25 @@ def convert_units(config_dict, original_data, var_type):
             raise ValueError('Incorrect parameters: vapor pressure unit flags in config are not set up correctly.')
 
     elif var_type == 'wind_speed':
-        if config_dict['uz_mph_flag'] == 1 and config_dict['uz_wind_run_km_flag'] == 0 \
-                and config_dict['uz_wind_run_mi_flag'] == 0:  # wind speed in miles per hour
+        if config_dict['uz_mph_flag'] == 1 and config_dict['uz_kmh_flag'] == 0 and \
+                config_dict['uz_wind_run_km_flag'] == 0 and config_dict['uz_wind_run_mi_flag'] == 0:
+            # wind speed in miles per hour
             converted_data = np.array(original_data * 0.44704)  # Convert mph to m/s
-        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_wind_run_km_flag'] == 1 \
-                and config_dict['uz_wind_run_mi_flag'] == 0:  # Wind run in km/day
+        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_kmh_flag'] == 1 and \
+                config_dict['uz_wind_run_km_flag'] == 0 and config_dict['uz_wind_run_mi_flag'] == 0:
+            # wind speed in kilometers per hour
+            converted_data = np.array(original_data * 0.27778)  # Convert kmh to m/s
+        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_kmh_flag'] == 0 and \
+                config_dict['uz_wind_run_km_flag'] == 1 and config_dict['uz_wind_run_mi_flag'] == 0:
+            # Wind run in km/day
             converted_data = np.array((original_data * 1000) / 86400)  # Convert km to m and day to seconds
-        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_wind_run_km_flag'] == 0 \
-                and config_dict['uz_wind_run_mi_flag'] == 1:  # Wind run in mi/day
+        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_kmh_flag'] == 0 and \
+                config_dict['uz_wind_run_km_flag'] == 0 and config_dict['uz_wind_run_mi_flag'] == 1:
+            # Wind run in mi/day
             converted_data = np.array(original_data * 0.0186267)  # todo source this equation of mi/day to m/s
-        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_wind_run_km_flag'] == 0 \
-                and config_dict['uz_wind_run_mi_flag'] == 0:  # wind speed in m/s
+        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_kmh_flag'] == 0 and \
+                config_dict['uz_wind_run_km_flag'] == 0 and config_dict['uz_wind_run_mi_flag'] == 0:
+            # wind speed in m/s
             pass
         else:
             # Incorrect setup of wind speed flags, raise an error
