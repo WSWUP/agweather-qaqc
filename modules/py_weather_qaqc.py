@@ -6,7 +6,7 @@ from math import ceil
 import numpy as np
 import os
 import pandas as pd
-from qaqc_modules import data_functions, input_functions, plotting_functions, qaqc_functions
+from . import data_functions, input_functions, plotting_functions, qaqc_functions
 from refet.calcs import _wind_height_adjust
 import warnings
 
