@@ -33,13 +33,13 @@ class WeatherQAQC:
         self.station_lon = self.config_dict['station_longitude']
         self.station_elev = self.config_dict['station_elevation']
         self.ws_anemometer_height = self.config_dict['anemometer_height']
-        self.missing_fill_value = self.config_dict['missing_fill_value']
+        self.missing_fill_value = self.config_dict['missing_output_value']
         self.folder_path = self.config_dict['folder_path']
 
         self.script_mode = self.config_dict['corr_flag']
         self.auto_mode = self.config_dict['auto_flag']
         self.fill_mode = self.config_dict['fill_flag']
-        self.generate_bokeh = self.config_dict['plot_flag']
+        self.generate_bokeh = True
 
         if self.script_mode == 1:  # correcting data
             self.mc_iterations = 1000  # Number of iters for MC simulation of thornton running solar radiation gen
@@ -64,7 +64,7 @@ class WeatherQAQC:
         self.data_ws = np.array(self.data_df.ws)
         self.data_precip = np.array(self.data_df.precip)
 
-        self.output_file_path = self.folder_path + "/correction_files/" + self.station_name + "_output" + ".xlsx"
+        self.output_file_path = self.folder_path + "/correction_files/output_data/" + self.station_name + "_output" + ".xlsx"
 
     def _calculate_secondary_vars(self):
         """
@@ -753,7 +753,7 @@ class WeatherQAQC:
                     else:
                         pass
 
-            fig = gridplot(grid_of_plots, toolbar_location='left', sizing_mode='scale_both')
+            fig = gridplot(grid_of_plots, toolbar_location='left', sizing_mode='stretch_both')
             save(fig)
 
             print("\nSystem: Composite bokeh graph has been generated.")
