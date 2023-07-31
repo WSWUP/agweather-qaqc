@@ -363,14 +363,14 @@ class WeatherQAQC:
                     for i in range(self.data_length):
                         if np.isnan(self.data_tmax[i]):
                             self.complete_tmax[i] = np.random.normal(self.mm_tmax[self.data_month[i] - 1],
-                                                                     self.std_tmax[self.data_month[i] - 1], 1)
+                                                                     self.std_tmax[self.data_month[i] - 1], 1)[0]
                             self.fill_tmax[i] = self.complete_tmax[i]
                         else:
                             pass
 
                         if np.isnan(self.data_tmin[i]):
                             self.complete_tmin[i] = np.random.normal(self.mm_tmin[self.data_month[i] - 1],
-                                                                     self.std_tmin[self.data_month[i] - 1], 1)
+                                                                     self.std_tmin[self.data_month[i] - 1], 1)[0]
                             self.fill_tmin[i] = self.complete_tmin[i]
                         else:
                             pass
@@ -657,10 +657,11 @@ class WeatherQAQC:
         # If user does correct data, then this plots data after correction
         print("\nSystem: Now creating composite bokeh graph.")
         if self.generate_bokeh:  # Flag to create graphs or not
+            reset_output()
             plot_list = []
 
-            x_size = 1400
-            y_size = 350
+            x_size = 1200
+            y_size = 400
 
             if self.script_mode == 0:
                 output_file(self.folder_path + "/correction_files/before_graphs/" + self.station_name +
@@ -753,7 +754,7 @@ class WeatherQAQC:
                     else:
                         pass
 
-            fig = gridplot(grid_of_plots, toolbar_location='left', sizing_mode='stretch_both')
+            fig = gridplot(grid_of_plots, toolbar_location='left', sizing_mode='stretch_width')
             save(fig)
 
             print("\nSystem: Composite bokeh graph has been generated.")
