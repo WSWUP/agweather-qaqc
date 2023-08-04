@@ -156,81 +156,75 @@ def convert_units(config_dict, original_data, var_type):
     var_type = var_type.lower()
 
     if var_type == 'temperature':
-        match config_dict['temperature_units']:
-            case 0:  # celsius
-                pass
-            case 1:  # fahrenheit
-                converted_data = np.array(((original_data - 32.0) * (5.0 / 9.0)))
-            case 2:  # kelvin
-                converted_data = np.array(original_data - 273.15)
-            case _:
-                raise ValueError('Incorrect parameters: TEMPERATURE_UNITS in config is not set up correctly.')
+        if config_dict['temperature_units'] == 0:  # Celsius
+            pass
+        elif config_dict['temperature_units'] == 1:  # Fahrenheit
+            converted_data = np.array(((original_data - 32.0) * (5.0 / 9.0)))
+        elif config_dict['temperature_units'] == 2:  # kelvin
+            converted_data = np.array(original_data - 273.15)
+        else:
+            raise ValueError('Incorrect parameters: TEMPERATURE_UNITS in config is not set up correctly.')
 
     elif var_type == 'wind_speed':
-        match config_dict['wind_units']:
-            case 0:  # m/s
-                pass
-            case 1:  # mph
-                converted_data = np.array(original_data * 0.44704)
-            case 2:  # kmh
-                converted_data = np.array(original_data * 0.27778)
-            case 3:  # wind run, miles per day
-                converted_data = np.array((original_data * 1609.34) / 86400)  # miles to meters, day to seconds
-            case 4:  # wind run, kilometers per day
-                converted_data = np.array((original_data * 1000) / 86400)  # kilometers to meters, day to seconds
-            case _:
-                raise ValueError('Incorrect parameters: WIND_UNITS in config is not set up correctly.')
+        if config_dict['wind_units'] == 0:  # m/s
+            pass
+        elif config_dict['wind_units'] == 1:  # mph
+            converted_data = np.array(original_data * 0.44704)
+        elif config_dict['wind_units'] == 2:  # kmh
+            converted_data = np.array(original_data * 0.27778)
+        elif config_dict['wind_units'] == 3:  # wind run, miles per day
+            converted_data = np.array((original_data * 1609.34) / 86400)  # miles to meters, day to seconds
+        elif config_dict['wind_units'] == 4:  # wind run, kilometers per day
+            converted_data = np.array((original_data * 1000) / 86400)  # kilometers to meters, day to seconds
+        else:
+            raise ValueError('Incorrect parameters: WIND_UNITS in config is not set up correctly.')
 
     elif var_type == 'precipitation':
-        match config_dict['precipitation_units']:
-            case 0:  # mm/day
-                pass
-            case 1:  # meters/day
-                converted_data = np.array(original_data * 1000)
-            case 2:  # inches/day
-                converted_data = np.array(original_data * 25.4)
-            case _:
-                raise ValueError('Incorrect parameters: PRECIPITATION_UNITS in config is not set up correctly.')
+        if config_dict['precipitation_units'] == 0:  # mm/day
+            pass
+        elif config_dict['precipitation_units'] == 1:  # meters/day
+            converted_data = np.array(original_data * 1000)
+        elif config_dict['precipitation_units'] == 2:  # inches/day
+            converted_data = np.array(original_data * 25.4)
+        else:
+            raise ValueError('Incorrect parameters: PRECIPITATION_UNITS in config is not set up correctly.')
 
     elif var_type == 'solar_radiation':
-        match config_dict['solar_radiation_units']:
-            case 0:  # w/m2
-                pass
-            case 1:  # mj/m2
-                # convert MJ to J and divide by seconds in the day
-                converted_data = np.array((original_data * 1000000) / 86400)
-            case 2:  # kw-hr/m2
-                # convert kw to w and divide by hours per day
-                converted_data = np.array((original_data * 1000) / 24)
-            case 3:  # langleys
-                # equation from https://www.wcc.nrcs.usda.gov/ftpref/wntsc/H&H/GEM/SolarRadConversion.pdf
-                converted_data = np.array(original_data * 0.484583)
-            case _:
-                raise ValueError('Incorrect parameters: SOLAR_RADIATION_UNITS in config is not set up correctly.')
+        if config_dict['solar_radiation_units'] == 0:  # w/m2
+            pass
+        elif config_dict['solar_radiation_units'] == 1:  # mj/m2
+            # convert MJ to J and divide by seconds in the day
+            converted_data = np.array((original_data * 1000000) / 86400)
+        elif config_dict['solar_radiation_units'] == 2:  # kw-hr/m2
+            # convert kw to w and divide by hours per day
+            converted_data = np.array((original_data * 1000) / 24)
+        elif config_dict['solar_radiation_units'] == 3:  # langleys
+            # equation from https://www.wcc.nrcs.usda.gov/ftpref/wntsc/H&H/GEM/SolarRadConversion.pdf
+            converted_data = np.array(original_data * 0.484583)
+        else:
+            raise ValueError('Incorrect parameters: SOLAR_RADIATION_UNITS in config is not set up correctly.')
 
     elif var_type == 'vapor_pressure':
-        match config_dict['vapor_pressure_units']:
-            case 0:  # kpa
-               pass
-            case 1:  # pa
-                converted_data = np.array(original_data / 1000)
-            case 2:  # torr or mmhg
-                converted_data = np.array(original_data * 0.133322)
-            case 3:  # millibars
-                converted_data = np.array(original_data * 0.1)
-            case 4:  # atmospheres
-                converted_data = np.array(original_data * 101.325)
-            case _:
-                raise ValueError('Incorrect parameters: VAPOR_PRESSURE_UNITS in config is not set up correctly.')
+        if config_dict['vapor_pressure_units'] == 0:  # kpa
+            pass
+        elif config_dict['vapor_pressure_units'] == 1:  # pa
+            converted_data = np.array(original_data / 1000)
+        elif config_dict['vapor_pressure_units'] == 2:  # torr or mmhg
+            converted_data = np.array(original_data * 0.133322)
+        elif config_dict['vapor_pressure_units'] == 3:  # millibars
+            converted_data = np.array(original_data * 0.1)
+        elif config_dict['vapor_pressure_units'] == 4:  # atmospheres
+            converted_data = np.array(original_data * 101.325)
+        else:
+            raise ValueError('Incorrect parameters: VAPOR_PRESSURE_UNITS in config is not set up correctly.')
 
     elif var_type == 'relative_humidity':
-        match config_dict['relative_humidity_units']:
-            case 0:  # percentage
-                pass
-            case 1:  # decimal
-                converted_data = np.array(original_data * 100.0)
-            case _:
-                raise ValueError('Incorrect parameters: RELATIVE_HUMIDITY_UNITS in config is not set up correctly.')
+        if config_dict['relative_humidity_units'] == 0:  # percentage
+            pass
+        elif config_dict['relative_humidity_units'] == 1:  # decimal
+            converted_data = np.array(original_data * 100.0)
+        else:
+            raise ValueError('Incorrect parameters: RELATIVE_HUMIDITY_UNITS in config is not set up correctly.')
 
     else:
         # If an unsupported variable type is passed, raise a value error to point it out.
