@@ -17,7 +17,7 @@ if __name__ == "__main__":
             f'The script will likely still function, but spend extra time verifying outputs.')
     else:
         pass
-    print(sys.version)
+
     # Check if user has passed in a config file, or else just grab the default.
     # Also see if user has passed a metadata file to allow for automatic reading/writing into the metadata file.
     print("\nSystem: Starting single station data QAQC script.")

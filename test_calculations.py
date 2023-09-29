@@ -2,7 +2,7 @@ import pandas as pd
 import pytest as pt
 import numpy as np
 import math
-from qaqc_modules import input_functions, data_functions
+from modules import input_functions, data_functions
 
 metadata_file_path = 'test_files/test_metadata.xlsx'
 config_file_path = 'test_files/test_config.ini'
