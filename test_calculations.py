@@ -83,9 +83,9 @@ def test_temperature_conversion():
     temp_k = np.array([373.15])  # boiling point and freezing point of water in K
     temp_c = np.array([100.0])  # boiling point and freezing point of water in C
 
-    config_dict_for_f = {'temp_f_flag': 1, 'temp_k_flag': 0}
-    config_dict_for_k = {'temp_f_flag': 0, 'temp_k_flag': 1}
-    config_dict_for_c = {'temp_f_flag': 0, 'temp_k_flag': 0}
+    config_dict_for_f = {'temperature_units': 1}
+    config_dict_for_k = {'temperature_units': 2}
+    config_dict_for_c = {'temperature_units': 0}
 
     converted_temp_f_to_c = input_functions.convert_units(config_dict_for_f, temp_f, 'temperature')
     converted_temp_k_to_c = input_functions.convert_units(config_dict_for_k, temp_k, 'temperature')
@@ -107,16 +107,19 @@ def test_wind_speed_conversion():
     uz_run_mi = np.array([375.8])  # Test speed in daily wind run (miles)
     uz_run_km = np.array([604.80])  # Test speed in daily wind run (kilometers)
     uz_ms = np.array([7.0])  # Test wind speed in meters per second
+    uz_kph = np.array([25.2]) # Test wind speed in kilometers per hour
 
-    config_dict_for_mph = {'uz_mph_flag': 1, 'uz_wind_run_km_flag': 0, 'uz_wind_run_mi_flag': 0}
-    config_dict_for_run_km = {'uz_mph_flag': 0, 'uz_wind_run_km_flag': 1, 'uz_wind_run_mi_flag': 0}
-    config_dict_for_run_mi = {'uz_mph_flag': 0, 'uz_wind_run_km_flag': 0, 'uz_wind_run_mi_flag': 1}
-    config_dict_for_ms = {'uz_mph_flag': 0, 'uz_wind_run_km_flag': 0, 'uz_wind_run_mi_flag': 0}
+    config_dict_for_mph = {'wind_units': 1}
+    config_dict_for_run_km = {'wind_units': 4}
+    config_dict_for_run_mi = {'wind_units': 3}
+    config_dict_for_ms = {'wind_units': 0}
+    config_dict_for_kph = {'wind_units' : 2}
 
     converted_uz_mph_to_ms = input_functions.convert_units(config_dict_for_mph, uz_mph, 'wind_speed')
     converted_uz_run_km_to_ms = input_functions.convert_units(config_dict_for_run_km, uz_run_km, 'wind_speed')
     converted_uz_run_mi_to_ms = input_functions.convert_units(config_dict_for_run_mi, uz_run_mi, 'wind_speed')
     converted_uz_ms_to_ms = input_functions.convert_units(config_dict_for_ms, uz_ms, 'wind_speed')
+    converted_uz_kph_to_ms = input_functions.convert_units(config_dict_for_kph, uz_kph, 'wind_speed')
 
     assert converted_uz_mph_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
         'Wind mph to m/s and test value m/s are not equal.'
@@ -126,6 +129,8 @@ def test_wind_speed_conversion():
         'Wind run_mi to m/s and test value m/s are not equal.'
     assert converted_uz_ms_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
         'Wind m/s to m/s and test value m/s are not equal.'
+    assert converted_uz_kph_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
+        'wind kph to m/s and test value ms are not equal.'
 
 
 def test_vapor_pressure_conversion():
@@ -136,9 +141,9 @@ def test_vapor_pressure_conversion():
     ea_mbar = np.array([10.0])  # Test vapor pressure in millibars
     ea_kpa = np.array([1.0])  # Test vapor pressure in kilopascals
 
-    config_dict_for_torr = {'ea_torr_flag': 1, 'ea_mbar_flag': 0}
-    config_dict_for_mbar = {'ea_torr_flag': 0, 'ea_mbar_flag': 1}
-    config_dict_for_kpa = {'ea_torr_flag': 0, 'ea_mbar_flag': 0}
+    config_dict_for_torr = {'vapor_pressure_units': 2}
+    config_dict_for_mbar = {'vapor_pressure_units': 3}
+    config_dict_for_kpa = {'vapor_pressure_units': 0}
 
     converted_ea_torr_to_kpa = input_functions.convert_units(config_dict_for_torr, ea_torr, 'vapor_pressure')
     converted_ea_mbar_to_kpa = input_functions.convert_units(config_dict_for_mbar, ea_mbar, 'vapor_pressure')
@@ -161,10 +166,10 @@ def test_solar_radiation_conversion():
     rs_kwhr = np.array([2.4])  # Test radiation in kilowatt-hours/m2
     rs_w = np.array([100.0])  # Test radiation in watts/m2
 
-    config_dict_for_lang = {'rs_lang_flag': 1, 'rs_mj_flag': 0, 'rs_kwhr_flag': 0}
-    config_dict_for_mj = {'rs_lang_flag': 0, 'rs_mj_flag': 1, 'rs_kwhr_flag': 0}
-    config_dict_for_kwhr = {'rs_lang_flag': 0, 'rs_mj_flag': 0, 'rs_kwhr_flag': 1}
-    config_dict_for_w = {'rs_lang_flag': 0, 'rs_mj_flag': 0, 'rs_kwhr_flag': 0}
+    config_dict_for_lang = {'solar_radiation_units': 3}
+    config_dict_for_mj = {'solar_radiation_units': 1}
+    config_dict_for_kwhr = {'solar_radiation_units': 2}
+    config_dict_for_w = {'solar_radiation_units': 0}
 
     converted_rs_lang_to_w = input_functions.convert_units(config_dict_for_lang, rs_lang, 'solar_radiation')
     converted_rs_mj_to_w = input_functions.convert_units(config_dict_for_mj, rs_mj, 'solar_radiation')
@@ -188,8 +193,8 @@ def test_precipitation_conversion():
     pp_inch = np.array([1.0])  # Test precipitation in inches
     pp_mm = np.array([25.4])  # Test precipitation in millimeters
 
-    config_dict_for_inch = {'pp_inch_flag': 1}
-    config_dict_for_mm = {'pp_inch_flag': 0}
+    config_dict_for_inch = {'precipitation_units': 2}
+    config_dict_for_mm = {'precipitation_units': 0}
 
     converted_pp_inch_to_mm = input_functions.convert_units(config_dict_for_inch, pp_inch, 'precipitation')
     converted_pp_mm_to_mm = input_functions.convert_units(config_dict_for_mm, pp_mm, 'precipitation')
@@ -207,8 +212,8 @@ def test_relative_humidity_conversion():
     rh_fract = np.array([0.5])  # Test relative humidity as a fraction
     rh_perct = np.array([50.0])  # Test relative humidity as a percentage
 
-    config_dict_for_fract = {'rh_fraction_flag': 1}
-    config_dict_for_perct = {'rh_fraction_flag': 0}
+    config_dict_for_fract = {'relative_humidity_units': 1}
+    config_dict_for_perct = {'relative_humidity_units': 0}
 
     converted_rh_fract_to_perct = input_functions.convert_units(config_dict_for_fract, rh_fract, 'relative_humidity')
     converted_rh_perct_to_perct = input_functions.convert_units(config_dict_for_perct, rh_perct, 'relative_humidity')
