@@ -1,9 +1,0 @@
-bokeh == 3.2.1
-configparser == 5.0.2
-numpy == 1.25.0
-openpyxl == 3.0.10
-pandas == 1.5.3
-pathlib == 1.0.1
-pytest == 7.4.0
-refet == 0.4.2
-xlsxwriter == 3.1.1
