@@ -2,7 +2,8 @@ import numpy as np
 import math
 import datetime as dt
 import logging as log
-from . import plotting_functions
+import modules.plotting_functions as plotting_functions
+from modules.utils import get_int_input, get_float_input
 import warnings
 
 from bokeh.plotting import save, show
@@ -27,7 +28,7 @@ def additive_corr(log_writer, start, end, var_one, var_two):
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
 
-    mod = float(input("\nEnter the additive modifier you want to apply to all values: "))
+    mod = get_float_input("\nEnter the additive modifier you want to apply to all values: ")
     corr_var_one[start:end] = var_one[start:end] + mod
     corr_var_two[start:end] = var_two[start:end] + mod
     log_writer.write('Selected correction interval started at %s and ended at %s. \n' % (start, end))
@@ -42,7 +43,7 @@ def generate_corr_menu(code, auto_corr, first_pass):
 
         Parameters:
             code : integer code passed by main script that indicates what type of data has been passed
-            auto_corr : flag for whether or not automatic correction has been enabled
+            auto_corr : flag for whether automatic correction has been enabled
             first_pass : flag for if this is the first iteration of correction or not
 
         Returns:
@@ -81,19 +82,10 @@ def generate_corr_menu(code, auto_corr, first_pass):
 
     if auto_corr != 0 and first_pass == 1:  # automatic pass enabled
         choice = 4
-        loop = 0
         first_pass = 0
         print('\n Automatic first-pass correction is being performed, option 4 selected. \n')
     else:
-        choice = int(input("Enter your selection: "))
-        loop = 1
-
-    while loop:
-        if 1 <= choice <= 4:
-            loop = 0
-        else:
-            print('Please enter a valid option.')
-            choice = int(input('Specify which variable you would like to correct: '))
+        choice = get_int_input(1, 4, "Enter your selection: ")
 
     return choice, first_pass
 
@@ -112,17 +104,23 @@ def generate_interval(var_size):
     print('\nPlease enter the starting index of your correction interval.'
           '\n   You may also enter -1 to select all data points.')
 
-    int_start = int(input("Enter your starting index: "))
+    int_start = get_int_input(-1, var_size, 'Enter your starting index: ')
     if int_start == -1:
         int_start = 0
         int_end = var_size
     else:
-        int_end = int(input("Enter your ending index: "))
+        # get ending of interval, add two to ensure at least some data is corrected
+        int_end = get_int_input(int_start+2, var_size, 'Enter your ending index: ')
         # Check that user didn't select past the end of record.
         if int_end > var_size:
             int_end = var_size
         else:
             pass
+    # Check that int_end isn't before int_start
+    if int_start > int_end:
+        temp_end = int_end
+        int_end = int_start
+        int_start = temp_end
     return int_start, int_end
 
 
@@ -145,7 +143,7 @@ def multiplicative_corr(log_writer, start, end, var_one, var_two):
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
 
-    mod = float(input("\nEnter the multiplicative modifier you want to apply to all values: "))
+    mod = get_float_input("\nEnter the multiplicative modifier you want to apply to all values: ")
     corr_var_one[start:end] = var_one[start:end] * mod
     corr_var_two[start:end] = var_two[start:end] * mod
     log_writer.write('Selected correction interval started at %s and ended at %s. \n' % (start, end))
@@ -345,7 +343,7 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year, percen
         if corr_rhmax[i] > 100:
             corr_rhmax[i] = 100
             rhmax_cutoff += 1
-        elif corr_rhmax[i] <= 0:  # This should never really happen but need to control for it anyways.
+        elif corr_rhmax[i] <= 0:  # This should never really happen but need to control for it anyway.
             corr_rhmax[i] = 1
         else:
             pass
@@ -353,7 +351,7 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year, percen
         if corr_rhmin[i] > 100:
             corr_rhmin[i] = 100
             rhmin_cutoff += 1
-        elif corr_rhmin[i] <= 0:  # This should never really happen but need to control for it anyways
+        elif corr_rhmin[i] <= 0:  # This should never really happen but need to control for it anyway
             corr_rhmin[i] = 1
         else:
             pass
@@ -382,11 +380,11 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
             to counteract sensor drift and other errors.
 
             The start and end of the correction interval is used to cut a section of both rs and rso,
-            with these new sections being divided into 60 day periods. Each period is checked for the number of times
+            with these new sections being divided into 60-day periods. Each period is checked for the number of times
             rs exceeds rso. If there are less than three, they are removed (set to rso) as potential voltage spikes or
             other errors, but if there are more then they are left in.
-            Each period then has a correction factor calculated based on a user-specified (6 is recommended)
-            largest number of points for rs/rso.
+            Each period then has a correction factor calculated based on how many user-specified largest number of
+            points for rs/rso. (6 is recommended)
 
             If a period does not contain enough valid data points to fill the user-specified number, the entire period
             is thrown out.
@@ -528,7 +526,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
                 # First of the two rules used to check for the existence of voltage spikes, the logic is that if
                 # removing the largest point causes over a 2% change in the correction factor (which is an average of
                 # six largest points) then that point carried an undue influence and is a likely voltage spike
-                # We only need to care if Rs_average is above Rso_average, it it was below rso_average then it likely
+                # We only need to care if Rs_average is above Rso_average, if it was below rso_average then it likely
                 # would not be a voltage spike
                 if percent_diff_cf >= 2.0 and rs_avg > rso_avg:
                     new_cf_significant_change = True
@@ -589,7 +587,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
             # add this period's rs data, which has potentially been thrown out or despiked, to the new interval of rs
             despiked_rs_interval = np.append(despiked_rs_interval, rs_period)
 
-            # adjust counters to move to next period, if this is the final period then then does nothing.
+            # adjust counters to move to next period, if this is the final period then does nothing.
             count_two = 0
             count_three += 1
 
@@ -616,7 +614,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
     z = 0  # index that tracks which correction period we are in
     while x < len(rs) and x < end and z < len(period_corr):
         # x is less than the length of var1 to prevent OOB,
-        # and is before or at the end of the correction interval
+        # and is before or at the end of the correction interval,
         # and we have not yet run out of correction periods
         # and capping correction by a fifty percent increase or decrease
         if y <= period:
@@ -634,7 +632,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
                 # current rs point was not a potential voltage spike
                 else:
                     if 0.97 <= period_corr[z] <= 1.03:
-                        # dont change the data under the assumption that the sensor is working
+                        # don't change the data under the assumption that the sensor is working
                         unchanged_data_counter += 1
                     else:
                         # apply the correction to the data
@@ -717,7 +715,7 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
                 corr_var_two : 1D numpy array of corrected var_two values
     """
     correction_loop = 1
-    first_pass = 1  # boolean flag for whether or not it is the first pass, used in automation with auto_corr
+    first_pass = 1  # boolean flag for whether it is the first pass, used in automation with auto_corr
     var_size = var_one.shape[0]
     backup_var_one = np.array(var_one)
     backup_var_two = np.array(var_two)
@@ -774,7 +772,9 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
             if auto_corr != 0:
                 corr_percentile = 1
             else:
-                corr_percentile = int(input('\nEnter which top percentile you want to base corrections on (rec. 1): '))
+                corr_percentile = get_int_input(
+                    1, 365,
+                    '\nEnter which top percentile you want to base corrections on (rec. 1): ')
 
             (corr_var_one, corr_var_two) = rh_yearly_percentile_corr(corr_log, int_start, int_end, var_one, var_two,
                                                                      year, corr_percentile)
@@ -783,8 +783,12 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
                 corr_period = 60
                 corr_sample = 6
             else:
-                corr_period = int(input('\nEnter the number of days each correction period will last (rec. 60): '))
-                corr_sample = int(input('\nEnter the number of points per period to correct based on (rec 6): '))
+                corr_period = get_int_input(
+                    1, 365,
+                    '\nEnter the number of days each correction period will last (rec. 60): ')
+                corr_sample = get_int_input(
+                    1, corr_period,
+                    '\nEnter the number of points per period to correct based on (rec 6): ')
 
             (corr_var_one, corr_var_two) = rs_period_ratio_corr(corr_log, int_start, int_end, var_one, var_two,
                                                                 corr_sample, corr_period)
@@ -815,14 +819,7 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
               '\n   Enter 3 to start over.'
               '\n   Enter 4 to discard all changes.')
 
-        choice = int(input("Enter your selection: "))
-        loop = 1
-        while loop:
-            if 1 <= choice <= 4:
-                loop = 0
-            else:
-                print('Please enter a valid option.')
-                choice = int(input('Enter your selection: '))
+        choice = get_int_input(1, 4, "Enter your selection: ")
 
         if choice == 1:
             correction_loop = 0
@@ -864,7 +861,7 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
         a higher priority humidity variable have worse data than a lower priority one.
 
         Ex: A station has both vapor pressure (daily average calculated from 15 minute intervals)
-        and RH Maximum and Minimum (daily values). The humidity compliation funciton will only use RHMax and RHMin
+        and RH Maximum and Minimum (daily values). The humidity compilation function will only use RHMax and RHMin
         to calculate vapor pressure if there is a gap in the provided vapor pressure data. However, for some reason the
         vapor pressure data is bad, either from a faulty sensor or problem with the sampling, while the contemporaneous
         RH data is good. This function will allow you to graphically select the 'bad' section of vapor pressure data
@@ -908,10 +905,10 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
     humidity_log.write('\n------------------------------------------------------------------------------------------\n')
     humidity_log.write('Now beginning humidity record adjustment. \n')
 
-    humidity_fig = plotting_functions.humidity_adjustment_plots\
-        (station, dt_array, edited_compiled_ea, ea, ea_col, tmin, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col,
-         rhavg, rhavg_col, tdew_ko, folder_path)
-
+    humidity_fig = (
+        plotting_functions.humidity_adjustment_plots(station, dt_array, edited_compiled_ea, ea, ea_col, tmin,
+                                                     tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col,
+                                                     rhavg, rhavg_col, tdew_ko, folder_path))
     show(humidity_fig)
 
     ####################
@@ -921,7 +918,6 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
 
         ####################
         # First the user will select an interval, then they will choose a variable to copy from.
-
         (int_start, int_end) = generate_interval(var_size)
 
         print('\nPlease select which variable you want to use for this interval:'
@@ -932,29 +928,25 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
               '\n   To use Dewpoint temperature data that was filled in from TMin - Ko, enter 5.'
               '\n   To skip this selected interval, enter 6.')
 
-        choice = int(input("Enter your selection: "))
+        choice = get_int_input(1,6, "Enter your selection: ")
         loop = 1
 
         while loop:
-            if 1 <= choice <= 6:
                 if choice == 1 and ea_col == -1:
                     print('Ea was not provided by the dataset, please select a provided option.')
-                    choice = int(input('Specify which variable you would like to use: '))
+                    choice = get_int_input(1,6, 'Specify which variable you would like to use: ')
                 elif choice == 2 and tdew_col == -1:
                     print('TDew was not provided by the dataset, please select a provided option.')
-                    choice = int(input('Specify which variable you would like to use: '))
+                    choice = get_int_input(1,6, 'Specify which variable you would like to use: ')
                 elif choice == 3 and (rhmax_col == -1 or rhmin_col == -1):
                     print('RH Max and Min were not provided by the dataset, please select a provided option.')
-                    choice = int(input('Specify which variable you would like to use: '))
+                    choice = get_int_input(1,6, 'Specify which variable you would like to use: ')
                 elif choice == 4 and rhavg_col == -1:
                     print('RH Avg was not provided by the dataset, please select a provided option.')
-                    choice = int(input('Specify which variable you would like to use: '))
+                    choice = get_int_input(1,6, 'Specify which variable you would like to use: ')
                 else:
                     # Ko Tdew and skipping always a possible option
                     loop = 0
-            else:
-                print('Please enter a valid option.')
-                choice = int(input('Specify which variable you would like to use: '))
 
         humidity_log.write('Selected interval started at %s and ended at %s. \n' % (int_start, int_end))
 
@@ -1014,10 +1006,10 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
             raise ValueError('Incorrect parameters: CHOICE in humidity adjustment was an unexpected value.')
 
         # Now that the section has been overwritten, replot the variables
-        humidity_fig = plotting_functions.humidity_adjustment_plots\
-            (station, dt_array, edited_compiled_ea, ea, ea_col, tmin, tdew, tdew_col, rhmax, rhmax_col,
-             rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko, folder_path)
-
+        humidity_fig = (
+            plotting_functions.humidity_adjustment_plots(station, dt_array, edited_compiled_ea, ea, ea_col, tmin,
+                                                         tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col,
+                                                         rhavg, rhavg_col, tdew_ko, folder_path))
         show(humidity_fig)
 
         ####################
@@ -1028,14 +1020,7 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
               '\n   Enter 3 to start over.'
               '\n   Enter 4 to discard all changes.')
 
-        choice = int(input("Enter your selection: "))
-        loop = 1
-        while loop:
-            if 1 <= choice <= 4:
-                loop = 0
-            else:
-                print('Please enter a valid option.')
-                choice = int(input('Enter your selection: '))
+        choice = get_int_input(1,6, "Enter your selection: ")
 
         if choice == 1:
             adjustment_loop = 0

@@ -1,4 +1,3 @@
-import bokeh.plotting
 from bokeh.layouts import gridplot
 from bokeh.plotting import output_file, reset_output, save
 import datetime as dt
@@ -6,7 +5,7 @@ from math import ceil
 import numpy as np
 import os
 import pandas as pd
-from . import data_functions, input_functions, plotting_functions, qaqc_functions
+from modules import data_functions, input_functions, plotting_functions, qaqc_functions, utils
 from refet.calcs import _wind_height_adjust
 import warnings
 
@@ -64,7 +63,8 @@ class WeatherQAQC:
         self.data_ws = np.array(self.data_df.ws)
         self.data_precip = np.array(self.data_df.precip)
 
-        self.output_file_path = self.folder_path + "/correction_files/output_data/" + self.station_name + "_output" + ".xlsx"
+        self.output_file_path = (self.folder_path +
+                                 "/correction_files/output_data/" + self.station_name + "_output" + ".xlsx")
 
     def _calculate_secondary_vars(self):
         """
@@ -141,7 +141,7 @@ class WeatherQAQC:
                                                      self.column_df.rhavg, self.data_tdew_ko)
 
         # Calculates rso and grass/alfalfa reference evapotranspiration from refet package
-        warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans
+        warnings.filterwarnings('ignore', 'invalid value encountered')  # invalid value warning for nans
         (self.rso, self.mm_rs, self.eto, self.etr, self.mm_eto, self.mm_etr) = data_functions.\
             calc_rso_and_refet(self.station_lat, self.station_elev, self.ws_anemometer_height, self.data_doy,
                                self.data_month, self.data_tmax, self.data_tmin, self.compiled_ea, self.data_ws,
@@ -149,8 +149,7 @@ class WeatherQAQC:
         warnings.resetwarnings()  # reset warning filter to default
 
         #########################
-        # Back up original data
-        # Original data will be saved to output file
+        # Back up original data, save it to output file
         # Values are also used to generate delta values of corrected data - original data
         self.original_df = self.data_df.copy(deep=True)  # Create an unlinked copy of read-in values dataframe
         self.original_df['rso'] = self.rso
@@ -215,53 +214,30 @@ class WeatherQAQC:
                   '\n   Enter 0 to stop applying corrections.'
                   )
 
-            user = int(input("\nEnter your selection: "))
-            choice_loop = 1
+            choice_loop = True
             while choice_loop:
-                if 0 <= user <= 9:
-                    # The following if statements check if user tries to correct a variable that was not provided
-                    # or make sure correction is being done in the right manner
-                    if user == 2 and self.column_df.tdew == -1:
-                        print('\nDewpoint temperature was not provided by the file, please choose a different option.')
-                        user = int(input('Specify which variable you would like to correct: '))
+                user = utils.get_int_input(0, 9, "\nEnter your selection: ")
+                # The following if statements check whether user tries to correct a variable that was not provided
+                # or make sure correction is being done in the ideal order
+                if user == 2 and self.column_df.tdew == -1:
+                    print('\nDewpoint temperature was not provided by the file, please choose a different option.')
+                elif user == 6 and self.column_df.ea == -1:
+                    print('\nVapor Pressure was not provided by the file, please choose a different option.')
+                elif user == 7 and (self.column_df.rhmax == -1 or self.column_df.rhmin == -1):
+                    print('\nRHMax and RHMin were not provided by the file, please choose a different option.')
+                elif user == 8 and self.column_df.rhavg == -1:
+                    print('\nRHAvg was not provided by the file, please choose a different option.')
+                elif user == 5 and not self.humidity_adjusted:
+                    print('\n\nBefore correcting solar radiation, did you want to adjust compiled humidity?.')
+                    print('Doing so may allow you to get the best possible humidity record for Rs correction.')
+                    print('\nEnter 1 to adjust compiled humidity or 0 to skip.')
 
-                    elif user == 5 and not self.humidity_adjusted:
-                        print('\n\nBefore correcting solar radiation, did you want to adjust compiled humidity?.')
-                        print('Doing so may allow you to get the best possible humidity record for Rs correction.')
-                        print('\nEnter 1 to adjust compiled humidity or 0 to skip.')
-
-                        humid_loop = 1
-                        while humid_loop:
-                            humid_choice = int(input('Enter your selection: '))
-                            if humid_choice == 0:
-                                # user is choosing to skip humidity adjustment so nothing needs to be done.
-                                humid_loop = 0
-                            elif humid_choice == 1:
-                                # change original choice to the adjust humidity option
-                                user = 9
-                                humid_loop = 0
-                            else:
-                                # non valid choice entered
-                                print('\nPlease enter a valid option.')
-
-                        choice_loop = 0
-
-                    elif user == 6 and self.column_df.ea == -1:
-                        print('\nVapor Pressure was not provided by the file, please choose a different option.')
-                        user = int(input('Specify which variable you would like to correct: '))
-
-                    elif user == 7 and (self.column_df.rhmax == -1 or self.column_df.rhmin == -1):
-                        print('\nRHMax and RHMin were not provided by the file, please choose a different option.')
-                        user = int(input('Specify which variable you would like to correct: '))
-
-                    elif user == 8 and self.column_df.rhavg == -1:
-                        print('\nRHAvg was not provided by the file, please choose a different option.')
-                        user = int(input('Specify which variable you would like to correct: '))
-                    else:
-                        choice_loop = 0
+                    humid_choice = utils.get_int_input(0, 1, 'Enter your selection: ')
+                    if humid_choice == 1:  # change original choice to the adjust humidity option
+                        user = 9
+                    choice_loop = False
                 else:
-                    print('\nPlease enter a valid option.')
-                    user = int(input('Specify which variable you would like to correct: '))
+                    choice_loop = False
 
             ##########
             # Correcting individual variables based on user choice
@@ -322,19 +298,18 @@ class WeatherQAQC:
                                                  self.data_tdew_ko, self.data_rhmax, self.column_df.rhmax,
                                                  self.data_rhmin, self.column_df.rhmin,
                                                  self.data_rhavg, self.column_df.rhavg)
-
                 self.humidity_adjusted = True
             else:
-                # todo make this more explicit and handle user input that isnt strictly int without breaking
                 # user quits, exit out of loop
                 print('\nSystem: Now finishing up corrections.')
-                # Break here because all recalculations were done at the end of the last loop iteration
-                # also we break as opposed to setting script_mode to 0 because it is used later in the program
+                # Break here because all recalculations were done at the end of the last loop iteration,
+                # there's no need to calculate everything again.
+                # also we break as opposed to setting script_mode to 0 because
+                # script_mode is used later in the program
                 break
 
             if 1 <= user <= 2 or 6 <= user <= 8:
                 if user == 1:  # User has corrected temperature, so fill all missing values with a normal distribution
-
                     # Reset 'complete' vars as the underlying var has been changed.
                     self.complete_tmax = np.array(self.data_tmax)
                     self.complete_tmin = np.array(self.data_tmin)
@@ -455,7 +430,7 @@ class WeatherQAQC:
                             pass
 
                     if self.fill_mode:
-                        # we are filling in data, so copy all of the filled versions onto the original arrays
+                        # we are filling in data, so copy all the filled versions onto the original arrays
                         self.data_tdew = np.array(self.complete_tdew)
                     else:
                         # if we are not filling, we will hold the copies to later fill in rso, but will reset fill
@@ -492,7 +467,7 @@ class WeatherQAQC:
                     pass
 
                 if self.fill_mode:
-                    # we are filling in data, so copy all of the filled versions onto the original arrays
+                    # we are filling in data, so copy all the filled versions onto the original arrays
                     self.data_ea = np.array(self.complete_ea)
                     self.compiled_ea = np.array(self.complete_ea)
                 else:
