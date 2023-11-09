@@ -1,3 +1,4 @@
+import pathlib as pl
 import numpy as np
 
 
@@ -57,3 +58,32 @@ def get_float_input(prompt="Enter your choice: "):
         except (ValueError, IndexError):
             print(error_msg)
     return float_input
+
+
+def validate_file(file_path, expected_extensions):
+    """
+    Checks to see if provided path is valid, while also checking to see if file is of expected type.
+    Raises exceptions if either of those fail.
+
+    Args:
+        file_path: string of path to file
+        expected_extensions: list of strings of expected file types
+
+    Returns:
+        None
+    """
+    # Check to see if provided config file path actually points to a file.
+    if pl.Path(file_path).is_file():
+
+        # Next check to see if provided file is of the appropriate type.
+        # by obtaining the ending suffix and checking it against the expected types
+        file_extension = pl.PurePath(file_path).suffix.split('.', 1)[1]  # Remove period
+        file_extension = file_extension.lower()  # Make it lowercase
+
+        if file_extension not in expected_extensions:
+            raise IOError('\n\nProvided file was of type \'{}\' but script was expecting type \'{}\'.'
+                          .format(file_extension, expected_extensions))
+        else:
+            pass
+    else:
+        raise IOError('\n\nUnable to find the file at path \'{}\'.'.format(file_path))

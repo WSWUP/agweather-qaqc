@@ -1,6 +1,8 @@
 import pytest as pt
 import numpy as np
-from modules import input_functions, data_functions
+
+import agweatherqaqc.utils
+from agweatherqaqc import input_functions, calc_functions
 
 metadata_file_path = 'test_files/test_metadata.xlsx'
 config_file_path = 'test_files/test_config.ini'
@@ -63,9 +65,9 @@ humidity_data = [
 def test_validate_file():
     """Check to see if input_functions.validate_file works on both test files"""
     # This has no assertions, it will raise an exception if a problem is found
-    input_functions.validate_file(config_file_path, ['ini'])  # Test the config file
-    input_functions.validate_file(data_file_path, ['csv'])  # Test the data file
-    input_functions.validate_file(metadata_file_path, ['xls', 'xlsx'])  # Test the metadata file
+    agweatherqaqc.utils.validate_file(config_file_path, ['ini'])  # Test the config file
+    agweatherqaqc.utils.validate_file(data_file_path, ['csv'])  # Test the data file
+    agweatherqaqc.utils.validate_file(metadata_file_path, ['xls', 'xlsx'])  # Test the metadata file
 
 
 def test_read_config():
@@ -229,7 +231,7 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
     # Columns for ea from ea
     tdew_col, rhmax_col, rhmin_col, rhavg_col = -1, -1, -1, -1
     ea_col = 1
-    ea_from_ea, tdew_from_ea = data_functions.calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col,
+    ea_from_ea, tdew_from_ea = calc_functions.calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col,
                                                                       rhmax, rhmax_col, rhmin, rhmin_col, rhavg,
                                                                       rhavg_col)
     # Ea from TDew
@@ -241,7 +243,7 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
         ea_col, rhmax_col, rhmin_col, rhavg_col = -1, -1, -1, -1
         tdew_col = 1
 
-        ea_from_tdew, tdew_from_tdew = data_functions\
+        ea_from_tdew, tdew_from_tdew = calc_functions\
             .calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax, rhmax_col,
                                      rhmin, rhmin_col, rhavg, rhavg_col)
 
@@ -258,7 +260,7 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
         ea_col, tdew_col, rhavg_col = -1, -1, -1
         rhmax_col, rhmin_col = 1, 1
 
-        ea_from_rhmax_rhmin, tdew_from_rhmax_rhmin = data_functions\
+        ea_from_rhmax_rhmin, tdew_from_rhmax_rhmin = calc_functions\
             .calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax,
                                      rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col)
 
@@ -275,7 +277,7 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
         ea_col, tdew_col, rhmax_col, rhmin_col = -1, -1, -1, -1
         rhavg_col = 1
 
-        ea_from_rhavg, tdew_from_rhavg = data_functions\
+        ea_from_rhavg, tdew_from_rhavg = calc_functions\
             .calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax,
                                      rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col)
 

@@ -269,7 +269,7 @@ def humidity_adjustment_plots(station, dt_array, comp_ea, ea, ea_col, tmin, tdew
     tdew_ko_filled_plot = line_plot(x_size, y_size, dt_array, tmin, tdew_ko, 2, 'Ko curve ', link_plot=ea_comp_plot)
     humidity_plot_list.append(tdew_ko_filled_plot)
 
-    # Now construct grid plot out of all of the subplots
+    # Now construct grid plot out of all the subplots
     number_of_plots = len(humidity_plot_list)
     humid_grid_of_plots = [([None] * 1) for i in range(number_of_plots)]
 

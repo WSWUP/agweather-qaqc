@@ -1,4 +1,4 @@
-name: weather_data_qaqc
+name: agweatherqaqc
 channels:
   - conda-forge
 dependencies:

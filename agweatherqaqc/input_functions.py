@@ -3,37 +3,9 @@ import logging as log
 import numpy as np
 import os
 import pandas as pd
-import pathlib as pl
 import warnings
 
-
-def validate_file(file_path, expected_extensions):
-    """
-    Checks to see if provided path is valid, while also checking to see if file is of expected type.
-    Raises exceptions if either of those fail.
-
-    Args:
-        file_path: string of path to file
-        expected_extensions: list of strings of expected file types
-
-    Returns:
-        None
-    """
-    # Check to see if provided config file path actually points to a file.
-    if pl.Path(file_path).is_file():
-
-        # Next check to see if provided file is of the appropriate type.
-        # by obtaining the ending suffix and checking it against the expected types
-        file_extension = pl.PurePath(file_path).suffix.split('.', 1)[1]  # Remove period
-        file_extension = file_extension.lower()  # Make it lowercase
-
-        if file_extension not in expected_extensions:
-            raise IOError('\n\nProvided file was of type \'{}\' but script was expecting type \'{}\'.'
-                          .format(file_extension, expected_extensions))
-        else:
-            pass
-    else:
-        raise IOError('\n\nUnable to find the file at path \'{}\'.'.format(file_path))
+from agweatherqaqc.utils import validate_file
 
 
 def read_config(config_file_path):
@@ -70,7 +42,6 @@ def read_config(config_file_path):
     config_dict['lines_of_footer'] = config_reader['METADATA'].getint('LINES_OF_FOOTER')  # Lines of header to skip
 
     # OPTIONS Section
-    config_dict['corr_flag'] = config_reader['OPTIONS'].getboolean('CORRECTION_OPTION')  # Option to correct the data
     config_dict['auto_flag'] = config_reader['OPTIONS'].getboolean('AUTOMATIC_OPTION')  # auto first iteration of QAQC
     config_dict['fill_flag'] = config_reader['OPTIONS'].getboolean('FILL_OPTION')  # Option to fill in missing data
 
@@ -417,14 +388,13 @@ def obtain_data(config_file_path, metadata_file_path=None):
 
         Returns:
             extracted_data : pandas dataframe of entire dataset, with the variables being organized into columns
-            col_df : pandas series of what variables are stored in what columns, used to track which vars are provided
+            col_ser : pandas series of what variables are stored in what columns, used to track which vars are provided
             station_name : string of file, including path, that was provided to dataset
             log_file : string of log file, including path, that was provided to dataset
             station_lat : station latitude in decimal degrees
             station_elev : station elevation in meters
             anemom_height : height of anemometer in meters
             fill_value : value pulled from config file that indicates missing data in output file
-            script_mode : boolean flag for if user wants to correct data or not
             gen_bokeh : boolean flag for if user wants to plot graphs or not
     """
 
@@ -442,7 +412,15 @@ def obtain_data(config_file_path, metadata_file_path=None):
                                     keep_default_na=True, na_filter=True, verbose=True)
         print('\nSystem: Successfully opened metadata file at %s' % metadata_file_path)
 
-        current_row = metadata_df.run_count.ne(2).idxmax() - 1
+        # Pull out the metadata for the next file to process
+        # also check that the metadata file has outstanding entries to be processed, otherwise raise an error
+        processed_rows = metadata_df.processed.ne(1)
+        if processed_rows.eq(False).all():
+            raise IOError(f'\n\nThe metadata file at \'{metadata_file_path}\' '
+                          f'contains no unprocessed (processed == 1) files. \n'
+                          f'If you are seeing this before processing any files, make sure the \'processed\' '
+                          f'column in the metadata file has been set up with all entries are set to \'0\'.')
+        current_row = processed_rows.idxmax() - 1
         metadata_series = metadata_df.iloc[current_row]
 
         config_dict['data_file_path'] = metadata_series.input_path
@@ -450,7 +428,6 @@ def obtain_data(config_file_path, metadata_file_path=None):
         config_dict['station_longitude'] = metadata_series.longitude
         config_dict['station_elevation'] = metadata_series.elev_m
         config_dict['anemometer_height'] = metadata_series.anemom_height_m
-        config_dict['corr_flag'] = metadata_series.run_count
 
         # split file string on extension
         (file_name, station_extension) = os.path.splitext(config_dict['data_file_path'])
@@ -517,7 +494,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
                                  na_filter=True, verbose=True)
 
     else:
-        # This script is only handles csv and excel files. Validate_file() already catches this case
+        # This script is only handles csv and Excel files. Validate_file() already catches this case
         raise IOError('\n\nProvided file was of type \'{}\' but script was expecting type \'{}\'.'
                       .format(station_extension, ['csv', 'xls', 'xlsx']))
 
@@ -656,7 +633,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
                            index=datetime_df)
 
     # Create dataframe of column indices for weather variable, to track which ones were provided vs calculated
-    col_df = pd.Series({'tmax': tmax_col, 'tmin': tmin_col, 'tavg': tavg_col, 'tdew': tdew_col, 'ea': ea_col,
+    col_ser = pd.Series({'tmax': tmax_col, 'tmin': tmin_col, 'tavg': tavg_col, 'tdew': tdew_col, 'ea': ea_col,
                         'rhmax': rhmax_col, 'rhmin': rhmin_col, 'rhavg': rhavg_col, 'rs': rs_col, 'ws': ws_col,
                         'precip': precip_col})
 
@@ -672,7 +649,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
     data_df.month = date_reindex.month
     data_df.day = date_reindex.day
 
-    return data_df, col_df, metadata_df, metadata_series, config_dict
+    return data_df, col_ser, metadata_df, metadata_series, config_dict
 
 
 # This is never run by itself

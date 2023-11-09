@@ -237,8 +237,8 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
         That best fit model will then be used to fill any missing observations in actual solar radiation for the
         calculation of reference evapotranspiration. See the function calc_rs_tr for more information.
 
-        The number of iterations is currently set to 1000, and the bracket size with which to generate random values
-        is 0.5, these factors were chosen after trying different values on several stations and were a good balance of
+        The bracket size with which to generate random values
+        is 0.5, this factor was chosen after trying different values on several stations and were a good balance of
         minimizing RMSE and processing speed.
 
         When running the script on the first mode, only 50 iterations are done to save time, it may be that optimized
@@ -324,7 +324,8 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
     return orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr
 
 
-def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko):
+def calc_compiled_ea(tmax, tmin, tavg, ea, tdew, tdew_col,
+                     rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko):
     """
         This function is used to create a 'compiled' ea from all provided humidity variables, always using the best one
         provided within the dataset for each given day of the record. This function will work regardless of if ea is

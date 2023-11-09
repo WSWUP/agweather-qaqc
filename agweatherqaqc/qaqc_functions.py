@@ -2,8 +2,8 @@ import numpy as np
 import math
 import datetime as dt
 import logging as log
-import modules.plotting_functions as plotting_functions
-from modules.utils import get_int_input, get_float_input
+import agweatherqaqc.plotting_functions as plotting_functions
+from agweatherqaqc.utils import get_int_input, get_float_input
 import warnings
 
 from bokeh.plotting import save, show
