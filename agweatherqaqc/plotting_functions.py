@@ -27,14 +27,14 @@ def generate_line_plot_features(code, usage=''):
         var_one_color = 'red'
         var_two_name = 'TMin'
         var_two_color = 'blue'
-        units = 'degrees Celsius'
+        units = '°C'
         title = usage + var_one_name + ' and ' + var_two_name
     elif code == 2:  # Temperature min and dewpoint
         var_one_name = 'TMin'
         var_one_color = 'blue'
         var_two_name = 'TDew'
         var_two_color = 'black'
-        units = 'degrees Celsius'
+        units = '°C'
         title = usage + var_one_name + ' and ' + var_two_name
     elif code == 3:  # Wind Speed
         var_one_name = 'Wind Speed'
@@ -90,7 +90,7 @@ def generate_line_plot_features(code, usage=''):
         var_one_color = 'black'
         var_two_name = 'null'
         var_two_color = 'black'
-        units = 'degrees Celsius'
+        units = '°C'
         title = usage + var_one_name
     else:
         raise ValueError('Unsupported code type {} passed to generate_line_plot_features.'.format(code))
@@ -233,8 +233,7 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
                              link_plot=original_plot)
 
     corr_fig = gridplot([[original_plot], [corrected_plot], [delta_plot], [percent_plot]],
-                        toolbar_location="left", sizing_mode='scale_both')
-    corr_fig.sizing_mode = 'stretch_both'
+                        toolbar_location="left", sizing_mode='stretch_both')
     return corr_fig
 
 
@@ -270,7 +269,7 @@ def humidity_adjustment_plots(station, dt_array, comp_ea, ea, ea_col, tmin, tdew
     tdew_ko_filled_plot = line_plot(x_size, y_size, dt_array, tmin, tdew_ko, 2, 'Ko curve ', link_plot=ea_comp_plot)
     humidity_plot_list.append(tdew_ko_filled_plot)
 
-    # Now construct grid plot out of all of the subplots
+    # Now construct grid plot out of all the subplots
     number_of_plots = len(humidity_plot_list)
     humid_grid_of_plots = [([None] * 1) for i in range(number_of_plots)]
 
@@ -281,8 +280,7 @@ def humidity_adjustment_plots(station, dt_array, comp_ea, ea, ea_col, tmin, tdew
             else:
                 pass
 
-    humidity_fig = gridplot(humid_grid_of_plots, toolbar_location='left')
-    humidity_fig.sizing_mode = 'stretch_both'
+    humidity_fig = gridplot(humid_grid_of_plots, toolbar_location='left', sizing_mode='stretch_both')
 
     return humidity_fig
 

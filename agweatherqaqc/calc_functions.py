@@ -1,7 +1,7 @@
 import logging as log
 import numpy as np
 from refet import Daily
-from refet.calcs import _ra_daily, _rso_daily
+from refet.calcs import _air_pressure, _ra_daily, _rso_daily
 
 
 def calc_temperature_variables(month, tmax, tmin, tdew):
@@ -158,32 +158,25 @@ def calc_rso_and_refet(lat, elev, wind_anemom, doy, month, tmax, tmin, ea, uz, r
             Returns all variables listed above as 1D numpy arrays
     """
 
-    data_size = month.shape[0]  # Size of data set
-    ra = np.empty(data_size)  # Extraterrestrial solar radiation, MJ/m2, ASCE eq. 21
-    rso = np.empty(data_size)  # Clear sky solar radiation, MJ/m2, ASCE eq. 16
-    eto = np.empty(data_size)
-    etr = np.empty(data_size)
     monthly_rs = np.empty(12)
     monthly_eto = np.empty(12)
     monthly_etr = np.empty(12)
 
-    pressure = 101.3 * (((293 - (0.0065 * elev)) / 293) ** 5.26)  # units kPa, EQ 3 in ASCE RefET manual
-    # refet package expects rs in MJ/m2 and latitude in radians
-    refet_input_rs = np.array(rs * 0.0864)  # convert W/m2 to  MJ/m2
-    refet_input_lat = lat * (np.pi / 180.0)  # convert latitude into radians
+    # Calculate rso values
+    lat_radians = lat * np.pi / 180.0  # convert latitude into radians
+    pressure = _air_pressure(elev=elev, method='asce')  # returns air pressure in kpa
+    ra = _ra_daily(lat=lat_radians, doy=doy, method='asce')  # returns ra in mj/m2
+    rso = _rso_daily(ra=ra, ea=ea, pair=pressure, doy=doy, lat=lat_radians)
 
-    # Calculate daily values
-    for i in range(data_size):
-        ra[i] = _ra_daily(lat=refet_input_lat, doy=doy[i], method='asce')
-        rso[i] = _rso_daily(ra=ra[i], ea=ea[i], pair=pressure, doy=doy[i], lat=refet_input_lat)
+    # Calculating ETo in mm using refET package
+    eto = Daily(tmin=tmin, tmax=tmax, ea=ea, rs=rs, uz=uz,
+                zw=wind_anemom, elev=elev, lat=lat, doy=doy, method='asce',
+                input_units={'tmin': 'c', 'tmax': 'c', 'ea': 'kpa', 'rs': 'w/m2', 'uz': 'm/s', 'lat': 'deg'}).eto()
 
-        # Calculating ETo in mm using refET package
-        eto[i] = Daily(tmin=tmin[i], tmax=tmax[i], ea=ea[i], rs=refet_input_rs[i], uz=uz[i], zw=wind_anemom,
-                       elev=elev, lat=lat, doy=doy[i], method='asce').eto()
-
-        # Calculating ETr in mm using refET package
-        etr[i] = Daily(tmin=tmin[i], tmax=tmax[i], ea=ea[i], rs=refet_input_rs[i], uz=uz[i], zw=wind_anemom,
-                       elev=elev, lat=lat, doy=doy[i], method='asce').etr()
+    # Calculating ETr in mm using refET package
+    etr = Daily(tmin=tmin, tmax=tmax, ea=ea, rs=rs, uz=uz,
+                zw=wind_anemom, elev=elev, lat=lat, doy=doy, method='asce',
+                input_units={'tmin': 'c', 'tmax': 'c', 'ea': 'kpa', 'rs': 'w/m2', 'uz': 'm/s', 'lat': 'deg'}).etr()
 
     # Calculate mean monthly values
     j = 1
@@ -197,7 +190,7 @@ def calc_rso_and_refet(lat, elev, wind_anemom, doy, month, tmax, tmin, ea, uz, r
 
         j += 1
 
-    rso *= 11.574  # Convert rso from MJ/m2 to w/m2
+    rso = (rso * 1000000) / 86400  # Convert rso from MJ/m2 to w/m2
     return rso, monthly_rs, eto, etr, monthly_eto, monthly_etr
 
 
@@ -244,8 +237,8 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
         That best fit model will then be used to fill any missing observations in actual solar radiation for the
         calculation of reference evapotranspiration. See the function calc_rs_tr for more information.
 
-        The number of iterations is currently set to 1000, and the bracket size with which to generate random values
-        is 0.5, these factors were chosen after trying different values on several stations and were a good balance of
+        The bracket size with which to generate random values
+        is 0.5, this factor was chosen after trying different values on several stations and were a good balance of
         minimizing RMSE and processing speed.
 
         When running the script on the first mode, only 50 iterations are done to save time, it may be that optimized
@@ -267,7 +260,7 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
             mm_opt_rs_tr : monthly averaged opt_rs_tr (12 values total) values across all of record
     """
     print("\nSystem: Now performing a Monte Carlo simulation to optimize Thornton Running solar radiation parameters.")
-    print("\nSystem: %s iterations are being run, this may take some time." % mc_iterations)
+    print("System: %s iterations are being run, this may take some time." % mc_iterations)
 
     b_zero = np.array(0.031 + (0.031 * 0.5) * np.random.uniform(low=-1, high=1, size=mc_iterations))
     b_one = np.array(0.201 + (0.201 * 0.5) * np.random.uniform(low=-1, high=1, size=mc_iterations))
@@ -285,7 +278,7 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
         mc_rmse[i] = np.sqrt(np.nanmean((mc_rs_tr - rs) ** 2))  # Calculate RMSE to track how good those parameters were
 
         if (i % 100) == 0:  # Update user so they don't think script is frozen.
-            print('\nSystem: processing Thornton-Running iteration: {}'.format(i))
+            print('System: Processing Thornton-Running iteration: {} of {}'.format(i, mc_iterations))
         else:
             pass
 
@@ -294,8 +287,8 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
     # Calculate RMSE of original rs_tr B coefficients
     orig_rmse = np.sqrt(np.nanmean((orig_rs_tr - rs) ** 2))
 
-    print('\nSystem: original coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.format(orig_rmse))
-    print('System: optimized coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.
+    print('System: Original coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.format(orig_rmse))
+    print('System: Optimized coefficients for TR Solar Radiation produced an RMSE of: {0:.4f}'.
           format(mc_rmse[min_rmse_index]))
 
     # Calculate the optimized rs_tr using the B coefficients that caused the lowest rmse
@@ -331,7 +324,8 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
     return orig_rs_tr, mm_orig_rs_tr, opt_rs_tr, mm_opt_rs_tr
 
 
-def compile_ea(tmax, tmin, tavg, ea, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko):
+def calc_compiled_ea(tmax, tmin, tavg, ea, tdew, tdew_col,
+                     rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko):
     """
         This function is used to create a 'compiled' ea from all provided humidity variables, always using the best one
         provided within the dataset for each given day of the record. This function will work regardless of if ea is

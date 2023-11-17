@@ -1,40 +1,11 @@
 import configparser as cp
-import datetime as dt
 import logging as log
 import numpy as np
 import os
 import pandas as pd
-import pathlib as pl
 import warnings
 
-
-def validate_file(file_path, expected_extensions):
-    """
-    Checks to see if provided path is valid, while also checking to see if file is of expected type.
-    Raises exceptions if either of those fail.
-
-    Args:
-        file_path: string of path to file
-        expected_extensions: list of strings of expected file types
-
-    Returns:
-        None
-    """
-    # Check to see if provided config file path actually points to a file.
-    if pl.Path(file_path).is_file():
-
-        # Next check to see if provided file is of the appropriate type.
-        # by obtaining the ending suffix and checking it against the expected types
-        file_extension = pl.PurePath(file_path).suffix.split('.', 1)[1]  # Remove period
-        file_extension = file_extension.lower()  # Make it lowercase
-
-        if file_extension not in expected_extensions:
-            raise IOError('\n\nProvided file was of type \'{}\' but script was expecting type \'{}\'.'
-                          .format(file_extension, expected_extensions))
-        else:
-            pass
-    else:
-        raise IOError('\n\nUnable to find the file at path \'{}\'.'.format(file_path))
+from agweatherqaqc.utils import validate_file
 
 
 def read_config(config_file_path):
@@ -60,57 +31,46 @@ def read_config(config_file_path):
     # Create config file dictionary and start adding entries to it
     # METADATA Section
     config_dict = dict()
-    config_dict['data_file_path'] = config_reader['METADATA']['data_file_path']
-    config_dict['station_latitude'] = config_reader['METADATA'].getfloat('station_latitude')  # Expected in DD not DMS
-    config_dict['station_longitude'] = config_reader['METADATA'].getfloat('station_longitude')  # Expected in DD not DMS
-    config_dict['station_elevation'] = config_reader['METADATA'].getfloat('station_elevation')  # Expected in meters
-    config_dict['anemometer_height'] = config_reader['METADATA'].getfloat('anemometer_height')  # Expected in meters
-    config_dict['missing_data_value'] = config_reader['METADATA']['missing_data_value']  # Input missing data
-    config_dict['missing_fill_value'] = config_reader['METADATA']['output_fill_value']  # Output missing data
-    config_dict['lines_of_header'] = config_reader['METADATA'].getint('lines_of_file_header')  # Lines of header to skip
-    config_dict['lines_of_footer'] = config_reader['METADATA'].getint('lines_of_file_footer')  # Lines of header to skip
+    config_dict['data_file_path'] = config_reader['METADATA']['DATA_FILE_PATH']
+    config_dict['station_latitude'] = config_reader['METADATA'].getfloat('LATITUDE')  # Expected in DD not DMS
+    config_dict['station_longitude'] = config_reader['METADATA'].getfloat('LONGITUDE')  # Expected in DD not DMS
+    config_dict['station_elevation'] = config_reader['METADATA'].getfloat('ELEVATION')  # Expected in meters
+    config_dict['anemometer_height'] = config_reader['METADATA'].getfloat('ANEMOMETER_HEIGHT')  # Expected in meters
+    config_dict['missing_input_value'] = config_reader['METADATA']['MISSING_INPUT_VALUE']  # Input missing data
+    config_dict['missing_output_value'] = config_reader['METADATA']['MISSING_OUTPUT_VALUE']  # Output missing data
+    config_dict['lines_of_header'] = config_reader['METADATA'].getint('LINES_OF_HEADER')  # Lines of header to skip
+    config_dict['lines_of_footer'] = config_reader['METADATA'].getint('LINES_OF_FOOTER')  # Lines of header to skip
 
     # OPTIONS Section
-    config_dict['corr_flag'] = config_reader['OPTIONS'].getboolean('correction_option')  # Option to correct the data
-    config_dict['auto_flag'] = config_reader['OPTIONS'].getboolean('automatic_option')  # auto first iteration of QAQC
-    config_dict['fill_flag'] = config_reader['OPTIONS'].getboolean('fill_option')  # Option to fill in missing data
-    config_dict['plot_flag'] = config_reader['OPTIONS'].getboolean('plot_option')  # Option to generate bokeh plots
+    config_dict['auto_flag'] = config_reader['OPTIONS'].getboolean('AUTOMATIC_OPTION')  # auto first iteration of QAQC
+    config_dict['fill_flag'] = config_reader['OPTIONS'].getboolean('FILL_OPTION')  # Option to fill in missing data
 
     # DATA Section - Data Columns
-    config_dict['string_date_col'] = config_reader['DATA'].getint('string_date_col')
-    config_dict['year_col'] = config_reader['DATA'].getint('year_col')
-    config_dict['month_col'] = config_reader['DATA'].getint('month_col')
-    config_dict['day_col'] = config_reader['DATA'].getint('day_col')
-    config_dict['day_of_year_col'] = config_reader['DATA'].getint('day_of_year_col')
-    config_dict['tmax_col'] = config_reader['DATA'].getint('tmax_col')
-    config_dict['tavg_col'] = config_reader['DATA'].getint('tavg_col')
-    config_dict['tmin_col'] = config_reader['DATA'].getint('tmin_col')
-    config_dict['tdew_col'] = config_reader['DATA'].getint('tdew_col')
-    config_dict['uz_col'] = config_reader['DATA'].getint('uz_col')
-    config_dict['pp_col'] = config_reader['DATA'].getint('pp_col')
-    config_dict['rs_col'] = config_reader['DATA'].getint('rs_col')
-    config_dict['ea_col'] = config_reader['DATA'].getint('ea_col')
-    config_dict['rhmax_col'] = config_reader['DATA'].getint('rhmax_col')
-    config_dict['rhavg_col'] = config_reader['DATA'].getint('rhavg_col')
-    config_dict['rhmin_col'] = config_reader['DATA'].getint('rhmin_col')
+    config_dict['date_format'] = config_reader['DATA'].getint('DATE_FORMAT')
+    config_dict['string_date_col'] = config_reader['DATA'].getint('STRING_DATE_COL')
+    config_dict['year_col'] = config_reader['DATA'].getint('YEAR_COL')
+    config_dict['month_col'] = config_reader['DATA'].getint('MONTH_COL')
+    config_dict['day_col'] = config_reader['DATA'].getint('DAY_COL')
+    config_dict['day_of_year_col'] = config_reader['DATA'].getint('DAY_OF_YEAR_COL')
+    config_dict['tmax_col'] = config_reader['DATA'].getint('TEMPERATURE_MAX_COL')
+    config_dict['tavg_col'] = config_reader['DATA'].getint('TEMPERATURE_AVG_COL')
+    config_dict['tmin_col'] = config_reader['DATA'].getint('TEMPERATURE_MIN_COL')
+    config_dict['tdew_col'] = config_reader['DATA'].getint('DEWPOINT_TEMPERATURE_COL')
+    config_dict['uz_col'] = config_reader['DATA'].getint('WIND_DATA_COL')
+    config_dict['pp_col'] = config_reader['DATA'].getint('PRECIPITATION_COL')
+    config_dict['rs_col'] = config_reader['DATA'].getint('SOLAR_RADIATION_COL')
+    config_dict['ea_col'] = config_reader['DATA'].getint('VAPOR_PRESSURE_COL')
+    config_dict['rhmax_col'] = config_reader['DATA'].getint('RELATIVE_HUMIDITY_MAX_COL')
+    config_dict['rhavg_col'] = config_reader['DATA'].getint('RELATIVE_HUMIDITY_AVG_COL')
+    config_dict['rhmin_col'] = config_reader['DATA'].getint('RELATIVE_HUMIDITY_MIN_COL')
 
     # DATA Section - Unit Flags
-    config_dict['temp_f_flag'] = config_reader['DATA'].getboolean('temp_f_flag')
-    config_dict['temp_k_flag'] = config_reader['DATA'].getboolean('temp_k_flag')
-    config_dict['uz_mph_flag'] = config_reader['DATA'].getboolean('uz_mph_flag')
-    config_dict['uz_kmh_flag'] = config_reader['DATA'].getboolean('uz_kmh_flag')
-    config_dict['uz_wind_run_km_flag'] = config_reader['DATA'].getboolean('uz_wind_run_kilometers_flag')
-    config_dict['uz_wind_run_mi_flag'] = config_reader['DATA'].getboolean('uz_wind_run_miles_flag')
-    config_dict['pp_inch_flag'] = config_reader['DATA'].getboolean('pp_inch_flag')
-    config_dict['rs_lang_flag'] = config_reader['DATA'].getboolean('rs_lang_flag')
-    config_dict['rs_mj_flag'] = config_reader['DATA'].getboolean('rs_mj_flag')
-    config_dict['rs_kwhr_flag'] = config_reader['DATA'].getboolean('rs_kwhr_flag')
-    config_dict['ea_torr_flag'] = config_reader['DATA'].getboolean('ea_torr_flag')
-    config_dict['ea_mbar_flag'] = config_reader['DATA'].getboolean('ea_mbar_flag')
-    config_dict['rh_fraction_flag'] = config_reader['DATA'].getboolean('rh_fraction_flag')
-
-    # Data Section - Other
-    config_dict['date_format'] = config_reader['DATA'].getint('date_format')
+    config_dict['temperature_units'] = config_reader['DATA'].getint('TEMPERATURE_UNITS')
+    config_dict['wind_units'] = config_reader['DATA'].getint('WIND_UNITS')
+    config_dict['precipitation_units'] = config_reader['DATA'].getint('PRECIPITATION_UNITS')
+    config_dict['solar_radiation_units'] = config_reader['DATA'].getint('SOLAR_RADIATION_UNITS')
+    config_dict['vapor_pressure_units'] = config_reader['DATA'].getint('VAPOR_PRESSURE_UNITS')
+    config_dict['relative_humidity_units'] = config_reader['DATA'].getint('RELATIVE_HUMIDITY_UNITS')
 
     # Check to see that all expected variables are provided, ConfigParser defaults to None if it can't find something.
     if None in config_dict.values():
@@ -167,80 +127,76 @@ def convert_units(config_dict, original_data, var_type):
     var_type = var_type.lower()
 
     if var_type == 'temperature':
-        if config_dict['temp_f_flag'] == 1 and config_dict['temp_k_flag'] == 0:  # Units Fahrenheit
+        if config_dict['temperature_units'] == 0:  # Celsius
+            pass
+        elif config_dict['temperature_units'] == 1:  # Fahrenheit
             converted_data = np.array(((original_data - 32.0) * (5.0 / 9.0)))
-        elif config_dict['temp_f_flag'] == 0 and config_dict['temp_k_flag'] == 1:  # Units Kelvin
+        elif config_dict['temperature_units'] == 2:  # kelvin
             converted_data = np.array(original_data - 273.15)
-        elif config_dict['temp_f_flag'] == 0 and config_dict['temp_k_flag'] == 0:  # Units Celsius
-            pass
         else:
-            # Incorrect setup of temperature flags, raise an error
-            raise ValueError('Incorrect parameters: temperature unit flags in config are not set up correctly.')
-
-    elif var_type == 'vapor_pressure':
-        if config_dict['ea_torr_flag'] == 1 and config_dict['ea_mbar_flag'] == 0:  # Units torr or millimeters hydrogen
-            converted_data = np.array(original_data * 0.133322)  # Converts to kPa
-        elif config_dict['ea_torr_flag'] == 0 and config_dict['ea_mbar_flag'] == 1:  # Units mbar
-            converted_data = np.array(original_data * 0.1)  # Converts to kPa
-        elif config_dict['ea_torr_flag'] == 0 and config_dict['ea_mbar_flag'] == 0:  # Units kilopascals
-            pass
-        else:
-            # Incorrect setup of vapor pressure flags, raise an error
-            raise ValueError('Incorrect parameters: vapor pressure unit flags in config are not set up correctly.')
+            raise ValueError('Incorrect parameters: TEMPERATURE_UNITS in config is not set up correctly.')
 
     elif var_type == 'wind_speed':
-        if config_dict['uz_mph_flag'] == 1 and config_dict['uz_kmh_flag'] == 0 and \
-                config_dict['uz_wind_run_km_flag'] == 0 and config_dict['uz_wind_run_mi_flag'] == 0:
-            # wind speed in miles per hour
-            converted_data = np.array(original_data * 0.44704)  # Convert mph to m/s
-        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_kmh_flag'] == 1 and \
-                config_dict['uz_wind_run_km_flag'] == 0 and config_dict['uz_wind_run_mi_flag'] == 0:
-            # wind speed in kilometers per hour
-            converted_data = np.array(original_data * 0.27778)  # Convert kmh to m/s
-        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_kmh_flag'] == 0 and \
-                config_dict['uz_wind_run_km_flag'] == 1 and config_dict['uz_wind_run_mi_flag'] == 0:
-            # Wind run in km/day
-            converted_data = np.array((original_data * 1000) / 86400)  # Convert km to m and day to seconds
-        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_kmh_flag'] == 0 and \
-                config_dict['uz_wind_run_km_flag'] == 0 and config_dict['uz_wind_run_mi_flag'] == 1:
-            # Wind run in mi/day
-            converted_data = np.array(original_data * 0.0186267)  # todo source this equation of mi/day to m/s
-        elif config_dict['uz_mph_flag'] == 0 and config_dict['uz_kmh_flag'] == 0 and \
-                config_dict['uz_wind_run_km_flag'] == 0 and config_dict['uz_wind_run_mi_flag'] == 0:
-            # wind speed in m/s
+        if config_dict['wind_units'] == 0:  # m/s
             pass
+        elif config_dict['wind_units'] == 1:  # mph
+            converted_data = np.array(original_data * 0.44704)
+        elif config_dict['wind_units'] == 2:  # kmh
+            converted_data = np.array(original_data * 0.27778)
+        elif config_dict['wind_units'] == 3:  # wind run, miles per day
+            converted_data = np.array((original_data * 1609.34) / 86400)  # miles to meters, day to seconds
+        elif config_dict['wind_units'] == 4:  # wind run, kilometers per day
+            converted_data = np.array((original_data * 1000) / 86400)  # kilometers to meters, day to seconds
         else:
-            # Incorrect setup of wind speed flags, raise an error
-            raise ValueError('Incorrect parameters: wind speed unit flags in config are not set up correctly.')
+            raise ValueError('Incorrect parameters: WIND_UNITS in config is not set up correctly.')
 
     elif var_type == 'precipitation':
-        if config_dict['pp_inch_flag'] == 1:  # Units inches
-            converted_data = np.array(original_data * 25.4)  # Converts inches to mm
-        else:
+        if config_dict['precipitation_units'] == 0:  # mm/day
             pass
-
-    elif var_type == 'relative_humidity':
-        if config_dict['rh_fraction_flag'] == 1:  # Fraction (0.00-1.00) needs to be converted to a percentage
-            converted_data = np.array(original_data * 100.0)
+        elif config_dict['precipitation_units'] == 1:  # meters/day
+            converted_data = np.array(original_data * 1000)
+        elif config_dict['precipitation_units'] == 2:  # inches/day
+            converted_data = np.array(original_data * 25.4)
         else:
-            pass
+            raise ValueError('Incorrect parameters: PRECIPITATION_UNITS in config is not set up correctly.')
 
     elif var_type == 'solar_radiation':
-        if config_dict['rs_lang_flag'] == 1 and config_dict['rs_mj_flag'] == 0 \
-                and config_dict['rs_kwhr_flag'] == 0:  # Units langleys
-            converted_data = np.array(original_data * 0.484583)
-        elif config_dict['rs_lang_flag'] == 0 and config_dict['rs_mj_flag'] == 1 \
-                and config_dict['rs_kwhr_flag'] == 0:  # Units MJ/m2
-            converted_data = np.array(original_data * 11.574)
-        elif config_dict['rs_lang_flag'] == 0 and config_dict['rs_mj_flag'] == 0 \
-                and config_dict['rs_kwhr_flag'] == 1:  # Units kw-hr
-            converted_data = np.array((original_data * 1000) / 24)
-        elif config_dict['rs_lang_flag'] == 0 and config_dict['rs_mj_flag'] == 0 \
-                and config_dict['rs_kwhr_flag'] == 0:  # Units w/m2
+        if config_dict['solar_radiation_units'] == 0:  # w/m2
             pass
+        elif config_dict['solar_radiation_units'] == 1:  # mj/m2
+            # convert MJ to J and divide by seconds in the day
+            converted_data = np.array((original_data * 1000000) / 86400)
+        elif config_dict['solar_radiation_units'] == 2:  # kw-hr/m2
+            # convert kw to w and divide by hours per day
+            converted_data = np.array((original_data * 1000) / 24)
+        elif config_dict['solar_radiation_units'] == 3:  # langleys
+            # equation from https://www.wcc.nrcs.usda.gov/ftpref/wntsc/H&H/GEM/SolarRadConversion.pdf
+            converted_data = np.array(original_data * 0.484583)
         else:
-            # Incorrect setup of temperature flags, raise an error
-            raise ValueError('Incorrect parameters: solar radiation unit flags in config are not set up correctly.')
+            raise ValueError('Incorrect parameters: SOLAR_RADIATION_UNITS in config is not set up correctly.')
+
+    elif var_type == 'vapor_pressure':
+        if config_dict['vapor_pressure_units'] == 0:  # kpa
+            pass
+        elif config_dict['vapor_pressure_units'] == 1:  # pa
+            converted_data = np.array(original_data / 1000)
+        elif config_dict['vapor_pressure_units'] == 2:  # torr or mmhg
+            converted_data = np.array(original_data * 0.133322)
+        elif config_dict['vapor_pressure_units'] == 3:  # millibars
+            converted_data = np.array(original_data * 0.1)
+        elif config_dict['vapor_pressure_units'] == 4:  # atmospheres
+            converted_data = np.array(original_data * 101.325)
+        else:
+            raise ValueError('Incorrect parameters: VAPOR_PRESSURE_UNITS in config is not set up correctly.')
+
+    elif var_type == 'relative_humidity':
+        if config_dict['relative_humidity_units'] == 0:  # percentage
+            pass
+        elif config_dict['relative_humidity_units'] == 1:  # decimal
+            converted_data = np.array(original_data * 100.0)
+        else:
+            raise ValueError('Incorrect parameters: RELATIVE_HUMIDITY_UNITS in config is not set up correctly.')
+
     else:
         # If an unsupported variable type is passed, raise a value error to point it out.
         raise ValueError('Unsupported variable type {} passed to convert_units function.'.format(var_type))
@@ -432,21 +388,20 @@ def obtain_data(config_file_path, metadata_file_path=None):
 
         Returns:
             extracted_data : pandas dataframe of entire dataset, with the variables being organized into columns
-            col_df : pandas series of what variables are stored in what columns, used to track which vars are provided
+            col_ser : pandas series of what variables are stored in what columns, used to track which vars are provided
             station_name : string of file, including path, that was provided to dataset
             log_file : string of log file, including path, that was provided to dataset
             station_lat : station latitude in decimal degrees
             station_elev : station elevation in meters
             anemom_height : height of anemometer in meters
             fill_value : value pulled from config file that indicates missing data in output file
-            script_mode : boolean flag for if user wants to correct data or not
             gen_bokeh : boolean flag for if user wants to plot graphs or not
     """
 
     # Open config file
     validate_file(config_file_path, ['ini'])
     config_dict = read_config(config_file_path)
-    print('\nSuccessfully opened config file at %s' % config_file_path)
+    print('\nSystem: Successfully opened config file at %s' % config_file_path)
 
     # Open metadata file
     # If a metadata file is provided we will open it and overwrite values in config_dict with its values
@@ -455,9 +410,17 @@ def obtain_data(config_file_path, metadata_file_path=None):
         validate_file(metadata_file_path, 'xlsx')  # Validate file to make sure it exists and is the right type
         metadata_df = pd.read_excel(metadata_file_path, sheet_name=0, index_col=0, engine='openpyxl',
                                     keep_default_na=True, na_filter=True, verbose=True)
-        print('\nSuccessfully opened metadata file at %s' % metadata_file_path)
+        print('\nSystem: Successfully opened metadata file at %s' % metadata_file_path)
 
-        current_row = metadata_df.run_count.ne(2).idxmax() - 1
+        # Pull out the metadata for the next file to process
+        # also check that the metadata file has outstanding entries to be processed, otherwise raise an error
+        processed_rows = metadata_df.processed.ne(1)
+        if processed_rows.eq(False).all():
+            raise IOError(f'\n\nThe metadata file at \'{metadata_file_path}\' '
+                          f'contains no unprocessed (processed == 1) files. \n'
+                          f'If you are seeing this before processing any files, make sure the \'processed\' '
+                          f'column in the metadata file has been set up with all entries are set to \'0\'.')
+        current_row = processed_rows.idxmax() - 1
         metadata_series = metadata_df.iloc[current_row]
 
         config_dict['data_file_path'] = metadata_series.input_path
@@ -465,7 +428,6 @@ def obtain_data(config_file_path, metadata_file_path=None):
         config_dict['station_longitude'] = metadata_series.longitude
         config_dict['station_elevation'] = metadata_series.elev_m
         config_dict['anemometer_height'] = metadata_series.anemom_height_m
-        config_dict['corr_flag'] = metadata_series.run_count
 
         # split file string on extension
         (file_name, station_extension) = os.path.splitext(config_dict['data_file_path'])
@@ -516,27 +478,27 @@ def obtain_data(config_file_path, metadata_file_path=None):
     if station_extension == '.csv':  # csv file provided
         raw_data = pd.read_csv(config_dict['data_file_path'], delimiter=',', header=config_dict['lines_of_header'],
                                index_col=None, engine='python', skipfooter=config_dict['lines_of_footer'],
-                               na_values=config_dict['missing_data_value'], keep_default_na=True,
+                               na_values=config_dict['missing_input_value'], keep_default_na=True,
                                na_filter=True, verbose=True, skip_blank_lines=True)
 
     elif station_extension == '.xlsx':
         raw_data = pd.read_excel(config_dict['data_file_path'], sheet_name=0, header=config_dict['lines_of_header'],
                                  index_col=None, engine='openpyxl', skipfooter=config_dict['lines_of_footer'],
-                                 na_values=config_dict['missing_data_value'], keep_default_na=True,
+                                 na_values=config_dict['missing_input_value'], keep_default_na=True,
                                  na_filter=True, verbose=True)
 
     elif station_extension == '.xls':
         raw_data = pd.read_excel(config_dict['data_file_path'], sheet_name=0, header=config_dict['lines_of_header'],
                                  index_col=None, engine='xlrd', skipfooter=config_dict['lines_of_footer'],
-                                 na_values=config_dict['missing_data_value'], keep_default_na=True,
+                                 na_values=config_dict['missing_input_value'], keep_default_na=True,
                                  na_filter=True, verbose=True)
 
     else:
-        # This script is only handles csv and excel files. Validate_file() already catches this case
+        # This script is only handles csv and Excel files. Validate_file() already catches this case
         raise IOError('\n\nProvided file was of type \'{}\' but script was expecting type \'{}\'.'
                       .format(station_extension, ['csv', 'xls', 'xlsx']))
 
-    print('\nSuccessfully opened data file at %s' % config_dict['data_file_path'])
+    print('\nSystem: Successfully opened data file at %s' % config_dict['data_file_path'])
 
     # Handle any for network-specific oddities that may have slipped through
     raw_data = raw_data.replace(to_replace='NO RECORD   ', value=np.nan)  # catch for whitespaces on agriment
@@ -547,18 +509,20 @@ def obtain_data(config_file_path, metadata_file_path=None):
         os.makedirs(folder_path + '/correction_files/before_graphs/')
         os.makedirs(folder_path + '/correction_files/after_graphs/')
         os.makedirs(folder_path + '/correction_files/histograms/')
+        os.makedirs(folder_path + '/correction_files/log_files/')
+        os.makedirs(folder_path + '/correction_files/output_data/')
     else:
         pass
 
     # Create log file for this new data file
     config_dict['log_file_path'] = config_dict['folder_path'] + \
-        '/correction_files/' + config_dict['station_name'] + '_changes_log' + '.txt'
+        '/correction_files/log_files/' + config_dict['station_name'] + '_changes_log' + '.txt'
     log.basicConfig()
     logger = open(config_dict['log_file_path'], 'w')
     logger.write('The raw data for %s has been successfully read in at %s. \n \n' %
-                 (config_dict['station_name'], dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                 (config_dict['station_name'], pd.Timestamp.now().strftime('%Y-%m-%d %X')))
     logger.close()
-    print('\nSuccessfully created log file at %s.' % config_dict['log_file_path'])
+    print('\nSystem: Successfully created log file at %s.' % config_dict['log_file_path'])
 
     # Date handling, figures out the date format and extracts from string if needed
     if config_dict['date_format'] == 1:
@@ -581,7 +545,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
             data_year = np.array(raw_data.iloc[:, config_dict['year_col']].astype('int'))
         else:
             # date format was provided as separate columns but some were missing
-            raise ValueError('Date format parameter indicated separate y/m/d columns but some or all were missing')
+            raise ValueError('Date format parameter indicated separate Y/M/D columns but some or all were missing.')
 
     elif config_dict['date_format'] == 3:
         # Date is pre-split between year column and DOY column
@@ -591,7 +555,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
             data_year = np.array(raw_data.iloc[:, config_dict['year_col']].astype('int'))
         else:
             # date format was provided as separate year and doy columns but some were missing
-            raise ValueError('Date format parameter indicated year and DOY columns but some or all were missing')
+            raise ValueError('Date format parameter indicated year and DOY columns but some or all were missing.')
 
         dt_date = pd.to_datetime(data_year * 1000 + data_doy, format='%Y%j', errors='raise')
         data_day = np.array(dt_date.day.astype('int'))
@@ -669,7 +633,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
                            index=datetime_df)
 
     # Create dataframe of column indices for weather variable, to track which ones were provided vs calculated
-    col_df = pd.Series({'tmax': tmax_col, 'tmin': tmin_col, 'tavg': tavg_col, 'tdew': tdew_col, 'ea': ea_col,
+    col_ser = pd.Series({'tmax': tmax_col, 'tmin': tmin_col, 'tavg': tavg_col, 'tdew': tdew_col, 'ea': ea_col,
                         'rhmax': rhmax_col, 'rhmin': rhmin_col, 'rhavg': rhavg_col, 'rs': rs_col, 'ws': ws_col,
                         'precip': precip_col})
 
@@ -685,7 +649,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
     data_df.month = date_reindex.month
     data_df.day = date_reindex.day
 
-    return data_df, col_df, metadata_df, metadata_series, config_dict
+    return data_df, col_ser, metadata_df, metadata_series, config_dict
 
 
 # This is never run by itself

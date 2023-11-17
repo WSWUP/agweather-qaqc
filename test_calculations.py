@@ -1,8 +1,8 @@
-import pandas as pd
 import pytest as pt
 import numpy as np
-import math
-from qaqc_modules import input_functions, data_functions
+
+import agweatherqaqc.utils
+from agweatherqaqc import input_functions, calc_functions
 
 metadata_file_path = 'test_files/test_metadata.xlsx'
 config_file_path = 'test_files/test_config.ini'
@@ -65,9 +65,9 @@ humidity_data = [
 def test_validate_file():
     """Check to see if input_functions.validate_file works on both test files"""
     # This has no assertions, it will raise an exception if a problem is found
-    input_functions.validate_file(config_file_path, ['ini'])  # Test the config file
-    input_functions.validate_file(data_file_path, ['csv'])  # Test the data file
-    input_functions.validate_file(metadata_file_path, ['xls', 'xlsx'])  # Test the metadata file
+    agweatherqaqc.utils.validate_file(config_file_path, ['ini'])  # Test the config file
+    agweatherqaqc.utils.validate_file(data_file_path, ['csv'])  # Test the data file
+    agweatherqaqc.utils.validate_file(metadata_file_path, ['xls', 'xlsx'])  # Test the metadata file
 
 
 def test_read_config():
@@ -83,19 +83,19 @@ def test_temperature_conversion():
     temp_k = np.array([373.15])  # boiling point and freezing point of water in K
     temp_c = np.array([100.0])  # boiling point and freezing point of water in C
 
-    config_dict_for_f = {'temp_f_flag': 1, 'temp_k_flag': 0}
-    config_dict_for_k = {'temp_f_flag': 0, 'temp_k_flag': 1}
-    config_dict_for_c = {'temp_f_flag': 0, 'temp_k_flag': 0}
+    config_dict_for_f = {'temperature_units': 1}
+    config_dict_for_k = {'temperature_units': 2}
+    config_dict_for_c = {'temperature_units': 0}
 
     converted_temp_f_to_c = input_functions.convert_units(config_dict_for_f, temp_f, 'temperature')
     converted_temp_k_to_c = input_functions.convert_units(config_dict_for_k, temp_k, 'temperature')
     converted_temp_c_to_c = input_functions.convert_units(config_dict_for_c, temp_c, 'temperature')
 
-    assert converted_temp_f_to_c[0] == pt.approx(temp_c[0], abs=1e-3),\
+    assert converted_temp_f_to_c[0] == pt.approx(temp_c[0], abs=1e-3), \
         'Temperature F to C and test value C are not equal.'
-    assert converted_temp_k_to_c[0] == pt.approx(temp_c[0], abs=1e-3),\
+    assert converted_temp_k_to_c[0] == pt.approx(temp_c[0], abs=1e-3), \
         'Temperature K to C and test value C are not equal.'
-    assert converted_temp_c_to_c[0] == pt.approx(temp_c[0], abs=1e-3),\
+    assert converted_temp_c_to_c[0] == pt.approx(temp_c[0], abs=1e-3), \
         'Temperature C to C and test value C are not equal.'
 
 
@@ -103,29 +103,34 @@ def test_wind_speed_conversion():
     """Check to see if input_functions.convert_units produces the expected values when converting windspeed"""
 
     # Convert_units expects input in the form of numpy arrays
+    uz_ms = np.array([7.0])  # Test wind speed in meters per second
     uz_mph = np.array([15.66])  # Test wind in miles per hour
+    uz_kph = np.array([25.2])  # Test wind speed in kilometers per hour
     uz_run_mi = np.array([375.8])  # Test speed in daily wind run (miles)
     uz_run_km = np.array([604.80])  # Test speed in daily wind run (kilometers)
-    uz_ms = np.array([7.0])  # Test wind speed in meters per second
 
-    config_dict_for_mph = {'uz_mph_flag': 1, 'uz_wind_run_km_flag': 0, 'uz_wind_run_mi_flag': 0}
-    config_dict_for_run_km = {'uz_mph_flag': 0, 'uz_wind_run_km_flag': 1, 'uz_wind_run_mi_flag': 0}
-    config_dict_for_run_mi = {'uz_mph_flag': 0, 'uz_wind_run_km_flag': 0, 'uz_wind_run_mi_flag': 1}
-    config_dict_for_ms = {'uz_mph_flag': 0, 'uz_wind_run_km_flag': 0, 'uz_wind_run_mi_flag': 0}
+    config_dict_for_ms = {'wind_units': 0}
+    config_dict_for_mph = {'wind_units': 1}
+    config_dict_for_kph = {'wind_units': 2}
+    config_dict_for_run_mi = {'wind_units': 3}
+    config_dict_for_run_km = {'wind_units': 4}
 
+    converted_uz_ms_to_ms = input_functions.convert_units(config_dict_for_ms, uz_ms, 'wind_speed')
     converted_uz_mph_to_ms = input_functions.convert_units(config_dict_for_mph, uz_mph, 'wind_speed')
+    converted_uz_kph_to_ms = input_functions.convert_units(config_dict_for_kph, uz_kph, 'wind_speed')
     converted_uz_run_km_to_ms = input_functions.convert_units(config_dict_for_run_km, uz_run_km, 'wind_speed')
     converted_uz_run_mi_to_ms = input_functions.convert_units(config_dict_for_run_mi, uz_run_mi, 'wind_speed')
-    converted_uz_ms_to_ms = input_functions.convert_units(config_dict_for_ms, uz_ms, 'wind_speed')
 
+    assert converted_uz_ms_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
+        'Wind m/s to m/s and test value m/s are not equal.'
     assert converted_uz_mph_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
         'Wind mph to m/s and test value m/s are not equal.'
+    assert converted_uz_kph_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
+        'wind kph to m/s and test value ms are not equal.'
     assert converted_uz_run_km_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
         'Wind run_km to m/s and test value m/s are not equal.'
     assert converted_uz_run_mi_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
         'Wind run_mi to m/s and test value m/s are not equal.'
-    assert converted_uz_ms_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
-        'Wind m/s to m/s and test value m/s are not equal.'
 
 
 def test_vapor_pressure_conversion():
@@ -136,9 +141,9 @@ def test_vapor_pressure_conversion():
     ea_mbar = np.array([10.0])  # Test vapor pressure in millibars
     ea_kpa = np.array([1.0])  # Test vapor pressure in kilopascals
 
-    config_dict_for_torr = {'ea_torr_flag': 1, 'ea_mbar_flag': 0}
-    config_dict_for_mbar = {'ea_torr_flag': 0, 'ea_mbar_flag': 1}
-    config_dict_for_kpa = {'ea_torr_flag': 0, 'ea_mbar_flag': 0}
+    config_dict_for_torr = {'vapor_pressure_units': 2}
+    config_dict_for_mbar = {'vapor_pressure_units': 3}
+    config_dict_for_kpa = {'vapor_pressure_units': 0}
 
     converted_ea_torr_to_kpa = input_functions.convert_units(config_dict_for_torr, ea_torr, 'vapor_pressure')
     converted_ea_mbar_to_kpa = input_functions.convert_units(config_dict_for_mbar, ea_mbar, 'vapor_pressure')
@@ -161,10 +166,10 @@ def test_solar_radiation_conversion():
     rs_kwhr = np.array([2.4])  # Test radiation in kilowatt-hours/m2
     rs_w = np.array([100.0])  # Test radiation in watts/m2
 
-    config_dict_for_lang = {'rs_lang_flag': 1, 'rs_mj_flag': 0, 'rs_kwhr_flag': 0}
-    config_dict_for_mj = {'rs_lang_flag': 0, 'rs_mj_flag': 1, 'rs_kwhr_flag': 0}
-    config_dict_for_kwhr = {'rs_lang_flag': 0, 'rs_mj_flag': 0, 'rs_kwhr_flag': 1}
-    config_dict_for_w = {'rs_lang_flag': 0, 'rs_mj_flag': 0, 'rs_kwhr_flag': 0}
+    config_dict_for_lang = {'solar_radiation_units': 3}
+    config_dict_for_mj = {'solar_radiation_units': 1}
+    config_dict_for_kwhr = {'solar_radiation_units': 2}
+    config_dict_for_w = {'solar_radiation_units': 0}
 
     converted_rs_lang_to_w = input_functions.convert_units(config_dict_for_lang, rs_lang, 'solar_radiation')
     converted_rs_mj_to_w = input_functions.convert_units(config_dict_for_mj, rs_mj, 'solar_radiation')
@@ -188,8 +193,8 @@ def test_precipitation_conversion():
     pp_inch = np.array([1.0])  # Test precipitation in inches
     pp_mm = np.array([25.4])  # Test precipitation in millimeters
 
-    config_dict_for_inch = {'pp_inch_flag': 1}
-    config_dict_for_mm = {'pp_inch_flag': 0}
+    config_dict_for_inch = {'precipitation_units': 2}
+    config_dict_for_mm = {'precipitation_units': 0}
 
     converted_pp_inch_to_mm = input_functions.convert_units(config_dict_for_inch, pp_inch, 'precipitation')
     converted_pp_mm_to_mm = input_functions.convert_units(config_dict_for_mm, pp_mm, 'precipitation')
@@ -207,8 +212,8 @@ def test_relative_humidity_conversion():
     rh_fract = np.array([0.5])  # Test relative humidity as a fraction
     rh_perct = np.array([50.0])  # Test relative humidity as a percentage
 
-    config_dict_for_fract = {'rh_fraction_flag': 1}
-    config_dict_for_perct = {'rh_fraction_flag': 0}
+    config_dict_for_fract = {'relative_humidity_units': 1}
+    config_dict_for_perct = {'relative_humidity_units': 0}
 
     converted_rh_fract_to_perct = input_functions.convert_units(config_dict_for_fract, rh_fract, 'relative_humidity')
     converted_rh_perct_to_perct = input_functions.convert_units(config_dict_for_perct, rh_perct, 'relative_humidity')
@@ -226,7 +231,7 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
     # Columns for ea from ea
     tdew_col, rhmax_col, rhmin_col, rhavg_col = -1, -1, -1, -1
     ea_col = 1
-    ea_from_ea, tdew_from_ea = data_functions.calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col,
+    ea_from_ea, tdew_from_ea = calc_functions.calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col,
                                                                       rhmax, rhmax_col, rhmin, rhmin_col, rhavg,
                                                                       rhavg_col)
     # Ea from TDew
@@ -238,7 +243,7 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
         ea_col, rhmax_col, rhmin_col, rhavg_col = -1, -1, -1, -1
         tdew_col = 1
 
-        ea_from_tdew, tdew_from_tdew = data_functions\
+        ea_from_tdew, tdew_from_tdew = calc_functions\
             .calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax, rhmax_col,
                                      rhmin, rhmin_col, rhavg, rhavg_col)
 
@@ -255,7 +260,7 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
         ea_col, tdew_col, rhavg_col = -1, -1, -1
         rhmax_col, rhmin_col = 1, 1
 
-        ea_from_rhmax_rhmin, tdew_from_rhmax_rhmin = data_functions\
+        ea_from_rhmax_rhmin, tdew_from_rhmax_rhmin = calc_functions\
             .calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax,
                                      rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col)
 
@@ -272,7 +277,7 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
         ea_col, tdew_col, rhmax_col, rhmin_col = -1, -1, -1, -1
         rhavg_col = 1
 
-        ea_from_rhavg, tdew_from_rhavg = data_functions\
+        ea_from_rhavg, tdew_from_rhavg = calc_functions\
             .calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax,
                                      rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col)
 
@@ -300,6 +305,7 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
         assert test_ea_from_rhavg[2] == ea_from_rhavg[2]
         assert test_ea_from_rhavg[3] == ea_from_rhavg[3]
         assert test_ea_from_rhavg[4] == ea_from_rhavg[4]
+
 
 def blank():
     pass
