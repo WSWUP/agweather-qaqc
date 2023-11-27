@@ -1,6 +1,6 @@
 # agweather-qaqc (Weather Data QAQC Script)
 
-Full documentation, as well as a working example, can be found here: https://wswup.github.io/pyWeatherQAQC/ (Documentation URL will be updated soon.)
+Full documentation, as well as a working example, can be found here: https://wswup.github.io/agweather-qaqc/
 
 References
 ----------
