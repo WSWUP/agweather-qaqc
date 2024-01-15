@@ -846,17 +846,34 @@ is divided by this average rs to get a final ratio, which multiplied to all poin
 (electrical shorts, datalogger errors, etc.), which it does by looking at how the correction factor
 changes by shifting which values are included.</p>
 <p>The logic here being that erroneous values generally appear as a “spike” of Rs that is significantly
-higher than Rso, which would heavily influence the correction factor due to it being the ratio of averages.</p>
-<p>The existence of these “spikes” is evaluated numerically. We have the original correction factor of the
-six largest rs/rso ratios, and we compute it again by dropping the largest ratio and including the next
-largest. Ex: 1st-6th largest would become 2nd-7th largest. We check to see if this shifted in included
-values causes a larger than 2% change in the correction factor, and if so this whole process is repeated
-until the correction factor doesn’t significantly change. Values determined to be bad are set to
-a marker value and then later set to be equal to Rso * 1.05.</p>
+higher than Rso, which would heavily influence the correction factor due to it being the ratio of averages.
+“Spikes” are identified through testing the rs/rso ratios of a period with couple intuitive rules:</p>
+<dl class="simple">
+<dt>RULE 1:</dt><dd><p>The removal of the data from any one rso/rs ratio from the correction factor should not massively shift (&gt;2%)
+the value of that correction factor if sensor drift/miscalibration has occurred. While there may be variation
+between individual solar radiation observations due to cloudiness, over the period each cloud-free day
+should have approximately the same ratio with its corresponding clear-sky solar radiation value. This logic
+also holds true when parsing a period that needs to drift adjustment but may have bad observations.</p>
+</dd>
+<dt>RULE 2:</dt><dd><p>Is the average Rs value (calculated from the underlying Rs values from the Rs/Rso ratios included in the
+correction factor) exceed the average Rso value by at least 75 w/m**2? The main purpose of this rule is to
+warn the user when RULE 1 has been satisfied but this rule has not. This would occur when the observational
+data has a high concentration of bad values. The recommended course of action when this rule is violated
+is to remove the data manually.</p>
+</dd>
+</dl>
+<p>If RULE 1 violated, is this whole process is repeated with the next largest ratio until the correction factor
+doesn’t significantly change. Values determined to be bad are set to a marker value and then
+later set to be equal to Rso * 1.05.</p>
 <dl>
-<dt>Example:</dt><dd><p>sorted_ratio_list = [2, 1.5, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.7, 0.7…]</p>
-<p>Correction factor doesn’t change significantly when computed between values 3rd-8th and 4th-9th</p>
-<p>Correction factor that will be applied to the data will be based on values 3rd-8th, and the values for
+<dt>Example:</dt><dd><p>sorted_ratio_list = [3, 1.5, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.7, 0.7…]</p>
+<p>We have the original correction factor of the 1st-6th largest rs/rso ratios, and we compute it again
+by dropping the largest ratio and including the next largest. Ex: 1st-6th largest would become 2nd-7th largest.
+We check to see if this shifted in included values causes a larger than 2% change in the correction factor,</p>
+<p>Correction factor does significantly change when computed between values 1st-6th and 2nd-7th, with the same
+behavior between 2nd-7th and 3rd-8th. The correction factor doesn’t change significantly
+when computed between values 3rd-8th and 4th-9th.</p>
+<p>The correction factor that will be applied to the data will be based on values 3rd-8th, and the values for
 1st and 2nd will set equal to the corresponding Rso values * 1.05 after the data is corrected</p>
 </dd>
 </dl>
