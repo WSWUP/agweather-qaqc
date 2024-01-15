@@ -78,6 +78,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#module-agweatherqaqc.utils">agweatherqaqc.utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.utils.determine_delimiter"><code class="docutils literal notranslate"><span class="pre">determine_delimiter()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.utils.get_float_input"><code class="docutils literal notranslate"><span class="pre">get_float_input()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.utils.get_int_input"><code class="docutils literal notranslate"><span class="pre">get_int_input()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.utils.validate_file"><code class="docutils literal notranslate"><span class="pre">validate_file()</span></code></a></li>
@@ -847,7 +848,7 @@ is divided by this average rs to get a final ratio, which multiplied to all poin
 changes by shifting which values are included.</p>
 <p>The logic here being that erroneous values generally appear as a “spike” of Rs that is significantly
 higher than Rso, which would heavily influence the correction factor due to it being the ratio of averages.
-“Spikes” are identified through testing the rs/rso ratios of a period with couple intuitive rules:</p>
+“Spikes” are identified through testing the rs/rso ratios of a period with a couple intuitive rules:</p>
 <dl class="simple">
 <dt>RULE 1:</dt><dd><p>The removal of the data from any one rso/rs ratio from the correction factor should not massively shift (&gt;2%)
 the value of that correction factor if sensor drift/miscalibration has occurred. While there may be variation
@@ -999,6 +1000,27 @@ Due to seasonal variation in temperature the overall temperature record is subse
 </section>
 <section id="module-agweatherqaqc.utils">
 <span id="agweatherqaqc-utils"></span><h2>agweatherqaqc.utils<a class="headerlink" href="#module-agweatherqaqc.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.utils.determine_delimiter">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.utils.</span></span><span class="sig-name descname"><span class="pre">determine_delimiter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/utils.html#determine_delimiter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.utils.determine_delimiter" title="Link to this definition"></a></dt>
+<dd><p>Uses the csv.Sniffer class to determine the delimiter of an input file
+Will parse the first 5 lines and raise an error if the delimiter is not consistent</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">file_path<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) path to file to parse</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">delim<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) delimiter for the input file, to be used in pandas.read_csv()</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="agweatherqaqc.utils.get_float_input">
 <span class="sig-prename descclassname"><span class="pre">agweatherqaqc.utils.</span></span><span class="sig-name descname"><span class="pre">get_float_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Enter</span> <span class="pre">your</span> <span class="pre">choice:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/utils.html#get_float_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.utils.get_float_input" title="Link to this definition"></a></dt>

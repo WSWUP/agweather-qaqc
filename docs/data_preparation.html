@@ -48,6 +48,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installing agweather-qaqc</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Data Preparation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#program-flow">Program Flow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#directory-structure">Directory Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#setting-up-the-config-file">Setting up the Config File</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#metadata">METADATA</a></li>
@@ -56,7 +57,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#setting-up-the-metadata-file">Setting up the Metadata File</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-agweather-qaqc">Running agweather-qaqc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Running agweather-qaqc</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="qc_information.html">QC Procedure Information</a></li>
@@ -94,6 +95,12 @@ where in the data file they are located, and what units they are in.
 Most weather stations from the same network or source have the same format for their data,
 so this process may only have to be done once for multiple stations.</p>
 <p>All of this is accomplished through the parameters specified in <strong>config.ini</strong>.</p>
+<section id="program-flow">
+<h2>Program Flow<a class="headerlink" href="#program-flow" title="Link to this heading"></a></h2>
+<a class="reference internal image-reference" href="_images/program_flow.png"><img alt="A diagram showing the required inputs, flow of data, and outputs produced by this package." class="align-center" src="_images/program_flow.png" style="width: 700px; height: 450px;" /></a>
+<p>The path to the input data file for agweather-qaqc is one of the components of the configuration file. If a metadata file
+is also provided, the path to the input data will be pulled from there instead. See <a class="reference external" href="data_preparation.html#id1">below</a> for more information.</p>
+</section>
 <section id="directory-structure">
 <h2>Directory Structure<a class="headerlink" href="#directory-structure" title="Link to this heading"></a></h2>
 <a class="reference internal image-reference" href="_images/qaqc_directory.png"><img alt="The contents of the agweather-qaqc directory once downloaded from Github." class="align-center" src="_images/qaqc_directory.png" style="width: 200px; height: 250px;" /></a>
@@ -105,7 +112,7 @@ so this process may only have to be done once for multiple stations.</p>
 <li><p><strong>A .csv, .xls, or .xlsx data file</strong> - file with the weather station data to process. In this example, it is located within the “test_files” folder.</p></li>
 </ul>
 <p>When the file <strong>qaqc_single_station.py</strong> is run, it looks for the <strong>config.ini</strong> file within the same folder and
-starts pulling all the relevant information from that config file. <strong>See “Running agweather-qaqc” below for more options.</strong></p>
+starts pulling all the relevant information from that config file. See <a class="reference external" href="data_preparation.html#id1">Running agweather-qaqc</a> for more options.</p>
 <p>The github repository includes an example data file and a matching config.ini that is already set up to be run.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -179,26 +186,27 @@ metadata file. In addition, this file will be read from/written to when it is us
 the file open in another program you will get a PermissionError.</p>
 </div>
 </section>
-<section id="running-agweather-qaqc">
-<h2>Running agweather-qaqc<a class="headerlink" href="#running-agweather-qaqc" title="Link to this heading"></a></h2>
+<section id="id1">
+<h2>Running agweather-qaqc<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
 <p>There are three options when running the software through the CLI:</p>
-<p>Option 1:</p>
+<p><strong>Option 1</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
 <p>This will try to find a config file named, “config.ini” in the same directory as qaqc_single_station.py and read parameters from it.</p>
-<p>Option 2:</p>
+<p><strong>Option 2</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span> <span class="o">&lt;</span><span class="n">PATH_TO_CONFIG_FILE</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <p>This will try to open the config file located at the specified path and read parameters from it.</p>
-<p>Option 3:</p>
+<p><strong>Option 3</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span> <span class="o">&lt;</span><span class="n">PATH_TO_CONFIG_FILE</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">PATH_TO_METADATA_FILE</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <p>This will try to open the config file located at the specified path and read parameters from it, while also reading station
 metadata from the metadata file. This final option will allow for rapidly iteration through stations as one config file
 can serve as the key to interpreting any number of stations that share the same data structure or format.</p>
+<p>Alternatively, you can create an instance of WeatherQC class directly if you wish to use it as part of a larger workflow.</p>
 </section>
 </section>
 

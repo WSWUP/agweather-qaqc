@@ -1,5 +1,6 @@
-import pathlib as pl
+import csv
 import numpy as np
+import pathlib as pl
 
 
 # Background color to be used for all plots
@@ -152,3 +153,36 @@ def validate_file(file_path, expected_extensions):
             pass
     else:
         raise IOError('\n\nUnable to find the file at path \'{}\'.'.format(file_path))
+
+
+def determine_delimiter(file_path):
+    """
+    Uses the csv.Sniffer class to determine the delimiter of an input file
+    Will parse the first 5 lines and raise an error if the delimiter is not consistent
+
+    Args:
+        :file_path: (str) path to file to parse
+    Returns:
+        :delim: (str) delimiter for the input file, to be used in pandas.read_csv()
+    """
+
+    print(f'Attempting to parse the input file located at {file_path}.')
+    sniffer = csv.Sniffer()
+    sniffer.preferred.extend(['|'])  # add to the preferred list of delimiters
+
+    delimiter_list = []
+    with open(file_path, 'r') as f:
+        for row in range(5):
+            line = next(f).strip()
+            delim = sniffer.sniff(line).delimiter
+            delimiter_list.append(delim)
+
+    # Check to see if file structure is uniform and raise an error if not
+    uniform_delimiters = all(i == delimiter_list[0] for i in delimiter_list)
+    if not uniform_delimiters:
+        raise IOError(f'The file at {file_path} has inconsistent delimiters and cannot be parsed. Delimiters found: \n'
+                      f'{delimiter_list}.\n Consider removing the header/footer information if the formatting '
+                      f'differs from the rest of the data file.')
+
+    # Uniform delimiters found, return delimiter
+    return delim

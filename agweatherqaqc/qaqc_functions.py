@@ -398,7 +398,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
 
     The logic here being that erroneous values generally appear as a "spike" of Rs that is significantly
     higher than Rso, which would heavily influence the correction factor due to it being the ratio of averages.
-    "Spikes" are identified through testing the rs/rso ratios of a period with couple intuitive rules:
+    "Spikes" are identified through testing the rs/rso ratios of a period with a couple intuitive rules:
 
     RULE 1:
         The removal of the data from any one rso/rs ratio from the correction factor should not massively shift (>2%)

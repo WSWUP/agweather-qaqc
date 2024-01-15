@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import warnings
 
-from agweatherqaqc.utils import validate_file
+from agweatherqaqc.utils import validate_file, determine_delimiter
 
 
 def _read_config(config_file_path):
@@ -87,7 +87,7 @@ def _extract_variable(raw_data, col):
         Pulls individual variable from raw data array and returns it as a numpy array.
 
         Args:
-            raw_data : 2D matrix of raw data pulled from input .csv file
+            raw_data : 2D matrix of raw data pulled from input file
             col : integer specifying column to pull out
 
         Returns:
@@ -319,7 +319,7 @@ def _process_variable(config_dict, raw_data, var_name):
 
         Args:
             config_dict : dictionary of all config file values
-            raw_data : 2D matrix of raw data pulled from .csv/xlsx specified in config file
+            raw_data : 2D matrix of raw data pulled from input file specified in config file
             var_name : string of text used to signify what variable has been requested.
 
         Returns:
@@ -474,8 +474,7 @@ def _obtain_data(config_file_path, metadata_file_path=None):
         config_dict['lines_of_header'] = config_dict['lines_of_header'] - 1
 
     # Open data file
-    validate_file(config_dict['data_file_path'], ['csv', 'xls', 'xlsx'])
-    if station_extension == '.csv':  # csv file provided
+    if station_extension == '.csv':
         raw_data = pd.read_csv(config_dict['data_file_path'], delimiter=',', header=config_dict['lines_of_header'],
                                index_col=None, engine='python', skipfooter=config_dict['lines_of_footer'],
                                na_values=config_dict['missing_input_value'], keep_default_na=True,
@@ -492,11 +491,14 @@ def _obtain_data(config_file_path, metadata_file_path=None):
                                  index_col=None, engine='xlrd', skipfooter=config_dict['lines_of_footer'],
                                  na_values=config_dict['missing_input_value'], keep_default_na=True,
                                  na_filter=True, verbose=True)
-
     else:
-        # This script is only handles csv and Excel files. Validate_file() already catches this case
-        raise IOError('\n\nProvided file was of type \'{}\' but script was expecting type \'{}\'.'
-                      .format(station_extension, ['csv', 'xls', 'xlsx']))
+        # a delimited file of some kind was passed, attempt to parse it
+        file_delim = determine_delimiter(config_dict['data_file_path'])
+        raw_data = pd.read_csv(config_dict['data_file_path'], delimiter=file_delim,
+                               header=config_dict['lines_of_header'], index_col=None, engine='python',
+                               skipfooter=config_dict['lines_of_footer'], na_values=config_dict['missing_input_value'],
+                               keep_default_na=True, na_filter=True, verbose=True, skip_blank_lines=True)
+
 
     print('\nSystem: Successfully opened data file at %s' % config_dict['data_file_path'])
 

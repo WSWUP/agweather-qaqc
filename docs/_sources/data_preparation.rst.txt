@@ -9,6 +9,17 @@ so this process may only have to be done once for multiple stations.
 
 All of this is accomplished through the parameters specified in **config.ini**.
 
+Program Flow
+============
+.. image:: images/program_flow.png
+    :width: 700px
+    :align: center
+    :height: 450px
+    :alt: A diagram showing the required inputs, flow of data, and outputs produced by this package.
+
+The path to the input data file for agweather-qaqc is one of the components of the configuration file. If a metadata file
+is also provided, the path to the input data will be pulled from there instead. See `below <data_preparation.html#id1>`_ for more information.
+
 Directory Structure
 ===================
 
@@ -26,7 +37,7 @@ Assuming you have cloned the github directory, your folder should contain the fo
 * **A .csv, .xls, or .xlsx data file** - file with the weather station data to process. In this example, it is located within the "test_files" folder.
 
 When the file **qaqc_single_station.py** is run, it looks for the **config.ini** file within the same folder and
-starts pulling all the relevant information from that config file. **See "Running agweather-qaqc" below for more options.**
+starts pulling all the relevant information from that config file. See `Running agweather-qaqc <data_preparation.html#id1>`_ for more options.
 
 The github repository includes an example data file and a matching config.ini that is already set up to be run.
 
@@ -117,19 +128,19 @@ Running agweather-qaqc
 
 There are three options when running the software through the CLI:
 
-Option 1::
+**Option 1**::
 
    >python qaqc_single_station.py
 
 This will try to find a config file named, "config.ini" in the same directory as qaqc_single_station.py and read parameters from it.
 
-Option 2::
+**Option 2**::
 
    >python qaqc_single_station.py <PATH_TO_CONFIG_FILE>
 
 This will try to open the config file located at the specified path and read parameters from it.
 
-Option 3::
+**Option 3**::
 
    >python qaqc_single_station.py <PATH_TO_CONFIG_FILE> <PATH_TO_METADATA_FILE>
 
@@ -137,6 +148,7 @@ This will try to open the config file located at the specified path and read par
 metadata from the metadata file. This final option will allow for rapidly iteration through stations as one config file
 can serve as the key to interpreting any number of stations that share the same data structure or format.
 
+Alternatively, you can create an instance of WeatherQC class directly if you wish to use it as part of a larger workflow.
 
 
 
