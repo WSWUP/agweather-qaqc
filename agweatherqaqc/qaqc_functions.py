@@ -2,8 +2,8 @@ import numpy as np
 import math
 import datetime as dt
 import logging as log
-import agweatherqaqc.plotting_functions as plotting_functions
-from agweatherqaqc.utils import get_int_input, get_float_input
+import agweatherqaqc.plot as plotting_functions
+from agweatherqaqc.utils import get_int_input, get_float_input, FEATURES_DICT
 import warnings
 
 from bokeh.plotting import save, show
@@ -11,19 +11,18 @@ from bokeh.plotting import save, show
 
 def additive_corr(log_writer, start, end, var_one, var_two):
     """
-        Corrects provided interval with a flat, user-provided additive modifier
+    Corrects provided interval with a flat, user-provided additive modifier obtained via the CLI
 
-        Parameters:
-            log_writer : logging object for log file
-            start : starting index of correction interval
-            end : ending index of correction interval
-            var_one : 1D numpy array of first variable
-            var_two : 1D numpy array of second variable, may be entirely nan's
+    Args:
+        :log_writer: Wrapper for writing to log file.
+        :start: (int) starting index of correction interval.
+        :end: (int) ending index of correction interval.
+        :var_one: (ndarray) 1-D array of first variable.
+        :var_two: (ndarray) 1-D array of second variable, may be entirely NaN.
 
-        Returns:
-            corr_var_one : 1D numpy array of first variable after correction
-            corr_var_two : 1D numpy array of second variable after correction, may be entirely nan's
-
+    Returns:
+        :corr_var_one: (ndarray) 1-D array of first variable after correction.
+        :corr_var_two: (ndarray) 1-D array of second variable after correction, may be entirely NaN.
     """
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
@@ -37,19 +36,18 @@ def additive_corr(log_writer, start, end, var_one, var_two):
     return corr_var_one, corr_var_two
 
 
-def generate_corr_menu(code, auto_corr, first_pass):
+def _generate_corr_menu(code, auto_corr, first_pass):
     """
-        Generates menu and obtains user selection on how they want to correct the variables they have provided
+    Generates menu and obtains user selection on how they want to correct the variables they have provided
 
-        Parameters:
-            code : integer code passed by main script that indicates what type of data has been passed
-            auto_corr : flag for whether automatic correction has been enabled
-            first_pass : flag for if this is the first iteration of correction or not
+    Args:
+        :code: (int) integer code passed by main script that indicates what type of data has been passed
+        :auto_corr: (bool) flag for whether automatic correction has been enabled
+        :first_pass: (bool) flag for if this is the first iteration of correction or not
 
-        Returns:
-            choice : integer of user selection on how they want to correct data
-            first_pass : flag for if this is the first iteration of correction or not
-
+    Returns:
+        :choice: (int) integer of user selection on how they want to correct data
+        :first_pass: (bool) flag for if this is the first iteration of correction or not
     """
     corr_method = '   To skip correcting this data, enter 4.'
 
@@ -92,14 +90,14 @@ def generate_corr_menu(code, auto_corr, first_pass):
 
 def generate_interval(var_size):
     """
-        Generates menu and obtains user selection on what intervals the user wants to correct
+    Generates menu and obtains user selection on what intervals the user wants to correct via the CLI
 
-        Parameters:
-            var_size : integer of variable size, to prevent creation of an out of bound index
+    Args:
+        :var_size: (int) of input data size, to prevent creation of an out of bound index
 
-        Returns:
-            int_start : integer of index user wants to start correction on
-            int_end : integer of index user wants to end correction on
+    Returns:
+        :int_start: (int) of index user wants to start correction on
+        :int_end: (int) of index user wants to end correction on
     """
     print('\nPlease enter the starting index of your correction interval.'
           '\n   You may also enter -1 to select all data points.')
@@ -126,19 +124,17 @@ def generate_interval(var_size):
 
 def multiplicative_corr(log_writer, start, end, var_one, var_two):
     """
-        Corrects provided interval with a user-provided multiplicative modifier
+    Corrects provided interval with a user-provided multiplicative modifier obtained from the CLI
 
-        Parameters:
-            log_writer : logging object for log file
-            start : starting index of correction interval
-            end : ending index of correction interval
-            var_one : 1D numpy array of first variable
-            var_two : 1D numpy array of second variable, may be entirely nan's
-
-        Returns:
-            corr_var_one : 1D numpy array of first variable after correction
-            corr_var_two : 1D numpy array of second variable after correction, may be entirely nan's
-
+    Args:
+        :log_writer: Wrapper for writing to log file
+        :start: (int) starting index of correction interval
+        :end: (int) ending index of correction interval
+        :var_one: (ndarray) 1-D numpy array of first variable
+        :var_two: (ndarray) 1-D numpy array of second variable, may be entirely nan's
+    Returns:
+        :corr_var_one: (ndarray) 1-D array of first variable after correction
+        :corr_var_two: (ndarray) 1-D array of second variable after correction, may be entirely nan's
     """
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
@@ -154,19 +150,18 @@ def multiplicative_corr(log_writer, start, end, var_one, var_two):
 
 def set_to_nan(log_writer, start, end, var_one, var_two):
     """
-        Sets entire provided interval to nans, likely because the observations are bad and need to be thrown out.
+    Sets entire provided interval to nans, likely because the observations are bad and need to be thrown out.
 
-        Parameters:
-            log_writer : logging object for log file
-            start : starting index of correction interval
-            end : ending index of correction interval
-            var_one : 1D numpy array of first variable
-            var_two : 1D numpy array of second variable, may be entirely nan's
+    Args:
+        :log_writer: Wrapper for writing to log file
+        :start: (int) starting index of correction interval
+        :end: (int) ending index of correction interval
+        :var_one: (ndarray) 1-D array of first variable
+        :var_two: (ndarray) 1-D array of second variable, may be entirely nan's
 
-        Returns:
-            corr_var_one : 1D numpy array of first variable after data was removed
-            corr_var_two : 1D numpy array of second variable after data was removed, may be entirely nan's
-
+    Returns:
+        :corr_var_one: (ndarray) 1-D array of first variable after data was removed
+        :corr_var_two: (ndarray) 1-D array of second variable after data was removed, may be entirely nan's
     """
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
@@ -181,21 +176,21 @@ def set_to_nan(log_writer, start, end, var_one, var_two):
 
 def modified_z_score_outlier_detection(data):
     """
-        Calculates the modified z scores of provided dataset and sets to nan any values that are above the threshold
-        The modified z approach and threshold of 3.5 is recommended in:
+    Calculates the modified z scores of provided dataset and sets to nan any values that are above the threshold
+    The modified z approach and threshold of 3.5 is recommended in:
 
-        Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and Handle Outliers",
-        The ASQC Basic References in Quality Control: Statistical Techniques
+    Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and Handle Outliers",
+    The ASQC Basic References in Quality Control: Statistical Techniques
 
-        Modified z scores are more robust than traditional z scores because they are determined by the median, which is
-        less susceptible to outliers.
+    Modified z scores are more robust than traditional z scores because they are determined by the median, which is
+    less susceptible to outliers.
 
-    Parameters:
-        data : 1D numpy array of values, most likely temperature values for a given month
+    Args:
+        :data: (ndarray) 1-D array of values
 
     Returns:
-        cleaned_data : 1D numpy array of values that have had outliers removed
-        outlier_count : integer of number of outliers removed
+        :cleaned_data: (ndarray) 1-D array of values that have had outliers removed
+        :outlier_count: (int) number of outliers removed
     """
     threshold = 3.5
     cleaned_data = np.array(data)
@@ -213,72 +208,84 @@ def modified_z_score_outlier_detection(data):
     return cleaned_data, outlier_count
 
 
-def temp_find_outliers(log_writer, t_var_one, var_one_name, t_var_two, var_two_name, month):
+def temp_find_outliers(log_writer, var_one, var_one_name, var_two, var_two_name, month):
     """
-            Uses a modified z-score approach to automatically detect outliers and set them to nan.
+    Wrapper function for modified_z_score_outlier_detection() that will process provided temperature variables.
+    Due to seasonal variation in temperature the overall temperature record is subset into months
+    (ex. all January observations are grouped together) and modified_z_score_outlier_detection() is run 12 times.
 
-            Parameters:
-                log_writer : logging object for log file
-                t_var_one : 1D numpy array of first variable, either tmax, or tmin
-                var_one_name : string of var one name
-                t_var_two : 1D numpy array of second variable, either tmin or tdew
-                var_two_name : string of var two name
-                month : 1D numpy array of month values
+    Args:
+        :log_writer: Wrapper for writing to log file
+        :var_one: (ndarray) 1-D array of first variable, either tmax, or tmin
+        :var_one_name: (str) name for var one
+        :var_two: (ndarray) 1-D array of second variable, either tmin or tdew
+        :var_two_name: (str) name for var two
+        :month: (ndarray) 1-D array of month values
 
-            Returns:
-                t_var_one : 1D numpy array of first variable after data was removed
-                t_var_two : 1D numpy array of second variable after data was removed
+    Returns:
+        :corrected_var_one: (ndarray) 1-D array of first variable after data was removed
+        :corrected_var_two: (ndarray) 1-D array of second variable after data was removed
 
     """
     log_writer.write('User has opted to use a modified z-score approach to identify and remove outliers. \n')
     var_one_total_outliers = 0
     var_two_total_outliers = 0
 
-    corrected_var_one = np.array(t_var_one)
-    corrected_var_two = np.array(t_var_two)
+    corrected_var_one = np.array(var_one)
+    corrected_var_two = np.array(var_two)
 
     k = 1
     while k <= 12:
         t_index = np.where(month == k)[0]
 
-        (corrected_var_one[t_index], var_one_outlier_count) = modified_z_score_outlier_detection(t_var_one[t_index])
-        (corrected_var_two[t_index], var_two_outlier_count) = modified_z_score_outlier_detection(t_var_two[t_index])
+        (corrected_var_one[t_index], var_one_outlier_count) = modified_z_score_outlier_detection(var_one[t_index])
+        (corrected_var_two[t_index], var_two_outlier_count) = modified_z_score_outlier_detection(var_two[t_index])
 
         var_one_total_outliers = var_one_total_outliers + var_one_outlier_count
         var_two_total_outliers = var_two_total_outliers + var_two_outlier_count
         k += 1
 
-    print('{0} outliers were removed on variable {1}.'.format(var_one_total_outliers, var_one_name))
-    print('{0} outliers were removed on variable {1}.'.format(var_two_total_outliers, var_two_name))
-    log_writer.write('{0} outliers were removed on variable {1}. \n'.format(var_one_total_outliers, var_one_name))
-    log_writer.write('{0} outliers were removed on variable {1}. \n'.format(var_two_total_outliers, var_two_name))
+    # check to make sure TMin isn't getting double-corrected
+    if var_one_name == "Temperature Minimum":
+        # Tmin/Tdew correction option
+        print('Temperature Minimum is corrected as part of Temperature Maximum / Temperature Minimum.')
+        log_writer.write('Temperature Minimum is corrected as part of Temperature Maximum / Temperature Minimum.')
+        print('{0} outliers were removed on variable {1}.'.format(var_two_total_outliers, var_two_name))
+        log_writer.write('{0} outliers were removed on variable {1}. \n'
+                         .format(var_two_total_outliers, var_two_name))
 
-    return corrected_var_one, corrected_var_two
+        return var_one, corrected_var_two
+    else:
+        # Tmax/Tmin correciton option
+        print('{0} outliers were removed on variable {1}.'.format(var_one_total_outliers, var_one_name))
+        log_writer.write('{0} outliers were removed on variable {1}. \n'
+                         .format(var_one_total_outliers, var_one_name))
+        print('{0} outliers were removed on variable {1}.'.format(var_two_total_outliers, var_two_name))
+        log_writer.write('{0} outliers were removed on variable {1}. \n'
+                         .format(var_two_total_outliers, var_two_name))
+        return corrected_var_one, corrected_var_two
 
 
 def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year, percentage):
     """
-            Performs a year-based percentile correction on relative humidity, works on the belief that every year should
-            have at least a few observations where RHMax hits 100% (such as when it rains). This is a concise way to
-            solve sensor drift issues that may arise. The correction strength is determined only by RHMax values, but
-            the correction is also duplicated to RHMin values as they are obtained by the same sensor and likely suffer
-            the same sensor drift problem.
+    Performs a year-based percentile correction on relative humidity, works on the assumption that,
+    in areas with significant agriculture, every year should have at least a few observations
+    where RHMax hits 100% (such as when it rains). This is a concise way to solve sensor drift issues that may arise.
+    The correction strength is determined only by RHMax values, but the correction is also applied to RHMin values
+    as they are obtained by the same sensor and likely suffer the same sensor drift problem.
 
-            Divide 100 by user specified percentage to get a
+    Args:
+        :log_writer: Wrapper for writing to log file
+        :start: (int) starting index of correction interval
+        :end: (int) ending index of correction interval
+        :rhmax: (ndarray) 1-D array of rhmax values
+        :rhmin: (ndarray) 1-D array of rhmin
+        :year: (ndarray) 1-D array of year values
+        :percentage: (int) what top yearly percentage of observations user wants to base correction on
 
-            Parameters:
-                log_writer : logging object for log file
-                start : starting index of correction interval
-                end : ending index of correction interval
-                rhmax : 1D numpy array of rhmax
-                rhmin : 1D numpy array of rhmin
-                year : 1D numpy array of year values
-                percentage : integer of what top yearly percentages user wants to base correction on, recommended is 2
-
-            Returns:
-                corr_rhmax : 1D numpy array of rhmax values after correction is applied
-                corr_rhmin : 1D numpy array of rhmin values after correction is applied
-
+    Returns:
+        :corr_rhmax: (ndarray) 1-D array of rhmax values after correction is applied
+        :corr_rhmin: (ndarray) 1-D array of rhmin values after correction is applied
     """
 
     # Obtain sample size from percentage value provided
@@ -328,7 +335,7 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year, percen
     # Now we apply the correction to both RHmax and RHmin
     rhmax_cutoff = 0  # tracks number of observations corrected above 100%
     rhmin_cutoff = 0  # tracks number of observations corrected above 100%
-    invert_max_min_cutoff = 0  # tracks the number of times rhmax was less than rhmin (as an initial problem w/ data)
+    invert_max_min_cutoff = 0  # tracks the number of times RHmax was less than RHmin (as an initial problem w/ data)
     for i in range(start, end):
         if unique_years[offset] == year[i]:  # Years are aligned
             corr_rhmax[i] = rhmax[i] * rh_corr_per_year[offset]
@@ -376,50 +383,65 @@ def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year, percen
 
 def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period, period):
     """
-            This function corrects rs by applying a correction factor (a ratio of rso/rs) to each user defined period
-            to counteract sensor drift and other errors.
+    This function corrects rs by applying a correction factor (a ratio of clear-sky solar radiation (rso) over
+    observed solar radiation (rs)) to each user defined period to counteract sensor drift and other errors.
 
-            The start and end of the correction interval is used to cut a section of both rs and rso,
-            with these new sections being divided into 60-day periods. Each period is checked for the number of times
-            rs exceeds rso. If there are less than three, they are removed (set to rso) as potential voltage spikes or
-            other errors, but if there are more then they are left in.
-            Each period then has a correction factor calculated based on how many user-specified largest number of
-            points for rs/rso. (6 is recommended)
+    The start and end of the correction interval is used to cut a section of both rs and rso,
+    with these new sections being divided into user-defined periods. Each period then has a correction factor
+    calculated based on the user-specified largest number of points for rs/rso.
+    Averages are formed for both rs and rso of those largest points, and then this average rso
+    is divided by this average rs to get a final ratio, which multiplied to all points within its corresponding period.
 
-            If a period does not contain enough valid data points to fill the user-specified number, the entire period
-            is thrown out.
+    Within each period, the code checks for the existence of potential isolated erroneous readings
+    (electrical shorts, datalogger errors, etc.), which it does by looking at how the correction factor
+    changes by shifting which values are included.
 
-            Averages are formed for both rs and rso of those largest points,
-            and then this new average rso is divided by this new average rs to get a final ratio, which is then
-            to be multiplied to all points within its corresponding period.
+    The logic here being that erroneous values generally appear as a "spike" of Rs that is significantly
+    higher than Rso, which would heavily influence the correction factor due to it being the ratio of averages.
 
-            To prevent the code from correcting data beyond the point of believability, if the correction factor is
-            below 0.5 or above 1.5, the data for that period is removed instead.
+    The existence of these "spikes" is evaluated numerically. We have the original correction factor of the
+    six largest rs/rso ratios, and we compute it again by dropping the largest ratio and including the next
+    largest. Ex: 1st-6th largest would become 2nd-7th largest. We check to see if this shifted in included
+    values causes a larger than 2% change in the correction factor, and if so this whole process is repeated
+    until the correction factor doesn't significantly change. Values determined to be bad are set to
+    a marker value and then later set to be equal to Rso * 1.05.
 
-            In addition, if the correction factor is between 0.97 < X < 1.03, the data is unchanged under the assumption
-            that the sensor was behaving as expected.
+    Example:
+        sorted_ratio_list = [2, 1.5, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.7, 0.7...]
 
-            Finally, the function returns the corrected solar radiation that has had spikes removed (if applicable)
-            and the period-based correction factor applied.
+        Correction factor doesn't change significantly when computed between values 3rd-8th and 4th-9th
 
-            Parameters:
-                log_writer : logging object for the log file
-                start : starting index of correction interval
-                end : ending index of correction interval
-                rs : 1D numpy array of rs
-                rso : 1D numpy array of rso
-                sample_size_per_period : percentile threshold that correction factors are going to be calculated off of
-                period : length of each correction period within the user-specified interval
+        Correction factor that will be applied to the data will be based on values 3rd-8th, and the values for
+        1st and 2nd will set equal to the corresponding Rso values * 1.05 after the data is corrected
 
-            Returns:
-                corr_rs : 1D numpy array of corrected rs values
-                rso : not actually changed from input, but is returned to keep everything consistent in main qaqc funct.
+    If a period does not contain enough valid data points to fill the user-specified number, the entire period
+    is thrown out. To prevent the code from correcting data beyond the point of believability, if the correction
+    factor is below 0.5 or above 1.5, the data for that period is removed instead.
+
+    In addition, if the correction factor is between 0.97 < X < 1.03, the data is unchanged under the assumption
+    that the sensor was behaving as expected.
+
+    Finally, the function returns the corrected solar radiation that has had erroneous readings removed (if applicable)
+    and the period-based correction factor applied. Post-correction Rs data that exceeds Rso by 3% is clipped to Rso.
+
+    Args:
+        :log_writer: Wrapper for writing to the log file
+        :start: (int) starting index of correction interval
+        :end: (int) ending index of correction interval
+        :rs: (ndarray) 1-D numpy array of rs
+        :rso: (ndarray) 1-D numpy array of rso
+        :sample_size_per_period: (int) number of points in each period correction factors are calculated with
+        :period: (int) length of each correction period within the user-specified interval
+
+    Returns:
+        :corr_rs: (ndarray) 1-D array of corrected rs values
+        :rso: (ndarray) 1-D array, not actually changed, is returned for consistent behavior in main qaqc function.
     """
 
     corr_rs = np.array(rs)  # corrected variable that all the corrections are going to be written to
     insufficient_period_counter = 0  # counter for the number of periods that were removed due to insufficient data
     insufficient_data_counter = 0  # counter for the number of rs data points that were removed due to insufficient data
-    despike_counter = 0
+    bad_vals_counter = 0  # counter for bad vals like voltage shorts, datalogger errors, etc.
 
     # Determining correction factor for intervals based on pre-defined periods
     num_periods = int(math.ceil((end - start) / period))
@@ -430,38 +452,37 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
     # Placing intervals in separate array for easy handling
     rs_interval = np.array(rs[start:end])
     rso_interval = np.array(rso[start:end])
-    despiked_rs_interval = np.array([])  # used to recreate interval of rs that will track the despiking of points
+    cleaned_rs_interval = np.array([])  # used to recreate interval of rs that will track the removal of bad obs
 
     # separate the interval into predefined periods and compute correction
-    count_one = 0  # index for full correction interval
-    count_two = 0  # index for within each period
-    count_three = 0  # index for number of periods
-    while count_one < len(rs_interval):
-        if ((count_two < period) and count_one == len(rs_interval) - 1) or count_two == period:
-            # The first part of this if statement handles reaching the end of the final period
-            # The second part of this if statement handles reaching the end of any other period
+    interval_index = 0  # index for full correction interval
+    within_period_index = 0  # index for within each period
+    num_period_index = 0  # index for number of periods
+    while interval_index < len(rs_interval):
 
-            if count_two < period:  # We are dealing with the final period
-                rs_period[count_two] = rs_interval[count_one]
-                rso_period[count_two] = rso_interval[count_one]
+        # If statement to handle being at the end of the period, or at the end of the overall correction interval
+        if ((within_period_index < period) and interval_index == len(rs_interval) - 1) or within_period_index == period:
+
+            if within_period_index < period:  # We are dealing with the final period
+                rs_period[within_period_index] = rs_interval[interval_index]
+                rso_period[within_period_index] = rso_interval[interval_index]
 
                 # each period's data is overwritten by the subsequent period's data, because the final period may not
                 # have 60 days, chop off remaining days that have values from previous period.
-                rs_period = rs_period[:count_two-(period-1)].copy()
-                rso_period = rso_period[:count_two-(period-1)].copy()
-                count_one += 1  # increment by 1 to end the loop after this iteration
-
+                rs_period = rs_period[:within_period_index-(period-1)].copy()
+                rso_period = rso_period[:within_period_index-(period-1)].copy()
+                interval_index += 1  # increment by 1 to end the loop after this iteration
             else:  # We have reached the end of a period, no special treatment needed
                 pass
 
-            # Now that we are at the end of a period or finishing up the last period, we check for the existence of
-            # potential voltage spikes
+            # Now that we are at the end of a period or finishing up the last period,
+            # we check for the existence of potential bad values
             period_ratios = np.divide(rs_period, rso_period)
             period_ratios_copy = np.array(period_ratios)  # make a copy, we remove largest val to find the next largest
             max_ratio_indexes = []  # tracks the indexes of the maximum values found
 
             invalid_period = 0  # boolean flag to specify if this period has the data necessary to calculate corr factor
-            despike_loop = 1  # boolean flag to specify if we should keep checking for voltage spikes or not
+            bad_vals_loop = 1  # boolean flag to specify if we should keep checking for bad values or not
 
             # First, check to see if there are non-nan values present
             # and the period has at least the sample size in days present
@@ -477,7 +498,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
                     else:
                         # only nans are left, have to quit loop and throw out the data
                         invalid_period = 1
-                        despike_loop = 0
+                        bad_vals_loop = 0
                         print('\nA period was thrown out due to insufficient data, failed finding valid point # %s '
                               ' out of the required %s.' % (i + 1, sample_size_per_period))
                         break
@@ -486,16 +507,15 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
                 print('\nA period was thrown out due to insufficient data, either because it had no valid ratios,'
                       'or because it had less than %s days.' % sample_size_per_period)
                 invalid_period = 1
-                despike_loop = 0
+                bad_vals_loop = 0
 
-            # institute a loop that remains true as long as none of the ending conditions are met
-            # while we iterate down the rest of the values until we're reasonably sure that remaining points
-            # don't massively shift the data
+            # Start a loop that remains true as long as none of the ending conditions are met while iterating down
+            # the rest of the values until reasonably sure that remaining points don't massively shift the data
             cf_index_start = 0
             cf_index_end = cf_index_start + sample_size_per_period  # ending index is not inclusive
             new_cf_index_start = cf_index_start + 1
             new_cf_index_end = cf_index_end + 1
-            while despike_loop == 1:
+            while bad_vals_loop == 1:
 
                 if np.any(np.isfinite(period_ratios_copy)) and np.size(period_ratios_copy) >= sample_size_per_period:
                     max_ratio_indexes.append(np.nanargmax(period_ratios_copy))
@@ -504,11 +524,11 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
                 else:
                     # only nans are left, end the loop and set the period as invalid
                     # this is under the logic that if we've iterated through all points without finding a
-                    # non-likely-spike then something is obviously wrong with this period.
+                    # value that seems okay then something is obviously wrong with this period.
                     invalid_period = 1
-                    despike_loop = 0
+                    bad_vals_loop = 0
                     print('\nA period was thrown out due to failing to find a sufficient '
-                          'number of valid values when testing for despiking.')
+                          'number of valid values when testing for bad values.')
 
                 rs_avg = np.nanmean(rs_period[max_ratio_indexes[cf_index_start:cf_index_end]])
                 rso_avg = np.nanmean(rso_period[max_ratio_indexes[cf_index_start:cf_index_end]])
@@ -517,24 +537,22 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
                 new_rso_avg = np.nanmean(rso_period[max_ratio_indexes[new_cf_index_start:new_cf_index_end]])
 
                 # Example: if current_cf uses largest points 0-5, new_cf uses largest points 1-6 (omitting the largest)
-
                 current_cf = rso_avg / rs_avg  # current correction factor from currently used points
                 new_cf = new_rso_avg / new_rs_avg  # exploratory correction factor used to check for large changes
                 diff_cf = new_cf - current_cf
                 percent_diff_cf = (diff_cf / current_cf) * 100
 
-                # First of the two rules used to check for the existence of voltage spikes, the logic is that if
+                # First of the two rules used to check for the existence of bad values, the logic is that if
                 # removing the largest point causes over a 2% change in the correction factor (which is an average of
-                # six largest points) then that point carried an undue influence and is a likely voltage spike
-                # We only need to care if Rs_average is above Rso_average, if it was below rso_average then it likely
-                # would not be a voltage spike
+                # six largest points) then that point carried an undue influence and is a likely bad value
+                # We only need to care if Rs_average is above Rso_average
                 if percent_diff_cf >= 2.0 and rs_avg > rso_avg:
                     new_cf_significant_change = True
                 else:
                     new_cf_significant_change = False
 
-                # Second of the two rules used to check for the existence of voltage spikes is if Rs average
-                # is sufficiently larger than rso average. This would occur with a lot of spikes with consistent values,
+                # Second of the two rules used to check for the existence of bad values is if Rs average
+                # is sufficiently larger than rso average. This would occur with many  bad values with consistent values
                 # this should occur very infrequently
                 if (rs_avg - rso_avg) >= 75:
                     rs_avg_greatly_exceeds_rso_avg = True
@@ -545,58 +563,58 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
                 if new_cf_significant_change or rs_avg_greatly_exceeds_rso_avg:
                     # at least one of the rules were violated, so continue forward with the next iteration
 
-                    # check for the rarer rule occuring:
+                    # check for the rarer rule occurring:
                     if not new_cf_significant_change and rs_avg_greatly_exceeds_rso_avg:
                         print('\nWARNING: The rule for rs greatly exceeding rso was triggered without triggering the'
                               ' significant change to correction factor rule. Look at the data to make sure the data'
-                              ' has a lot of voltage spikes. Period was {} starting around {} and ending around {}. \n'
-                              .format(count_three, (count_one - period), count_one))
+                              ' has a lot of bad values. Period was {} starting around {} and ending around {}. \n'
+                              .format(num_period_index, (interval_index - period), interval_index))
 
-                    # increment indexes and keep iterating for more spikes
+                    # increment indexes and keep iterating for more bad values
                     cf_index_start += 1
                     cf_index_end = cf_index_start + sample_size_per_period  # ending index is not inclusive
                     new_cf_index_start = cf_index_start + 1
                     new_cf_index_end = cf_index_end + 1
 
-                    despike_counter += 1
+                    bad_vals_counter += 1
                 else:
                     # if neither of the two rules were violated, we can proceed with the assumption that all likely
-                    # spikes have been removed, and we use the current_cf as the correction factor
-                    despike_loop = 0
+                    # bad values have been removed, and we use the current_cf as the correction factor
+                    bad_vals_loop = 0
 
             if invalid_period != 1:  # period has valid data to compute correction factor
                 rs_avg = np.nanmean(rs_period[max_ratio_indexes[cf_index_start:cf_index_end]])
                 rso_avg = np.nanmean(rso_period[max_ratio_indexes[cf_index_start:cf_index_end]])
 
-                period_corr[count_three] = rso_avg / rs_avg  # compute the correction factor
+                period_corr[num_period_index] = rso_avg / rs_avg  # compute the correction factor
 
-                # Go through and set the rs points marked as likely spikes to a unique identifier to find later
+                # Go through and set the rs points marked as likely bad values to a unique identifier to find later
                 rs_period[max_ratio_indexes[:cf_index_start]] = -12345
 
             else:
-                # This period has insufficient data to correct, instead we will remove all poitns and track how many we
+                # This period has insufficient data to correct, instead we will remove all points and track how many we
                 # remove
                 removed_points = np.count_nonzero(~np.isnan(rs_period))  # count number of points we're about to remove
                 rs_period[:] = np.nan  # insufficient data exists to correct this period, so set it to nan
-                period_corr[count_three] = np.nan
+                period_corr[num_period_index] = np.nan
                 insufficient_period_counter += 1
                 insufficient_data_counter += removed_points
                 print('\nThis insufficient period contained %s datapoints for Rs, which have been set to nan.'
                       % removed_points)
 
-            # add this period's rs data, which has potentially been thrown out or despiked, to the new interval of rs
-            despiked_rs_interval = np.append(despiked_rs_interval, rs_period)
+            # add this period's rs data, which has had potentially bad values removed, to the new interval of rs
+            cleaned_rs_interval = np.append(cleaned_rs_interval, rs_period)
 
             # adjust counters to move to next period, if this is the final period then does nothing.
-            count_two = 0
-            count_three += 1
+            within_period_index = 0
+            num_period_index += 1
 
-        elif count_two < period:
+        elif within_period_index < period:
             # haven't run out of data points, and period still hasn't been filled
-            rs_period[count_two] = rs_interval[count_one]
-            rso_period[count_two] = rso_interval[count_one]
-            count_one += 1
-            count_two += 1
+            rs_period[within_period_index] = rs_interval[interval_index]
+            rso_period[within_period_index] = rso_interval[interval_index]
+            interval_index += 1
+            within_period_index += 1
 
         else:
             # This should never happen
@@ -604,8 +622,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
 
     # Now that the correction factor has been computed for each period, we now step through each period again and
     # apply those correction factors
-
-    corr_rs[start:end] = despiked_rs_interval[:]  # save all the values removed for despiking/insufficient data
+    corr_rs[start:end] = cleaned_rs_interval[:]  # save all the values removed for suspect values/insufficient data
     correction_cutoff_counter = 0
     rso_clipping_counter = 0
     unchanged_data_counter = 0
@@ -622,14 +639,13 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
 
             # Check to see if rs correction factor is smaller than a 50% relative increase or decrease
             # if it is larger than that we will remove it for a later fill with Rs_TR
-            if period_corr[z] <= 1.50 or period_corr[z] >= 0.5:
+            if 0.50 <= period_corr[z] <= 1.50:
 
-                # was the current rs point removed for being a voltage spike?
+                # was the current rs point removed for being a potentially bad value?
                 # if so, set it to 1.05*Rso and leave it there (do not later clip it)
                 if corr_rs[x] == -12345:
                     corr_rs[x] = rso[x] * 1.05
 
-                # current rs point was not a potential voltage spike
                 else:
                     if 0.97 <= period_corr[z] <= 1.03:
                         # don't change the data under the assumption that the sensor is working
@@ -658,8 +674,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
             y = 1
             z += 1
 
-    print('\n%s data points were removed as part of the despiking process. \n' % despike_counter)
-
+    print('\n%s data points were removed as part of the suspect values evaluation process. \n' % bad_vals_counter)
     print('\n%s Rs data points were removed due to their correction factor exceeding a '
           '50 percent relative increase or decrease. \n' % correction_cutoff_counter)
 
@@ -675,8 +690,8 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
     log_writer.write('Periodic ratio-based Rs corrections were applied,'
                      ' period length was %s, and correction sample size was %s. \n'
                      % (period, sample_size_per_period))
-    log_writer.write('%s data points were removed as part of the despiking process. \n'
-                     % despike_counter)
+    log_writer.write('%s data points were removed as part of the suspect value evaluation process. \n'
+                     % bad_vals_counter)
     log_writer.write('%s Rs data points in %s different periods were removed due to insufficient data present in'
                      ' either Rs or Rso to compute a correction factor. \n'
                      % (insufficient_data_counter, insufficient_period_counter))
@@ -690,29 +705,30 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
 
 def correction(station, log_path, folder_path, var_one, var_two, dt_array, month, year, code, auto_corr=0):
     """
-            This main qaqc function takes in two variables and, depending on the code provided, enables different
-            correction methods for the user to use to correct data. Once a correction has been applied, user has the
-            option to do multiple iterations before finishing. All actions taken are recorded into the log file.
+    This main qaqc function takes in two variables and, depending on the code provided, enables different
+    correction methods for the user to use to correct data. This function serves as the
+    wrapper/handler for all other correction method functions. Once a correction has been applied, user has the
+    option to do multiple iterations before finishing. All actions taken are recorded into the log file.
 
-            After each iteration a bokeh graph is generated that shows the changes that have occurred. After the user
-            decides to completely finish with corrections, one final bokeh plot is generated that shows the final
-            corrected product vs the uncorrected data that was initially passed in
+    After each iteration a bokeh graph is generated that shows the changes that have occurred. After the user
+    decides to completely finish with corrections, one final bokeh plot is generated that shows the final
+    corrected product vs the uncorrected data that was initially passed in
 
-            Parameters:
-                station : string of station name for saving files
-                log_path : string of path to log file
-                folder_path : string of path to correction files directory
-                var_one : 1d numpy array of first variable passed
-                var_two : 1d numpy array of second variable passed
-                dt_array : date time array used for bokeh plotting
-                month : 1D numpy array of month values
-                year : 1D numpy array of year values
-                code : integer that is used to determine what variables are actually passed as var_one and var_two
-                auto_corr : int flag for the "automatic first pass" mode, which auto-applies default correction first
+    Args:
+        :station: (str) station name for saving files
+        :log_path: (str) path to log file
+        :folder_path: (str) path to correction files directory
+        :var_one: (ndarray) 1-D numpy array of first variable passed
+        :var_two: (ndarray) 1-D numpy array of second variable, may be all NaN
+        :dt_array: (ndarray) 1-D datetime array used for bokeh plotting
+        :month: (ndarray) 1-D numpy array of month values
+        :year: (ndarray) 1-D numpy array of year values
+        :code: (int) used to determine what variables are actually passed as var_one and var_two
+        :auto_corr: (int) flag for the "automatic first pass" mode, which auto-applies default correction first
 
-            Returns:
-                corr_var_one : 1D numpy array of corrected var_one values
-                corr_var_two : 1D numpy array of corrected var_two values
+    Returns:
+        :corr_var_one: (ndarray) 1-D numpy array of corrected var_one values
+        :corr_var_two: (ndarray) 1-D numpy array of corrected var_two values
     """
     correction_loop = 1
     first_pass = 1  # boolean flag for whether it is the first pass, used in automation with auto_corr
@@ -722,17 +738,17 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
 
-    (units, title, var_one_name, var_one_color, var_two_name, var_two_color) = \
-        plotting_functions.generate_line_plot_features(code, '')
-
     ####################
-    # Logging
     # Reopen log file and append correction actions taken to it.
     log.basicConfig()
     corr_log = open(log_path, 'a')
-    corr_log.write('\n--------------------------------------------------------------------------------------------\n')
-    corr_log.write('Now correcting %s and %s at %s. \n' %
-                   (var_one_name, var_two_name, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    if FEATURES_DICT[code]['var_two_name'] is None:
+        corr_log.write('\n\nCorrecting %s at %s. \n'
+                       % (FEATURES_DICT[code]['var_one_name'], dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    else:
+        corr_log.write('\n\nCorrecting %s and %s at %s. \n'
+                       % (FEATURES_DICT[code]['var_one_name'], FEATURES_DICT[code]['var_two_name'],
+                          dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
     ####################
     # Generate Before-Corrections Graph
@@ -757,7 +773,7 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
         else:
             (int_start, int_end) = generate_interval(var_size)
 
-        (choice, first_pass) = generate_corr_menu(code, auto_corr, first_pass)
+        (choice, first_pass) = _generate_corr_menu(code, auto_corr, first_pass)
 
         if choice == 1:
             (corr_var_one, corr_var_two) = additive_corr(corr_log, int_start, int_end, var_one, var_two)
@@ -766,8 +782,8 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
         elif choice == 3:
             (corr_var_one, corr_var_two) = set_to_nan(corr_log, int_start, int_end, var_one, var_two)
         elif choice == 4 and (code == 1 or code == 2):
-            (corr_var_one, corr_var_two) = temp_find_outliers(corr_log, var_one, var_one_name, var_two, var_two_name,
-                                                              month)
+            (corr_var_one, corr_var_two) = temp_find_outliers(corr_log, var_one, FEATURES_DICT[code]['var_one_name'],
+                                                              var_two, FEATURES_DICT[code]['var_two_name'], month)
         elif choice == 4 and code == 8:
             if auto_corr != 0:
                 corr_percentile = 1
@@ -802,7 +818,6 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
             raise ValueError('Unsupported code type {0} and choice type {1} passed to qaqc_functions.'
                              .format(code, choice))
 
-        ####################
         # Generate After-Corrections Graph
         corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
                                                                 corr_var_two, code, folder_path)
@@ -811,7 +826,6 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
         if auto_corr == 1 or auto_corr == 0:
             auto_corr = 0  # set to 0 to prevent another automatic correction loop
 
-        ####################
         # Determine if user wants to keep correcting
         print('\nAre you done correcting?'
               '\n   Enter 1 for yes.'
@@ -856,40 +870,45 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
 def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax, tmin, tavg, compiled_ea, ea, ea_col,
                                  tdew, tdew_col, tdew_ko, rhmax, rhmax_col, rhmin, rhmin_col, rhavg, rhavg_col):
     """
-        This function is display the 'compiled' ea generated from all available humidity data, and the user will have
-        the option to overwrite sections of the 'compiled' ea with ea generated from a variable of their choice, should
-        a higher priority humidity variable have worse data than a lower priority one.
+    This function displays the 'compiled' ea generated from all available humidity data, and the user will have
+    the option to overwrite sections of the 'compiled' ea with ea generated from a variable of their choice, should
+    a higher priority humidity variable have worse data than a lower priority one.
 
-        Ex: A station has both vapor pressure (daily average calculated from 15 minute intervals)
+    Example 1: 
+        A station has both vapor pressure (daily average calculated from 15 minute intervals)
         and RH Maximum and Minimum (daily values). The humidity compilation function will only use RHMax and RHMin
         to calculate vapor pressure if there is a gap in the provided vapor pressure data. However, for some reason the
         vapor pressure data is bad, either from a faulty sensor or problem with the sampling, while the contemporaneous
         RH data is good. This function will allow you to graphically select the 'bad' section of vapor pressure data
         and overwrite it with the vapor pressure calculated from the present RH Maximum and minimum data.
+        
+    Example 2: 
+        A station has both vapor pressure (daily average calculated from 15 minute intervals)
+        and RH Maximum and Minimum (daily values). Data from all variables is bad for the periods of 01/2016-12/2016.
+        This function would allow you to fill in the 'compiled' ea values from 2016 with values from Tmin - Ko 
 
-        Parameters:
-            station : string of station name for saving files
-            log_path : string of path to log file
-            folder_path : string of path to correction files directory
-            dt_array : date time array used for bokeh plots
-            tmax : 1D array of maximum temperature values
-            tmin : 1D array of minimum temperature values
-            tavg : 1D array of average temperature values
-            compiled_ea : the array of ea values that has been generated from all provided humidity variables
-            ea : 1D array of vapor pressure values, which may be empty
-            ea_col : column of ea variable in data file, if it is provided
-            tdew : 1D array of dewpoint temperature values, which may be empty
-            tdew_col : column of Tdew variable in data file, if it is provided
-            tdew_ko : 1D array of dewpoint temperature values, where missing values are filled in by Tmin-Ko curve
-            rhmax : 1D array of maximum relative humidity values, which may be empty
-            rhmax_col : column of rhmax variable in data file, if it was provided
-            rhmin : 1D array of minimum relative humidity values, which may be empty
-            rhmin_col : column of rhmin variable in data file, if it was provided
-            rhavg : 1D array of average relative humidity values, which may be empty
-            rhavg_col : column of rhavg variable in data file, if it was provided
-
-        Returns:
-            Returns a "compiled" ea array that has had select sections replaced by the "best" variables
+    Args:
+        :station: (str) station name for saving files
+        :log_path: (str) path to log file
+        :folder_path: (str) path to correction files directory
+        :dt_array: (ndarray) 1-D datetime array used for bokeh plots
+        :tmax: (ndarray) 1-D array of maximum temperature values
+        :tmin: (ndarray) 1-D array of minimum temperature values
+        :tavg: (ndarray) 1-D array of average temperature values
+        :compiled_ea: (ndarray) the array of ea values that has been generated from all provided humidity variables
+        :ea: (ndarray) 1-D array of vapor pressure values, which may be empty
+        :ea_col: (int) used to determine if ea was provided by the data source
+        :tdew: (ndarray) 1-D array of dewpoint temperature values, which may be empty
+        :tdew_col: (int) column of Tdew variable in data file, if it is provided
+        :tdew_ko: (ndarray) 1-D array of dewpoint temperature values, where missing values are filled in by Tmin-Ko curve
+        :rhmax: (ndarray) 1-D array of maximum relative humidity values, which may be empty
+        :rhmax_col: (int) column of rhmax variable in data file, if it was provided
+        :rhmin: (ndarray) 1-D array of minimum relative humidity values, which may be empty
+        :rhmin_col: (int) column of rhmin variable in data file, if it was provided
+        :rhavg: (ndarray) 1-D array of average relative humidity values, which may be empty
+        :rhavg_col: (int) column of rhavg variable in data file, if it was provided
+    Returns:
+        :edited_compiled_ea: (ndarray) ea array that has had selected sections replaced by the selected sources
     """
 
     adjustment_loop = 1

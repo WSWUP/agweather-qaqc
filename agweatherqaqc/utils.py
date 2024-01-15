@@ -2,18 +2,87 @@ import pathlib as pl
 import numpy as np
 
 
+# Background color to be used for all plots
+BACKGROUND_COLOR = '#fafafa'
+
+# This dictionary stores the variable names and plot features for each
+#   variable/pair of variables that may be processed
+FEATURES_DICT = {
+    1: {"var_one_name": "Temperature Maximum",
+        "var_one_color": "red",
+        "var_two_name": "Temperature Minimum",
+        "var_two_color": "blue",
+        "units": "°C",
+        "qc_filename": "tmax_tmin"},
+    2: {"var_one_name": "Temperature Minimum",
+        "var_one_color": "blue",
+        "var_two_name": "Dewpoint Temperature",
+        "var_two_color": "black",
+        "units": "°C",
+        "qc_filename": "tmin_tdew"},
+    3: {"var_one_name": "Wind Speed",
+        "var_one_color": "black",
+        "var_two_name": None,
+        "var_two_color": None,
+        "units": "m/s",
+        "qc_filename": "wind"},
+    4: {"var_one_name": "Precipitation",
+        "var_one_color": "black",
+        "var_two_name": None,
+        "var_two_color": None,
+        "units": "mm",
+        "qc_filename": "precip"},
+    5: {"var_one_name": "Solar Radiation",
+        "var_one_color": "blue",
+        "var_two_name": "Clear-Sky Solar Radiation",
+        "var_two_color": "black",
+        "units": "w/m2",
+        "qc_filename": "solar"},
+    6: {"var_one_name": "Solar Radiation",
+        "var_one_color": "blue",
+        "var_two_name": "Thornton-Running Solar Radiation",
+        "var_two_color": "black",
+        "units": "w/m2",
+        "qc_filename": None},
+    7: {"var_one_name": "Vapor Pressure",
+        "var_one_color": "black",
+        "var_two_name": None,
+        "var_two_color": None,
+        "units": "kPa",
+        "qc_filename": "vapor"},
+    8: {"var_one_name": "RH Maximum",
+        "var_one_color": "blue",
+        "var_two_name": "RH Minimum",
+        "var_two_color": "red",
+        "units": "%",
+        "qc_filename": "rhmax_rhmin"},
+    9: {"var_one_name": "RH Average",
+        "var_one_color": "black",
+        "var_two_name": None,
+        "var_two_color": None,
+        "units": "%",
+        "qc_filename": "rhavg"},
+    10: {"var_one_name": "Ko Curve",
+         "var_one_color": "black",
+         "var_two_name": None,
+         "var_two_color": None,
+         "units": "°C",
+         "qc_filename": None}
+}
+
+
 def get_int_input(start_val, end_val, prompt="Enter your choice: "):
     """
         Prompts the user for an integer input within a specified range,
         with handling for if the input is bad or falls outside the expected range.
 
         Args:
-            start_val (int): start of acceptable integer values
-            end_val (int): end of acceptable integer values
-            prompt (string): prompt to display to the user
+            :start_val: (int) start of acceptable integer values
+            :end_val: (int) end of acceptable integer values
+            :prompt: (str) prompt to display to the user
 
         Returns:
-            sanitized integer value entered by the user
+            :int_input: (int) sanitized integer value entered by the user
     """
 
     error_msg = f'Invalid input. Please enter an integer between {start_val} and {end_val}. \n'
@@ -40,10 +109,10 @@ def get_float_input(prompt="Enter your choice: "):
         Prompts the user for a float input, with handling for if the input is bad
 
         Args:
-            prompt (string): prompt to display to the user
+            :prompt: (str) prompt to display to the user
 
         Returns:
-            sanitized value entered by the user
+            :float_input: (float) sanitized value entered by the user
     """
 
     error_msg = f'Invalid input. Please enter a numerical value.\n'
@@ -63,18 +132,14 @@ def get_float_input(prompt="Enter your choice: "):
 def validate_file(file_path, expected_extensions):
     """
     Checks to see if provided path is valid, while also checking to see if file is of expected type.
-    Raises exceptions if either of those fail.
+    Raises exceptions if either of those fail. Returns nothing.
 
     Args:
-        file_path: string of path to file
-        expected_extensions: list of strings of expected file types
-
-    Returns:
-        None
+        :file_path: (str) path to file
+        :expected_extensions: (list) possible expected file types
     """
     # Check to see if provided config file path actually points to a file.
     if pl.Path(file_path).is_file():
-
         # Next check to see if provided file is of the appropriate type.
         # by obtaining the ending suffix and checking it against the expected types
         file_extension = pl.PurePath(file_path).suffix.split('.', 1)[1]  # Remove period

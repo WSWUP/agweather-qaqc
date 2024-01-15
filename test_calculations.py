@@ -11,9 +11,7 @@ nan = np.nan
 
 # todo change handling of input dates to handle them all and sort it out
 # todo remove metadata_mode from script, it should just be automatic
-# todo add handling of wind run in mph there was only km
 # todo update docs format on all functions, only have read config, validate file, and convert units so far
-# todo check to see if a resolution of 1e-3 is good enough
 # todo update rest of code to use config_dict
 # todo make date input section of config file more verbose
 # todo check cutoff of rhmax/min before ea calc
@@ -72,7 +70,7 @@ def test_validate_file():
 
 def test_read_config():
     """Check to see if input_functions.read_config can open config file and find all required variables within it"""
-    input_functions.read_config(config_file_path)
+    input_functions._read_config(config_file_path)
 
 
 def test_temperature_conversion():
@@ -87,9 +85,9 @@ def test_temperature_conversion():
     config_dict_for_k = {'temperature_units': 2}
     config_dict_for_c = {'temperature_units': 0}
 
-    converted_temp_f_to_c = input_functions.convert_units(config_dict_for_f, temp_f, 'temperature')
-    converted_temp_k_to_c = input_functions.convert_units(config_dict_for_k, temp_k, 'temperature')
-    converted_temp_c_to_c = input_functions.convert_units(config_dict_for_c, temp_c, 'temperature')
+    converted_temp_f_to_c = input_functions._convert_units(config_dict_for_f, temp_f, 'temperature')
+    converted_temp_k_to_c = input_functions._convert_units(config_dict_for_k, temp_k, 'temperature')
+    converted_temp_c_to_c = input_functions._convert_units(config_dict_for_c, temp_c, 'temperature')
 
     assert converted_temp_f_to_c[0] == pt.approx(temp_c[0], abs=1e-3), \
         'Temperature F to C and test value C are not equal.'
@@ -115,11 +113,11 @@ def test_wind_speed_conversion():
     config_dict_for_run_mi = {'wind_units': 3}
     config_dict_for_run_km = {'wind_units': 4}
 
-    converted_uz_ms_to_ms = input_functions.convert_units(config_dict_for_ms, uz_ms, 'wind_speed')
-    converted_uz_mph_to_ms = input_functions.convert_units(config_dict_for_mph, uz_mph, 'wind_speed')
-    converted_uz_kph_to_ms = input_functions.convert_units(config_dict_for_kph, uz_kph, 'wind_speed')
-    converted_uz_run_km_to_ms = input_functions.convert_units(config_dict_for_run_km, uz_run_km, 'wind_speed')
-    converted_uz_run_mi_to_ms = input_functions.convert_units(config_dict_for_run_mi, uz_run_mi, 'wind_speed')
+    converted_uz_ms_to_ms = input_functions._convert_units(config_dict_for_ms, uz_ms, 'wind_speed')
+    converted_uz_mph_to_ms = input_functions._convert_units(config_dict_for_mph, uz_mph, 'wind_speed')
+    converted_uz_kph_to_ms = input_functions._convert_units(config_dict_for_kph, uz_kph, 'wind_speed')
+    converted_uz_run_km_to_ms = input_functions._convert_units(config_dict_for_run_km, uz_run_km, 'wind_speed')
+    converted_uz_run_mi_to_ms = input_functions._convert_units(config_dict_for_run_mi, uz_run_mi, 'wind_speed')
 
     assert converted_uz_ms_to_ms[0] == pt.approx(uz_ms[0], abs=1e-3), \
         'Wind m/s to m/s and test value m/s are not equal.'
@@ -145,9 +143,9 @@ def test_vapor_pressure_conversion():
     config_dict_for_mbar = {'vapor_pressure_units': 3}
     config_dict_for_kpa = {'vapor_pressure_units': 0}
 
-    converted_ea_torr_to_kpa = input_functions.convert_units(config_dict_for_torr, ea_torr, 'vapor_pressure')
-    converted_ea_mbar_to_kpa = input_functions.convert_units(config_dict_for_mbar, ea_mbar, 'vapor_pressure')
-    converted_ea_kpa_to_kpa = input_functions.convert_units(config_dict_for_kpa, ea_kpa, 'vapor_pressure')
+    converted_ea_torr_to_kpa = input_functions._convert_units(config_dict_for_torr, ea_torr, 'vapor_pressure')
+    converted_ea_mbar_to_kpa = input_functions._convert_units(config_dict_for_mbar, ea_mbar, 'vapor_pressure')
+    converted_ea_kpa_to_kpa = input_functions._convert_units(config_dict_for_kpa, ea_kpa, 'vapor_pressure')
 
     assert converted_ea_torr_to_kpa[0] == pt.approx(ea_kpa[0], abs=1e-3), \
         'Ea torr to kpa and test value kpa are not equal.'
@@ -171,10 +169,10 @@ def test_solar_radiation_conversion():
     config_dict_for_kwhr = {'solar_radiation_units': 2}
     config_dict_for_w = {'solar_radiation_units': 0}
 
-    converted_rs_lang_to_w = input_functions.convert_units(config_dict_for_lang, rs_lang, 'solar_radiation')
-    converted_rs_mj_to_w = input_functions.convert_units(config_dict_for_mj, rs_mj, 'solar_radiation')
-    converted_rs_kwhr_to_w = input_functions.convert_units(config_dict_for_kwhr, rs_kwhr, 'solar_radiation')
-    converted_rs_w_to_w = input_functions.convert_units(config_dict_for_w, rs_w, 'solar_radiation')
+    converted_rs_lang_to_w = input_functions._convert_units(config_dict_for_lang, rs_lang, 'solar_radiation')
+    converted_rs_mj_to_w = input_functions._convert_units(config_dict_for_mj, rs_mj, 'solar_radiation')
+    converted_rs_kwhr_to_w = input_functions._convert_units(config_dict_for_kwhr, rs_kwhr, 'solar_radiation')
+    converted_rs_w_to_w = input_functions._convert_units(config_dict_for_w, rs_w, 'solar_radiation')
 
     assert converted_rs_lang_to_w[0] == pt.approx(rs_w[0], abs=1e-3), \
         'Solar radiation lang to w/m2 and test value w/m2 are not equal.'
@@ -196,8 +194,8 @@ def test_precipitation_conversion():
     config_dict_for_inch = {'precipitation_units': 2}
     config_dict_for_mm = {'precipitation_units': 0}
 
-    converted_pp_inch_to_mm = input_functions.convert_units(config_dict_for_inch, pp_inch, 'precipitation')
-    converted_pp_mm_to_mm = input_functions.convert_units(config_dict_for_mm, pp_mm, 'precipitation')
+    converted_pp_inch_to_mm = input_functions._convert_units(config_dict_for_inch, pp_inch, 'precipitation')
+    converted_pp_mm_to_mm = input_functions._convert_units(config_dict_for_mm, pp_mm, 'precipitation')
 
     assert converted_pp_inch_to_mm[0] == pt.approx(pp_mm[0], abs=1e-3), \
         'Precipitation inch to mm and test value mm are not equal.'
@@ -215,8 +213,8 @@ def test_relative_humidity_conversion():
     config_dict_for_fract = {'relative_humidity_units': 1}
     config_dict_for_perct = {'relative_humidity_units': 0}
 
-    converted_rh_fract_to_perct = input_functions.convert_units(config_dict_for_fract, rh_fract, 'relative_humidity')
-    converted_rh_perct_to_perct = input_functions.convert_units(config_dict_for_perct, rh_perct, 'relative_humidity')
+    converted_rh_fract_to_perct = input_functions._convert_units(config_dict_for_fract, rh_fract, 'relative_humidity')
+    converted_rh_perct_to_perct = input_functions._convert_units(config_dict_for_perct, rh_perct, 'relative_humidity')
 
     assert converted_rh_fract_to_perct[0] == pt.approx(rh_perct[0], abs=1e-3), \
         'Relative humidity fraction to percentage and test value percentage are not equal.'

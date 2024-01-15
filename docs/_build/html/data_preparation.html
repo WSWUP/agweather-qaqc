@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Preparation &mdash; agweather-qaqc 1.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=1ed6394b"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="QC Procedure Information" href="qc_information.html" />
+    <link rel="prev" title="Installing agweather-qaqc" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            agweather-qaqc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing agweather-qaqc</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data Preparation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#directory-structure">Directory Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-the-config-file">Setting up the Config File</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#metadata">METADATA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#options">OPTIONS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data">DATA</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-the-metadata-file">Setting up the Metadata File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-agweather-qaqc">Running agweather-qaqc</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qc_information.html">QC Procedure Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">agweatherqaqc</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">agweather-qaqc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Data Preparation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/data_preparation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-preparation">
+<h1>Data Preparation<a class="headerlink" href="#data-preparation" title="Link to this heading"></a></h1>
+<p>agweather-qaqc requires a config file that specifies what weather variables are being provided,
+where in the data file they are located, and what units they are in.
+Most weather stations from the same network or source have the same format for their data,
+so this process may only have to be done once for multiple stations.</p>
+<p>All of this is accomplished through the parameters specified in <strong>config.ini</strong>.</p>
+<section id="directory-structure">
+<h2>Directory Structure<a class="headerlink" href="#directory-structure" title="Link to this heading"></a></h2>
+<a class="reference internal image-reference" href="_images/qaqc_directory.png"><img alt="The contents of the agweather-qaqc directory once downloaded from Github." class="align-center" src="_images/qaqc_directory.png" style="width: 200px; height: 250px;" /></a>
+<p>Assuming you have cloned the github directory, your folder should contain the following items:</p>
+<ul class="simple">
+<li><p><strong>The “agweatherqaqc” directory</strong> - contains module code and the environment.yml file.</p></li>
+<li><p><strong>config.ini</strong> - configuration file used by the script to interpret the contents of the data file.</p></li>
+<li><p><strong>qaqc_single_station.py</strong> - a wrapper script that enables to you use this module from the CLI. Your icon may not match what is pictured here.</p></li>
+<li><p><strong>A .csv, .xls, or .xlsx data file</strong> - file with the weather station data to process. In this example, it is located within the “test_files” folder.</p></li>
+</ul>
+<p>When the file <strong>qaqc_single_station.py</strong> is run, it looks for the <strong>config.ini</strong> file within the same folder and
+starts pulling all the relevant information from that config file. <strong>See “Running agweather-qaqc” below for more options.</strong></p>
+<p>The github repository includes an example data file and a matching config.ini that is already set up to be run.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>agweather-qaqc saves all of the output files in the same directory as the input data file.</p>
+</div>
+</section>
+<section id="setting-up-the-config-file">
+<h2>Setting up the Config File<a class="headerlink" href="#setting-up-the-config-file" title="Link to this heading"></a></h2>
+<p>The configuration file “config.ini” can be broken down into 3 sections:</p>
+<section id="metadata">
+<h3>METADATA<a class="headerlink" href="#metadata" title="Link to this heading"></a></h3>
+<p>The top section of the config.ini file is where you will specify the metadata of both the weather station
+the data came from, as well as information about the data file unrelated to measured variables.
+This includes things like the station’s geographical location and whether or not the file has a header.</p>
+</section>
+<section id="options">
+<h3>OPTIONS<a class="headerlink" href="#options" title="Link to this heading"></a></h3>
+<p>The next section of the config.ini file is where you will specify what options you want the script to run with.
+As an example, whether or not you wish to fill in missing data. The settings in this section are either set to “0” (indicating FALSE, or NO) or “1” (indicating TRUE, or YES).</p>
+</section>
+<section id="data">
+<h3>DATA<a class="headerlink" href="#data" title="Link to this heading"></a></h3>
+<p>The majority of work in setting up the config.ini file is done in this section, where we specify what variables
+are in which columns of data, and what units those variables are in. The configuration file has explanations
+for the various prompts in this section.</p>
+<p><strong>In Python, indexes start at 0.</strong>,
+If an .xlsx data file has Maximum Temperature data was in Column A, the appropriate setting would be “TEMPERATURE_MAX_COL = 0”.
+If Solar Radiation data was in Column E, the appropriate setting would be “SOLAR_RADIATION_COL = 4”, and so on.</p>
+<p><strong>A note on humidity data:</strong></p>
+<p>Humidity is commonly measured through either:</p>
+<ol class="arabic simple">
+<li><p>Actual Vapor Pressure (<strong>Ea</strong>)</p></li>
+<li><p>Dewpoint Temperature (<strong>TDew</strong>)</p></li>
+<li><p>Maximum and Minimum Relative Humidity (<strong>RHMax</strong> and <strong>RHMin</strong>)</p></li>
+<li><p>Average Relative Humidity (<strong>RHAvg</strong>)</p></li>
+</ol>
+<p>In terms of accuracy, this is a tiered list where the top option (<strong>Ea</strong>) is most desirable,
+and the bottom option (<strong>RHAvg</strong>) is the least. When configuring humidity measurements,
+<strong>input all the variables you may have</strong>, and the script will automatically pick the most preferable option.</p>
+</section>
+</section>
+<section id="setting-up-the-metadata-file">
+<h2>Setting up the Metadata File<a class="headerlink" href="#setting-up-the-metadata-file" title="Link to this heading"></a></h2>
+<p>Setting up a metadata file is an optional step that may save time depending on how many datafiles
+need to be processed. When this metadata file is setup, the software will iterate through all the lines of
+files contained within it, so that you do not need to manually change the config file parameters for each station.</p>
+<p>There is an example metadata file in the <strong>test_files</strong> folder, which is shown here:</p>
+<a class="reference internal image-reference" href="_images/example_metadata.png"><img alt="The example metadata file, text_metadata.xlsx." class="align-center" src="_images/example_metadata.png" style="width: 800px; height: 75px;" /></a>
+<p><strong>The metadata file is required to have the following named columns, which need to be filled out:</strong></p>
+<ul class="simple">
+<li><p><strong>index</strong> - 1 to N, where N is the number of stations you have to process</p></li>
+<li><p><strong>id</strong> - ID for that station, may be a letter or string, that is used by the network</p></li>
+<li><p><strong>station_name</strong> - Name of that station</p></li>
+<li><p><strong>latitude</strong> - Latitude of the station in decimal degrees</p></li>
+<li><p><strong>longitude</strong> - Longitude of the station in decimal degrees</p></li>
+<li><p><strong>elev_m</strong> - Elevation of the station in meters</p></li>
+<li><p><strong>anemom_height_m</strong> - Height in meters of the station’s anemometer</p></li>
+<li><p><strong>input_path</strong> - path to the data file for the station, either absolute or relative to the file <cite>qaqc_single_station.py</cite></p></li>
+<li><p><strong>processed</strong> - this column should be filled with 0’s before starting. This column is to track which stations have been run.</p></li>
+</ul>
+<p><strong>The following columns are required within the metadata file, but will be filled out by the software:</strong></p>
+<ul class="simple">
+<li><p><strong>record_start</strong> - Date at the start of the data file</p></li>
+<li><p><strong>record_end</strong> - Date at the end of the data file</p></li>
+<li><p><strong>output_path</strong> - relative path to the output file</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>agweather-qaqc requires that the metadata column names exactly match what is found within the example
+metadata file. In addition, this file will be read from/written to when it is used, so if you have
+the file open in another program you will get a PermissionError.</p>
+</div>
+</section>
+<section id="running-agweather-qaqc">
+<h2>Running agweather-qaqc<a class="headerlink" href="#running-agweather-qaqc" title="Link to this heading"></a></h2>
+<p>There are three options when running the software through the CLI:</p>
+<p>Option 1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>This will try to find a config file named, “config.ini” in the same directory as qaqc_single_station.py and read parameters from it.</p>
+<p>Option 2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span> <span class="o">&lt;</span><span class="n">PATH_TO_CONFIG_FILE</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>This will try to open the config file located at the specified path and read parameters from it.</p>
+<p>Option 3:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span> <span class="o">&lt;</span><span class="n">PATH_TO_CONFIG_FILE</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">PATH_TO_METADATA_FILE</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>This will try to open the config file located at the specified path and read parameters from it, while also reading station
+metadata from the metadata file. This final option will allow for rapidly iteration through stations as one config file
+can serve as the key to interpreting any number of stations that share the same data structure or format.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installing agweather-qaqc" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="qc_information.html" class="btn btn-neutral float-right" title="QC Procedure Information" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Christian Dunkerly.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>agweatherqaqc.calc_functions &mdash; agweather-qaqc 1.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=1ed6394b"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            agweather-qaqc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installing agweather-qaqc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_preparation.html">Data Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../qc_information.html">QC Procedure Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">agweatherqaqc</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">agweather-qaqc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">agweatherqaqc.calc_functions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for agweatherqaqc.calc_functions</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">log</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">refet</span> <span class="kn">import</span> <span class="n">Daily</span>
+<span class="kn">from</span> <span class="nn">refet.calcs</span> <span class="kn">import</span> <span class="n">_air_pressure</span><span class="p">,</span> <span class="n">_ra_daily</span><span class="p">,</span> <span class="n">_rso_daily</span>
+
+
+<div class="viewcode-block" id="calc_temperature_variables">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.calc_functions.calc_temperature_variables">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_temperature_variables</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">tdew</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the secondary temperature variables like mean monthly values</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :month: (ndarray) 1D numpy array of month values for use in mean monthly calculations</span>
+<span class="sd">        :tmax: (ndarray) 1D numpy array of maximum temperature values</span>
+<span class="sd">        :tmin: (ndarray) 1D numpy array of minimum temperature values</span>
+<span class="sd">        :tdew: (ndarray) 1D numpy array of dewpoint temperature values</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :delta_t: (ndarray) the daily difference between maximum temperature and minimum temperature</span>
+<span class="sd">        :monthly_delta_t: (ndarray) monthly averaged delta_t (12 values total) values</span>
+<span class="sd">        :k_not: (ndarray) the daily difference between minimum temperature and dewpoint temperature</span>
+<span class="sd">        :monthly_k_not: (ndarray) monthly averaged k_not (12 values total) values</span>
+<span class="sd">        :monthly_tmin: (ndarray) monthly averaged minimum temperature (12 values total) values</span>
+<span class="sd">        :monthly_tdew: (ndarray) monthly averaged dewpoint temperature (12 values total) values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">delta_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmax</span> <span class="o">-</span> <span class="n">tmin</span><span class="p">)</span>
+    <span class="n">k_not</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmin</span> <span class="o">-</span> <span class="n">tdew</span><span class="p">)</span>  <span class="c1"># ASCE Ref Appendix E Eq. 1</span>
+    <span class="n">monthly_tmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">monthly_tdew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">monthly_delta_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">monthly_k_not</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="c1"># Create average monthly delta_t and average monthly k_not for downstream analysis</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">):</span>
+        <span class="n">temp_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="n">ex</span> <span class="k">for</span> <span class="n">ex</span><span class="p">,</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">month</span><span class="p">)</span> <span class="k">if</span> <span class="n">ind</span> <span class="o">==</span> <span class="n">j</span><span class="p">]</span>
+        <span class="n">temp_indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp_indexes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">monthly_tmin</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">tmin</span><span class="p">[</span><span class="n">temp_indexes</span><span class="p">])</span>
+        <span class="n">monthly_tdew</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">tdew</span><span class="p">[</span><span class="n">temp_indexes</span><span class="p">])</span>
+        <span class="n">monthly_delta_t</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">delta_t</span><span class="p">[</span><span class="n">temp_indexes</span><span class="p">])</span>
+        <span class="n">monthly_k_not</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">k_not</span><span class="p">[</span><span class="n">temp_indexes</span><span class="p">])</span>
+
+        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">delta_t</span><span class="p">,</span> <span class="n">monthly_delta_t</span><span class="p">,</span> <span class="n">k_not</span><span class="p">,</span> <span class="n">monthly_k_not</span><span class="p">,</span> <span class="n">monthly_tmin</span><span class="p">,</span> <span class="n">monthly_tdew</span></div>
+
+
+
+<div class="viewcode-block" id="calc_humidity_variables">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.calc_functions.calc_humidity_variables">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_humidity_variables</span><span class="p">(</span><span class="n">tmax</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">tavg</span><span class="p">,</span> <span class="n">ea</span><span class="p">,</span> <span class="n">ea_col</span><span class="p">,</span> <span class="n">tdew</span><span class="p">,</span> <span class="n">tdew_col</span><span class="p">,</span> <span class="n">rhmax</span><span class="p">,</span> <span class="n">rhmax_col</span><span class="p">,</span>
+                            <span class="n">rhmin</span><span class="p">,</span> <span class="n">rhmin_col</span><span class="p">,</span> <span class="n">rhavg</span><span class="p">,</span> <span class="n">rhavg_col</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes in all possible humidity variables and figures out which one to use for the calculation of TDew and Ea.</span>
+
+<span class="sd">    Unless otherwise cited, all equations are from ASCE refet manual</span>
+
+<span class="sd">    Which variables used is determined by the variable column values in the input file, only those</span>
+<span class="sd">    variables provided by the original data source will be used, and the decision tree follows this path:</span>
+
+<span class="sd">    1. If Ea exists but Tdew doesn&#39;t exist, use Ea to calculate Tdew.</span>
+
+<span class="sd">    2. If Ea doesn&#39;t exist but Tdew does, use Tdew to calculate Ea.</span>
+
+<span class="sd">    3. If neither exist but RHmax and RHmin exist, use those to calculate both Ea and Tdew.</span>
+
+<span class="sd">    4. If nothing else exists, use RHAvg to calculate both Ea and Tdew.</span>
+
+<span class="sd">    If both Ea and TDew exist, then the function just returns those values.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :tmax: (ndarray) 1D array of maximum temperature values</span>
+<span class="sd">        :tmin: (ndarray) 1D array of minimum temperature values</span>
+<span class="sd">        :tavg: (ndarray) 1D array of average temperature values</span>
+<span class="sd">        :ea: (ndarray) 1D array of vapor pressure values, which may be empty</span>
+<span class="sd">        :ea_col: (int) column of ea variable in data file, if it was provided</span>
+<span class="sd">        :tdew: (ndarray) 1D array of dewpoint temperature values, which may be empty</span>
+<span class="sd">        :tdew_col: (int) column of tdew variable in data file, if it was provided</span>
+<span class="sd">        :rhmax: (ndarray) 1D array of maximum relative humidity values, which may be empty</span>
+<span class="sd">        :rhmax_col: (int) column of rhmax variable in data file, if it was provided</span>
+<span class="sd">        :rhmin: (ndarray) 1D array of minimum relative humidity values, which may be empty</span>
+<span class="sd">        :rhmin_col: (int) column of rhmin variable in data file, if it was provided</span>
+<span class="sd">        :rhavg: (ndarray) 1D array of average relative humidity values, which may be empty</span>
+<span class="sd">        :rhavg_col: (int) column of rhavg variable in data file, if it was provided</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :calc_ea: (ndarray) 1D array of vapor pressure values</span>
+<span class="sd">        :calc_tdew: (ndarray) 1D array of dewpoint temperature values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Check to see if TDew exists, if it does not, then see what is provided to calculate it.</span>
+    <span class="k">if</span> <span class="n">tdew_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># We are not given TDew</span>
+
+        <span class="k">if</span> <span class="n">ea_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># Vapor Pressure exists, so it will be used to calculate TDew</span>
+
+            <span class="n">calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ea</span><span class="p">)</span>
+            <span class="c1"># Calculate TDew using actual vapor pressure</span>
+            <span class="c1"># Below equation was taken from the book &quot;Evapotranspiration: Principles and</span>
+            <span class="c1"># Applications for Water Management&quot; by Goyal and Harmsen, Eq. 9 in chapter 13, page 320.</span>
+            <span class="n">calc_tdew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">116.91</span> <span class="o">+</span> <span class="p">(</span><span class="mf">237.3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">calc_ea</span><span class="p">)))</span> <span class="o">/</span> <span class="p">(</span><span class="mf">16.78</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">calc_ea</span><span class="p">)))</span>
+
+            <span class="k">return</span> <span class="n">calc_ea</span><span class="p">,</span> <span class="n">calc_tdew</span>
+
+        <span class="k">elif</span> <span class="n">ea_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">rhmax_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">rhmin_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># RHmax and RHmin exist but Ea does not exist</span>
+
+            <span class="n">eo_tmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">tmax</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tmax</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># units kPa, EQ 7</span>
+            <span class="n">eo_tmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">tmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tmin</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># units kPa, EQ 7</span>
+
+            <span class="n">calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(((</span><span class="n">eo_tmin</span> <span class="o">*</span> <span class="p">(</span><span class="n">rhmax</span> <span class="o">/</span> <span class="mi">100</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">eo_tmax</span> <span class="o">*</span> <span class="p">(</span><span class="n">rhmin</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># EQ 11</span>
+            <span class="n">calc_tdew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">116.91</span> <span class="o">+</span> <span class="p">(</span><span class="mf">237.3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">calc_ea</span><span class="p">)))</span> <span class="o">/</span> <span class="p">(</span><span class="mf">16.78</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">calc_ea</span><span class="p">)))</span>  <span class="c1"># EQ cited above</span>
+
+            <span class="k">return</span> <span class="n">calc_ea</span><span class="p">,</span> <span class="n">calc_tdew</span>
+
+        <span class="k">elif</span> <span class="n">ea_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">rhmax_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">rhmin_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">rhavg_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># Only RHAvg exists, so use it</span>
+
+            <span class="n">eo_tavg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">tavg</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tavg</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># units kPa, EQ 7</span>
+            <span class="n">calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eo_tavg</span> <span class="o">*</span> <span class="p">(</span><span class="n">rhavg</span> <span class="o">/</span> <span class="mi">100</span><span class="p">))</span>  <span class="c1"># EQ 14</span>
+            <span class="n">calc_tdew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">116.91</span> <span class="o">+</span> <span class="p">(</span><span class="mf">237.3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">calc_ea</span><span class="p">)))</span> <span class="o">/</span> <span class="p">(</span><span class="mf">16.78</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">calc_ea</span><span class="p">)))</span>  <span class="c1"># EQ cited above</span>
+
+            <span class="k">return</span> <span class="n">calc_ea</span><span class="p">,</span> <span class="n">calc_tdew</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If an unsupported combination of humidity variables is passed, raise a value error.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;calc_humidity_variables encountered an unexpected combination of inputs.&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">tdew_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># We are given tdew, so we check to see if ea also exists.</span>
+        <span class="n">calc_tdew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tdew</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ea_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># Vapor pressure not given, have to calculate from tdew</span>
+            <span class="n">calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">calc_tdew</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">calc_tdew</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># EQ 8, units kPa</span>
+        <span class="k">elif</span> <span class="n">ea_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Vapor pressure and tdew were both provided so we don&#39;t need to calculate either.</span>
+            <span class="n">calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ea</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If an unsupported combination of humidity variables is passed, raise a value error.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;calc_humidity_variables encountered an unexpected combination of inputs.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">calc_ea</span><span class="p">,</span> <span class="n">calc_tdew</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># If an unsupported combination of humidity variables is passed, raise a value error.</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;calc_humidity_variables encountered an unexpected combination of inputs.&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="calc_rso_and_refet">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.calc_functions.calc_rso_and_refet">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_rso_and_refet</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">elev</span><span class="p">,</span> <span class="n">wind_anemom</span><span class="p">,</span> <span class="n">doy</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">ea</span><span class="p">,</span> <span class="n">uz</span><span class="p">,</span> <span class="n">rs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates clear-sky solar radiation and reference evapotranspiration</span>
+<span class="sd">        variables using the refet package (https://github.com/DRI-WSWUP/RefET)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            :lat: (float) station latitude in decimal degrees</span>
+<span class="sd">            :elev: (float) station elevation in meters</span>
+<span class="sd">            :wind_anemom: (float) height of windspeed anemometer in meters</span>
+<span class="sd">            :doy: (ndarray) 1D numpy array of day of year in record</span>
+<span class="sd">            :month: (ndarray) 1D numpy array of current month in record</span>
+<span class="sd">            :tmax: (ndarray) 1D numpy array of maximum temperature values</span>
+<span class="sd">            :tmin: (ndarray) 1D numpy array of minimum temperature values</span>
+<span class="sd">            :ea: (ndarray) 1D numpy array of vapor pressure in kPa</span>
+<span class="sd">            :uz: (ndarray) 1D numpy array of average windspeed values</span>
+<span class="sd">            :rs: (ndarray) 1D numpy array of solar radiation values</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :rso: (ndarray) 1-D array of clear sky solar radiation</span>
+<span class="sd">            :monthly_rs: (ndarray) 1-D array of monthly averaged solar radiation (12 values total) values</span>
+<span class="sd">            :eto: (ndarray) 1-D array of  grass reference evapotranspiration in units mm/day</span>
+<span class="sd">            :etr: (ndarray)  1-D array of alfalfa reference evapotranspiration in units mm/day</span>
+<span class="sd">            :monthly_eto: (ndarray) 1-D array of monthly averaged grass reference ET (12 values total) values</span>
+<span class="sd">            :monthly_etr: (ndarray) 1-D array of monthly averaged alfalfa reference ET (12 values total) values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">monthly_rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">monthly_eto</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">monthly_etr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="c1"># Calculate rso values</span>
+    <span class="n">lat_radians</span> <span class="o">=</span> <span class="n">lat</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span>  <span class="c1"># convert latitude into radians</span>
+    <span class="n">pressure</span> <span class="o">=</span> <span class="n">_air_pressure</span><span class="p">(</span><span class="n">elev</span><span class="o">=</span><span class="n">elev</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;asce&#39;</span><span class="p">)</span>  <span class="c1"># returns air pressure in kpa</span>
+    <span class="n">ra</span> <span class="o">=</span> <span class="n">_ra_daily</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="n">lat_radians</span><span class="p">,</span> <span class="n">doy</span><span class="o">=</span><span class="n">doy</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;asce&#39;</span><span class="p">)</span>  <span class="c1"># returns ra in mj/m2</span>
+    <span class="n">rso</span> <span class="o">=</span> <span class="n">_rso_daily</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">ra</span><span class="p">,</span> <span class="n">ea</span><span class="o">=</span><span class="n">ea</span><span class="p">,</span> <span class="n">pair</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">doy</span><span class="o">=</span><span class="n">doy</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="n">lat_radians</span><span class="p">)</span>
+
+    <span class="c1"># Calculating ETo in mm using refET package</span>
+    <span class="n">eto</span> <span class="o">=</span> <span class="n">Daily</span><span class="p">(</span><span class="n">tmin</span><span class="o">=</span><span class="n">tmin</span><span class="p">,</span> <span class="n">tmax</span><span class="o">=</span><span class="n">tmax</span><span class="p">,</span> <span class="n">ea</span><span class="o">=</span><span class="n">ea</span><span class="p">,</span> <span class="n">rs</span><span class="o">=</span><span class="n">rs</span><span class="p">,</span> <span class="n">uz</span><span class="o">=</span><span class="n">uz</span><span class="p">,</span>
+                <span class="n">zw</span><span class="o">=</span><span class="n">wind_anemom</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="n">elev</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="n">lat</span><span class="p">,</span> <span class="n">doy</span><span class="o">=</span><span class="n">doy</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;asce&#39;</span><span class="p">,</span>
+                <span class="n">input_units</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;tmin&#39;</span><span class="p">:</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;tmax&#39;</span><span class="p">:</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;ea&#39;</span><span class="p">:</span> <span class="s1">&#39;kpa&#39;</span><span class="p">,</span> <span class="s1">&#39;rs&#39;</span><span class="p">:</span> <span class="s1">&#39;w/m2&#39;</span><span class="p">,</span> <span class="s1">&#39;uz&#39;</span><span class="p">:</span> <span class="s1">&#39;m/s&#39;</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="s1">&#39;deg&#39;</span><span class="p">})</span><span class="o">.</span><span class="n">eto</span><span class="p">()</span>
+
+    <span class="c1"># Calculating ETr in mm using refET package</span>
+    <span class="n">etr</span> <span class="o">=</span> <span class="n">Daily</span><span class="p">(</span><span class="n">tmin</span><span class="o">=</span><span class="n">tmin</span><span class="p">,</span> <span class="n">tmax</span><span class="o">=</span><span class="n">tmax</span><span class="p">,</span> <span class="n">ea</span><span class="o">=</span><span class="n">ea</span><span class="p">,</span> <span class="n">rs</span><span class="o">=</span><span class="n">rs</span><span class="p">,</span> <span class="n">uz</span><span class="o">=</span><span class="n">uz</span><span class="p">,</span>
+                <span class="n">zw</span><span class="o">=</span><span class="n">wind_anemom</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="n">elev</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="n">lat</span><span class="p">,</span> <span class="n">doy</span><span class="o">=</span><span class="n">doy</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;asce&#39;</span><span class="p">,</span>
+                <span class="n">input_units</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;tmin&#39;</span><span class="p">:</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;tmax&#39;</span><span class="p">:</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;ea&#39;</span><span class="p">:</span> <span class="s1">&#39;kpa&#39;</span><span class="p">,</span> <span class="s1">&#39;rs&#39;</span><span class="p">:</span> <span class="s1">&#39;w/m2&#39;</span><span class="p">,</span> <span class="s1">&#39;uz&#39;</span><span class="p">:</span> <span class="s1">&#39;m/s&#39;</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="s1">&#39;deg&#39;</span><span class="p">})</span><span class="o">.</span><span class="n">etr</span><span class="p">()</span>
+
+    <span class="c1"># Calculate mean monthly values</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">):</span>
+        <span class="n">temp_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="n">ex</span> <span class="k">for</span> <span class="n">ex</span><span class="p">,</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">month</span><span class="p">)</span> <span class="k">if</span> <span class="n">ind</span> <span class="o">==</span> <span class="n">j</span><span class="p">]</span>
+        <span class="n">temp_indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp_indexes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">monthly_rs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">rs</span><span class="p">[</span><span class="n">temp_indexes</span><span class="p">])</span>
+        <span class="n">monthly_eto</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">eto</span><span class="p">[</span><span class="n">temp_indexes</span><span class="p">])</span>
+        <span class="n">monthly_etr</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">etr</span><span class="p">[</span><span class="n">temp_indexes</span><span class="p">])</span>
+
+        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">rso</span> <span class="o">=</span> <span class="p">(</span><span class="n">rso</span> <span class="o">*</span> <span class="mi">1000000</span><span class="p">)</span> <span class="o">/</span> <span class="mi">86400</span>  <span class="c1"># Convert rso from MJ/m2 to w/m2</span>
+    <span class="k">return</span> <span class="n">rso</span><span class="p">,</span> <span class="n">monthly_rs</span><span class="p">,</span> <span class="n">eto</span><span class="p">,</span> <span class="n">etr</span><span class="p">,</span> <span class="n">monthly_eto</span><span class="p">,</span> <span class="n">monthly_etr</span></div>
+
+
+
+<div class="viewcode-block" id="calc_rs_tr">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.calc_functions.calc_rs_tr">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_rs_tr</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">rso</span><span class="p">,</span> <span class="n">delta_t</span><span class="p">,</span> <span class="n">mm_delta_t</span><span class="p">,</span> <span class="n">b_zero</span><span class="p">,</span> <span class="n">b_one</span><span class="p">,</span> <span class="n">b_two</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates theoretical daily solar radiation according to the Thornton and Running 1999 model.</span>
+<span class="sd">        Paper can be found here: http://www.engr.scu.edu/~emaurer/chile/vic_taller/papers/thornton_running_1997.pdf</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            :month: (ndarray) 1D numpy array of months within dataset</span>
+<span class="sd">            :rso: (ndarray) 1D numpy array of clear-sky solar radiation values in w/m2</span>
+<span class="sd">            :delta_t: (ndarray) 1D numpy array of difference between maximum and minimum temperature values</span>
+<span class="sd">            :mm_delta_t: (ndarray) monthly averaged delta_t (12 values total) values</span>
+<span class="sd">            :b_zero: (float) first B coefficient used in calculation of rs_tr, original value is 0.031</span>
+<span class="sd">            :b_one: (float) second B coefficient used in calculation of rs_tr, original value is 0.201</span>
+<span class="sd">            :b_two: (float) third B coefficient used in the calculation of rs_tr, original value is -0.185</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :rs_tr: (ndarray) 1D numpy array of thornton-running solar radiation</span>
+<span class="sd">            :mm_rs_tr: (ndarray) mean monthly averaged rs_tr (12 values total) values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mm_rs_tr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">b_coefficient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b_zero</span> <span class="o">+</span> <span class="n">b_one</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b_two</span> <span class="o">*</span> <span class="n">mm_delta_t</span><span class="p">))</span>
+    <span class="n">rs_tr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rso</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.9</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">b_coefficient</span><span class="p">[</span><span class="n">month</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta_t</span> <span class="o">**</span> <span class="mf">1.5</span><span class="p">)))</span>
+
+    <span class="c1"># Create mean monthly values</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">):</span>
+        <span class="n">temp_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="n">ex</span> <span class="k">for</span> <span class="n">ex</span><span class="p">,</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">month</span><span class="p">)</span> <span class="k">if</span> <span class="n">ind</span> <span class="o">==</span> <span class="n">j</span><span class="p">]</span>
+        <span class="n">temp_indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp_indexes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">mm_rs_tr</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">rs_tr</span><span class="p">[</span><span class="n">temp_indexes</span><span class="p">])</span>
+        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">rs_tr</span><span class="p">,</span> <span class="n">mm_rs_tr</span></div>
+
+
+
+<div class="viewcode-block" id="calc_org_and_opt_rs_tr">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.calc_functions.calc_org_and_opt_rs_tr">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_org_and_opt_rs_tr</span><span class="p">(</span><span class="n">mc_iterations</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">delta_t</span><span class="p">,</span> <span class="n">mm_delta_t</span><span class="p">,</span> <span class="n">rs</span><span class="p">,</span> <span class="n">rso</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function performs a monte carlo simulation on the b coefficients that go into generating thornton-</span>
+<span class="sd">    running solar radiation in an attempt to optimize a model that best fits observed solar radiation data.</span>
+<span class="sd">    That best fit model will then be used to fill any missing observations in actual solar radiation for the</span>
+<span class="sd">    calculation of reference evapotranspiration. See the function `calc_rs_tr()` for more information.</span>
+
+<span class="sd">    The bracket size with which to generate random values</span>
+<span class="sd">    is 0.5, this factor was chosen after trying different values on several stations and were a good balance of</span>
+<span class="sd">    minimizing RMSE and processing speed.</span>
+
+<span class="sd">    When running the script on the first mode, only 100 iterations are done to save time, it may be that optimized</span>
+<span class="sd">    has worse parameters than original in this case, so we just return the original parameters as the optimized</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :mc_iterations: (int) number of iterations in monte carlo simulation</span>
+<span class="sd">        :log_path: (str) path to log file that we will write the b coefficients and other relevant info to</span>
+<span class="sd">        :month: (ndarray) 1D numpy array of months within dataset</span>
+<span class="sd">        :delta_t: (ndarray) 1D numpy array of difference between maximum and minimum temperature values</span>
+<span class="sd">        :mm_delta_t: (ndarray) monthly averaged delta_t (12 values total) values</span>
+<span class="sd">        :rs: (ndarray) 1D numpy array of observed solar radiation values in w/m2</span>
+<span class="sd">        :rso: (ndarray) 1D numpy array of clear-sky solar radiation values in w/m2</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        :org_rs_tr: (ndarray) 1D numpy array of thornton-running solar radiation with original B coefficient values</span>
+<span class="sd">        :mm_org_rs_tr: (ndarray) 1D numpy array of monthly averaged org_rs_tr (12 values total) values</span>
+<span class="sd">        :opt_rs_tr: (ndarray) 1D numpy array of thornton-running solar radiation with optimized B coefficient values</span>
+<span class="sd">        :mm_opt_rs_tr: (ndarray) 1D numpy array of monthly averaged opt_rs_tr (12 values total) values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">System: Now performing a Monte Carlo simulation to optimize Thornton Running solar radiation parameters.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;System: </span><span class="si">%s</span><span class="s2"> iterations are being run, this may take some time.&quot;</span> <span class="o">%</span> <span class="n">mc_iterations</span><span class="p">)</span>
+
+    <span class="n">b_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.031</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.031</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">mc_iterations</span><span class="p">))</span>
+    <span class="n">b_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.201</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.201</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">mc_iterations</span><span class="p">))</span>
+    <span class="n">b_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">-</span><span class="mf">0.185</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.185</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">mc_iterations</span><span class="p">))</span>
+
+    <span class="n">mc_rmse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">mc_iterations</span><span class="p">)</span>
+
+    <span class="c1"># Calculate rs_tr using original, unoptimized B coefficients</span>
+    <span class="p">(</span><span class="n">orig_rs_tr</span><span class="p">,</span> <span class="n">mm_orig_rs_tr</span><span class="p">)</span> <span class="o">=</span> <span class="n">calc_rs_tr</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">rso</span><span class="p">,</span> <span class="n">delta_t</span><span class="p">,</span> <span class="n">mm_delta_t</span><span class="p">,</span> <span class="mf">0.031</span><span class="p">,</span> <span class="mf">0.201</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.185</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mc_iterations</span><span class="p">):</span>
+        <span class="c1"># Run all randomized b coefficients through thornton running calculation</span>
+        <span class="p">(</span><span class="n">mc_rs_tr</span><span class="p">,</span> <span class="n">mm_mc_rs_tr</span><span class="p">)</span> <span class="o">=</span> <span class="n">calc_rs_tr</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">rso</span><span class="p">,</span> <span class="n">delta_t</span><span class="p">,</span> <span class="n">mm_delta_t</span><span class="p">,</span> <span class="n">b_zero</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">b_one</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">b_two</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="n">mc_rmse</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">((</span><span class="n">mc_rs_tr</span> <span class="o">-</span> <span class="n">rs</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>  <span class="c1"># Calculate RMSE to track how good those parameters were</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">100</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Update user so they don&#39;t think script is frozen.</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;System: Processing Thornton-Running iteration: </span><span class="si">{}</span><span class="s1"> of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">mc_iterations</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="c1"># Now that we&#39;ve iterated through all variations, find the best one</span>
+    <span class="n">min_rmse_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">mc_rmse</span><span class="p">)</span>
+    <span class="c1"># Calculate RMSE of original rs_tr B coefficients</span>
+    <span class="n">orig_rmse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">((</span><span class="n">orig_rs_tr</span> <span class="o">-</span> <span class="n">rs</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;System: Original coefficients for TR Solar Radiation produced an RMSE of: </span><span class="si">{0:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">orig_rmse</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;System: Optimized coefficients for TR Solar Radiation produced an RMSE of: </span><span class="si">{0:.4f}</span><span class="s1">&#39;</span><span class="o">.</span>
+          <span class="nb">format</span><span class="p">(</span><span class="n">mc_rmse</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">]))</span>
+
+    <span class="c1"># Calculate the optimized rs_tr using the B coefficients that caused the lowest rmse</span>
+    <span class="p">(</span><span class="n">opt_rs_tr</span><span class="p">,</span> <span class="n">mm_opt_rs_tr</span><span class="p">)</span> <span class="o">=</span> <span class="n">calc_rs_tr</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">rso</span><span class="p">,</span> <span class="n">delta_t</span><span class="p">,</span> <span class="n">mm_delta_t</span><span class="p">,</span> <span class="n">b_zero</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">],</span>
+                                           <span class="n">b_one</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">],</span> <span class="n">b_two</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">])</span>
+
+    <span class="c1"># Write the b coefficients used to the log file then close it</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">()</span>
+    <span class="n">corr_log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">Thornton-Running Solar Radiation Optimization&#39;</span><span class="p">)</span>
+    <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Monte Carlo simulation with </span><span class="si">%s</span><span class="s1"> iterations produced the coefficients:&#39;</span> <span class="o">%</span> <span class="n">mc_iterations</span><span class="p">)</span>
+    <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">b_zero = </span><span class="si">{0:.4f}</span><span class="s1">, b_one = </span><span class="si">{1:.4f}</span><span class="s1">, b_two = </span><span class="si">{2:.4f}</span><span class="s1">&#39;</span><span class="o">.</span>
+                   <span class="nb">format</span><span class="p">(</span><span class="n">b_zero</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">],</span> <span class="n">b_one</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">],</span> <span class="n">b_two</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">]))</span>
+    <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Optimized coefficients RMSE against observed solar radiation was: </span><span class="si">{0:.4f}</span><span class="s1">&#39;</span><span class="o">.</span>
+                   <span class="nb">format</span><span class="p">(</span><span class="n">mc_rmse</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">]))</span>
+    <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Original coefficients RMSE against observed solar radiation was: </span><span class="si">{0:.4f}</span><span class="s1"> </span><span class="se">\n\n</span><span class="s1">&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">orig_rmse</span><span class="p">))</span>
+    <span class="n">corr_log</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">orig_rmse</span> <span class="o">&lt;</span> <span class="n">mc_rmse</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">]</span> <span class="ow">and</span> <span class="n">mc_iterations</span> <span class="o">==</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="c1"># if original was better than optimized, it is likely because we didn&#39;t do enough iterations</span>
+        <span class="c1"># which is likely because we&#39;re not correcting data, so just return original as optimized</span>
+        <span class="n">opt_rs_tr</span> <span class="o">=</span> <span class="n">orig_rs_tr</span>
+        <span class="n">mm_opt_rs_tr</span> <span class="o">=</span> <span class="n">mm_orig_rs_tr</span>
+    <span class="k">elif</span> <span class="n">orig_rmse</span> <span class="o">&lt;</span> <span class="n">mc_rmse</span><span class="p">[</span><span class="n">min_rmse_index</span><span class="p">]</span> <span class="ow">and</span> <span class="n">mc_iterations</span> <span class="o">!=</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="c1"># this shouldn&#39;t happen, as we should have done enough iterations to beat original values, so raise an error</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Thornton running optimization failed to beat original coefficient values.&#39;</span> <span class="o">+</span>
+                         <span class="s1">&#39; Try running again, and if this error persists please report it on github.&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># Return both original and optimized rs_tr</span>
+    <span class="k">return</span> <span class="n">orig_rs_tr</span><span class="p">,</span> <span class="n">mm_orig_rs_tr</span><span class="p">,</span> <span class="n">opt_rs_tr</span><span class="p">,</span> <span class="n">mm_opt_rs_tr</span></div>
+
+
+
+<div class="viewcode-block" id="calc_compiled_ea">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.calc_functions.calc_compiled_ea">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_compiled_ea</span><span class="p">(</span><span class="n">tmax</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">tavg</span><span class="p">,</span> <span class="n">ea</span><span class="p">,</span> <span class="n">tdew</span><span class="p">,</span> <span class="n">tdew_col</span><span class="p">,</span>
+                     <span class="n">rhmax</span><span class="p">,</span> <span class="n">rhmax_col</span><span class="p">,</span> <span class="n">rhmin</span><span class="p">,</span> <span class="n">rhmin_col</span><span class="p">,</span> <span class="n">rhavg</span><span class="p">,</span> <span class="n">rhavg_col</span><span class="p">,</span> <span class="n">tdew_ko</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function is used to create a &#39;compiled&#39; ea from all provided humidity variables, always using the best one</span>
+<span class="sd">        provided within the dataset for each given day of the record. This function will work regardless of if ea is</span>
+<span class="sd">        provided by the dataset or not. See `qaqc_functions.compiled_humidity_adjustment` for more information.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            :tmax: (ndarray) 1D array of maximum temperature values</span>
+<span class="sd">            :tmin: (ndarray) 1D array of minimum temperature values</span>
+<span class="sd">            :tavg: (ndarray) 1D array of average temperature values</span>
+<span class="sd">            :ea: (ndarray) 1D array of vapor pressure values, which may be empty</span>
+<span class="sd">            :tdew: (ndarray) 1D array of dewpoint temperature values, which may be empty</span>
+<span class="sd">            :tdew_col: (int) column of Tdew variable in data file, if it is provided</span>
+<span class="sd">            :rhmax: (ndarray) 1D array of maximum relative humidity values, which may be empty</span>
+<span class="sd">            :rhmax_col: (int) column of rhmax variable in data file, if it was provided</span>
+<span class="sd">            :rhmin: (ndarray) 1D array of minimum relative humidity values, which may be empty</span>
+<span class="sd">            :rhmin_col: (int) column of rhmin variable in data file, if it was provided</span>
+<span class="sd">            :rhavg: (ndarray) 1D array of average relative humidity values, which may be empty</span>
+<span class="sd">            :rhavg_col: (int) column of rhavg variable in data file, if it was provided</span>
+<span class="sd">            :tdew_ko: (ndarray) 1D array of tdew data filled in by tmin-ko curve</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :compiled_ea: (ndarray) 1D array of vapor pressure that has been compiled from the &quot;best&quot; data sources</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_length</span> <span class="o">=</span> <span class="n">ea</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">compiled_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data_length</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">tdew_calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data_length</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">rh_max_min_calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data_length</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">rh_avg_calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data_length</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># TDew data filled in with TMin - Ko curve is always an option</span>
+    <span class="n">tdew_ko_calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">tdew_ko</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tdew_ko</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># EQ 8, units kPa</span>
+
+    <span class="k">if</span> <span class="n">tdew_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># Dewpoint temperature is provided</span>
+
+        <span class="n">tdew_calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">tdew</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tdew</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># EQ 8, units kPa</span>
+
+    <span class="k">if</span> <span class="n">rhmax_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">rhmin_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># relative humidity is provided</span>
+
+        <span class="n">eo_tmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">tmax</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tmax</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># units kPa, EQ 7</span>
+        <span class="n">eo_tmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">tmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tmin</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># units kPa, EQ 7</span>
+
+        <span class="n">rh_max_min_calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(((</span><span class="n">eo_tmin</span> <span class="o">*</span> <span class="p">(</span><span class="n">rhmax</span> <span class="o">/</span> <span class="mi">100</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">eo_tmax</span> <span class="o">*</span> <span class="p">(</span><span class="n">rhmin</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># EQ 11</span>
+
+    <span class="k">if</span> <span class="n">rhavg_col</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># RHAvg is provided</span>
+
+        <span class="n">eo_tavg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">tavg</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tavg</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># units kPa, EQ 7</span>
+        <span class="n">rh_avg_calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eo_tavg</span> <span class="o">*</span> <span class="p">(</span><span class="n">rhavg</span> <span class="o">/</span> <span class="mi">100</span><span class="p">))</span>  <span class="c1"># EQ 14</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data_length</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ea</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>  <span class="c1"># Either Ea is provided or is already calculated by the best humidity variable available</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">tdew_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">compiled_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tdew_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">tdew_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rh_max_min_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">compiled_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rh_max_min_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">tdew_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rh_max_min_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rh_avg_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">compiled_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rh_avg_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">tdew_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rh_max_min_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rh_avg_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">compiled_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tdew_ko_calc_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># ea exists here so no need to fill</span>
+            <span class="n">compiled_ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ea</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">compiled_ea</span></div>
+
+
+<span class="c1"># This is never run by itself</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">This module is called as a part of the QAQC script, it does nothing by itself.&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Christian Dunkerly.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

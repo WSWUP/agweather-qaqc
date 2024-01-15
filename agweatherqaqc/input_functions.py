@@ -8,7 +8,7 @@ import warnings
 from agweatherqaqc.utils import validate_file
 
 
-def read_config(config_file_path):
+def _read_config(config_file_path):
     """
     Opens config file at provided path and stores all required values in a python dictionary. This dictionary will be
     used both to import data and elsewhere in the code to refer to what type of data was passed in
@@ -82,7 +82,7 @@ def read_config(config_file_path):
         return config_dict
 
 
-def extract_variable(raw_data, col):
+def _extract_variable(raw_data, col):
     """
         Pulls individual variable from raw data array and returns it as a numpy array.
 
@@ -103,10 +103,10 @@ def extract_variable(raw_data, col):
     return var
 
 
-def convert_units(config_dict, original_data, var_type):
+def _convert_units(config_dict, original_data, var_type):
     """
     Takes in 1d numpy array of original data, and then converts it to the appropriate units.
-    What actions are taken are dependant on what parameters were read in/stored into config_dict.
+    What actions are taken are dependent on what parameters were read in/stored into config_dict.
 
     Sources:
         https://www.wcc.nrcs.usda.gov/ftpref/wntsc/H&H/GEM/SolarRadConversion.pdf
@@ -204,7 +204,7 @@ def convert_units(config_dict, original_data, var_type):
     return converted_data
 
 
-def daily_realistic_limits(original_data, log_path, var_type):
+def _daily_realistic_limits(original_data, log_path, var_type):
     """
         Applies a realistic limit to data to automatically catch and remove bad values that may have resulted
         from sensor malfunctions, sensor degradation, etc. Caught values are replaced by a numpy nan. This function
@@ -262,13 +262,13 @@ def daily_realistic_limits(original_data, log_path, var_type):
     return limited_data  # Return the limited data
 
 
-def remove_isolated_observations(original_var):
+def _remove_isolated_observations(original_var):
     """
         Iterates through provided variable and tries to find any isolated observation, here defined as any observation
         that is surrounded by missing observations, and sets them to nan.
 
-        While this is deleting likely valid data, it is an important step because work is validated visually using bokeh
-        plots, which will not display isolated points and we do not want possibly bad values to slip though.
+        While this is deleting likely valid data, it is an important step because data is evaluated visually using bokeh
+        plots, which will not display isolated points, we do not want possibly bad values to slip though.
 
         The actual occurrence of an observation being surrounded by nans should be rare enough that this function has
         little impact.
@@ -310,7 +310,7 @@ def remove_isolated_observations(original_var):
     return processed_var
 
 
-def process_variable(config_dict, raw_data, var_name):
+def _process_variable(config_dict, raw_data, var_name):
     """
         Combines the functions extract_var, convert_units, and daily_realistic_limits to increase readability. First,
         the function extracts individual variables from the raw data, then converts them into the expected metric units,
@@ -364,17 +364,17 @@ def process_variable(config_dict, raw_data, var_name):
         var_type = 'solar_radiation'
     else:
         # If an unsupported variable type is passed, raise a value error to point it out.
-        raise ValueError('Unsupported variable type {} passed to process_variable function.'.format(var_name))
+        raise ValueError('Unsupported variable type {} passed to _process_variable function.'.format(var_name))
 
-    original_var = extract_variable(raw_data, var_col)  # Will either return data or an array of nans of expected size
-    converted_var = convert_units(config_dict, original_var, var_type)  # converts data to appropriate units
-    filtered_var = daily_realistic_limits(converted_var, config_dict['log_file_path'], var_type)  # removed bad vals
-    processed_var = remove_isolated_observations(filtered_var)  # returns data with no isolated observations
+    original_var = _extract_variable(raw_data, var_col)  # Will either return data or an array of nans of expected size
+    converted_var = _convert_units(config_dict, original_var, var_type)  # converts data to appropriate units
+    filtered_var = _daily_realistic_limits(converted_var, config_dict['log_file_path'], var_type)  # removed bad vals
+    processed_var = _remove_isolated_observations(filtered_var)  # returns data with no isolated observations
 
     return processed_var, var_col
 
 
-def obtain_data(config_file_path, metadata_file_path=None):
+def _obtain_data(config_file_path, metadata_file_path=None):
     """
         Uses read_config() to acquire a full dictionary of the config file and then uses the values contained within it
         to direct how data is processed and what variables are obtained.
@@ -400,7 +400,7 @@ def obtain_data(config_file_path, metadata_file_path=None):
 
     # Open config file
     validate_file(config_file_path, ['ini'])
-    config_dict = read_config(config_file_path)
+    config_dict = _read_config(config_file_path)
     print('\nSystem: Successfully opened config file at %s' % config_file_path)
 
     # Open metadata file
@@ -570,17 +570,17 @@ def obtain_data(config_file_path, metadata_file_path=None):
     # Variable processing
     # Imports all weather variables, converts them into the correct units, and filters them to remove impossible values
 
-    (data_tmax, tmax_col) = process_variable(config_dict, raw_data, 'maximum_temperature')
-    (data_tmin, tmin_col) = process_variable(config_dict, raw_data, 'minimum_temperature')
-    (data_tavg, tavg_col) = process_variable(config_dict, raw_data, 'average_temperature')
-    (data_tdew, tdew_col) = process_variable(config_dict, raw_data, 'dewpoint_temperature')
-    (data_ea, ea_col) = process_variable(config_dict, raw_data, 'vapor_pressure')
-    (data_rhmax, rhmax_col) = process_variable(config_dict, raw_data, 'maximum_relative_humidity')
-    (data_rhmin, rhmin_col) = process_variable(config_dict, raw_data, 'minimum_relative_humidity')
-    (data_rhavg, rhavg_col) = process_variable(config_dict, raw_data, 'average_relative_humidity')
-    (data_rs, rs_col) = process_variable(config_dict, raw_data, 'solar_radiation')
-    (data_ws, ws_col) = process_variable(config_dict, raw_data, 'wind_speed')
-    (data_precip, precip_col) = process_variable(config_dict, raw_data, 'precipitation')
+    (data_tmax, tmax_col) = _process_variable(config_dict, raw_data, 'maximum_temperature')
+    (data_tmin, tmin_col) = _process_variable(config_dict, raw_data, 'minimum_temperature')
+    (data_tavg, tavg_col) = _process_variable(config_dict, raw_data, 'average_temperature')
+    (data_tdew, tdew_col) = _process_variable(config_dict, raw_data, 'dewpoint_temperature')
+    (data_ea, ea_col) = _process_variable(config_dict, raw_data, 'vapor_pressure')
+    (data_rhmax, rhmax_col) = _process_variable(config_dict, raw_data, 'maximum_relative_humidity')
+    (data_rhmin, rhmin_col) = _process_variable(config_dict, raw_data, 'minimum_relative_humidity')
+    (data_rhavg, rhavg_col) = _process_variable(config_dict, raw_data, 'average_relative_humidity')
+    (data_rs, rs_col) = _process_variable(config_dict, raw_data, 'solar_radiation')
+    (data_ws, ws_col) = _process_variable(config_dict, raw_data, 'wind_speed')
+    (data_precip, precip_col) = _process_variable(config_dict, raw_data, 'precipitation')
 
     # HPRCC data reports '0' for missing observations as well as a text column, but this script doesn't interpret text
     # columns, so instead we see if both tmax and tmin have the same value (0, or -17.7778 depending on units) and if so

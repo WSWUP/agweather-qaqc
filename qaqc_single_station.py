@@ -1,4 +1,4 @@
-from agweatherqaqc.agweatherqaqc import AgWeatherQAQC
+from agweatherqaqc.agweatherqaqc import WeatherQC
 import sys
 
 
@@ -33,8 +33,7 @@ if __name__ == "__main__":
         config_path = 'config.ini'
         metadata_path = None
 
-    metadata_path = 'test_files/test_metadata.xlsx'
-    config_path = 'test_files/test_config.ini'
-    station_qaqc = AgWeatherQAQC(config_path, metadata_path, gridplot_columns=1)
+
+    station_qaqc = WeatherQC(config_path, metadata_path, gridplot_columns=1)
     station_qaqc.process_station()
     print("\nSystem: Now ending single station QAQC script.")

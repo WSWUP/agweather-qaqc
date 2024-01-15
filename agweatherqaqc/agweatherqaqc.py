@@ -5,13 +5,36 @@ from math import ceil
 import numpy as np
 import os
 import pandas as pd
-from agweatherqaqc import calc_functions, input_functions, plotting_functions, qaqc_functions, utils
+from agweatherqaqc import utils, calc_functions, input_functions, plot, qaqc_functions
 from refet.calcs import _wind_height_adjust
 import warnings
 
 
-class AgWeatherQAQC:
+class WeatherQC:
+    """
+    The WeatherQC class is a holistic package for the QC of agricultural weather data.
 
+    It requires the filepath to a config file, and from that file does everything necessary for to enable
+    the end user to QC the data from a station. The class handles the reading in of data, sanitizing of inputs,
+    plotting and logging the correction of said data, and finally saving the final data for in other analyses.
+
+    Usually, weather stations from the same source or network have the same file structure, so WeatherQC features
+    an optional input of the filepath to a metadata file to process multiple stations using the same input file.
+
+    # Example:
+        >>> from agweatherqaqc.agweatherqaqc import WeatherQC
+        >>> config_path = 'test_files/test_config.ini'
+        >>> metadata_path = 'test_files/test_metadata.xlsx'
+        >>> station_qaqc = WeatherQC(config_path, metadata_path, gridplot_columns=1)
+        >>> station_qaqc.process_station()
+
+    Both the config and metadata files have requirements on file structure and contents. The files
+    contained within the `./test_data/` directory can serve as templates to copy from or modify.
+
+    Please see the documentation of `WeatherQC.process_station()`, as well as the documentation for the functions
+    within `agweatherqaqc.qaqc_functions` and `agweatherqaqc.calc_functions` for more information on
+    the overall process and individual steps.
+    """
     def __init__(self, config_file_path='config.ini', metadata_file_path=None, gridplot_columns=1):
         self.config_path = config_file_path
         self.metadata_path = metadata_file_path
@@ -21,16 +44,12 @@ class AgWeatherQAQC:
         self.mc_iterations_post_corrections = 1000  # do MC approach after all data has been corrected
         self.generate_bokeh = True
 
-
     def _obtain_data(self):
         """
             Obtain initial data and put it into a dataframe
         """
         (self.data_df, self.column_ser, self.metadata_df, self.metadata_series, self.config_dict) = \
-            input_functions.obtain_data(self.config_path, self.metadata_path)
-
-        # todo this individual assignment section is only temporary as the config_dict of input functions will be
-        #    referenced though this script eventually
+            input_functions._obtain_data(self.config_path, self.metadata_path)
         self.station_name = self.config_dict['station_name']
         self.log_file = self.config_dict['log_file_path']
         self.station_lat = self.config_dict['station_latitude']
@@ -39,7 +58,6 @@ class AgWeatherQAQC:
         self.ws_anemometer_height = self.config_dict['anemometer_height']
         self.missing_fill_value = self.config_dict['missing_output_value']
         self.folder_path = self.config_dict['folder_path']
-
         self.auto_mode = self.config_dict['auto_flag']
         self.fill_mode = self.config_dict['fill_flag']
 
@@ -368,7 +386,7 @@ class AgWeatherQAQC:
                             pass
 
                     if self.fill_mode:
-                        # we are filling in data, so copy all of the filled versions onto the original temperature
+                        # we are filling in data, so copy all the filled versions onto the original temperature
                         self.data_tmax = np.array(self.complete_tmax)
                         self.data_tmin = np.array(self.complete_tmin)
                     else:
@@ -447,9 +465,10 @@ class AgWeatherQAQC:
                 '''
                 self.compiled_ea = calc_functions.calc_compiled_ea(self.data_tmax, self.data_tmin, self.data_tavg,
                                                                    self.data_ea, self.data_tdew, self.column_ser.tdew,
-                                                                   self.data_rhmax, self.column_ser.rhmax, self.data_rhmin,
-                                                                   self.column_ser.rhmin, self.data_rhavg,
-                                                                   self.column_ser.rhavg, self.data_tdew_ko)
+                                                                   self.data_rhmax, self.column_ser.rhmax,
+                                                                   self.data_rhmin, self.column_ser.rhmin,
+                                                                   self.data_rhavg, self.column_ser.rhavg,
+                                                                   self.data_tdew_ko)
 
                 # Reset 'complete' version as underlying variable may have changed.
                 self.complete_ea = np.array(self.compiled_ea)
@@ -485,7 +504,7 @@ class AgWeatherQAQC:
                     pass
 
                 if self.fill_mode:
-                    # we are filling in data, so copy all of the filled versions onto the original arrays
+                    # we are filling in data, so copy all the filled versions onto the original arrays
                     self.data_ea = np.array(self.complete_ea)
                     self.compiled_ea = np.array(self.complete_ea)
                 else:
@@ -598,18 +617,18 @@ class AgWeatherQAQC:
         # Generates composite plot of specific variables before correction
         # We fill these variables by sampling a normal distribution, so we use this plot mainly as evidence for that.
         if self.generate_bokeh and self.script_mode == 0:
-            ws_hist = plotting_functions.histogram_plot(self.data_ws[~np.isnan(self.data_ws)],
-                                                        'Windspeed', 'black', 'm/s')
-            tmax_hist = plotting_functions.histogram_plot(self.data_tmax[~np.isnan(self.data_tmax)],
-                                                          'TMax', 'red', 'degrees C')
-            tmin_hist = plotting_functions.histogram_plot(self.data_tmin[~np.isnan(self.data_tmin)],
-                                                          'TMin', 'blue', 'degrees C')
-            tavg_hist = plotting_functions.histogram_plot(self.data_tmin[~np.isnan(self.data_tmin)],
-                                                          'TAvg', 'black', 'degrees C')
-            tdew_hist = plotting_functions.histogram_plot(self.data_tdew[~np.isnan(self.data_tdew)],
-                                                          'TDew', 'black', 'degrees C')
-            k_not_hist = plotting_functions.histogram_plot(self.k_not[~np.isnan(self.k_not)],
-                                                           'Ko', 'black', 'degrees C')
+            ws_hist = plot.histogram_plot(self.data_ws[~np.isnan(self.data_ws)],
+                                          'Windspeed', 'black', 'm/s')
+            tmax_hist = plot.histogram_plot(self.data_tmax[~np.isnan(self.data_tmax)],
+                                            'TMax', 'red', 'degrees C')
+            tmin_hist = plot.histogram_plot(self.data_tmin[~np.isnan(self.data_tmin)],
+                                            'TMin', 'blue', 'degrees C')
+            tavg_hist = plot.histogram_plot(self.data_tmin[~np.isnan(self.data_tmin)],
+                                            'TAvg', 'black', 'degrees C')
+            tdew_hist = plot.histogram_plot(self.data_tdew[~np.isnan(self.data_tdew)],
+                                            'TDew', 'black', 'degrees C')
+            k_not_hist = plot.histogram_plot(self.k_not[~np.isnan(self.k_not)],
+                                            'Ko', 'black', 'degrees C')
 
             output_file(self.folder_path + "/correction_files/histograms/" + self.station_name + '_histograms.html',
                         title=self.station_name + ' histograms')
@@ -642,70 +661,70 @@ class AgWeatherQAQC:
                 raise ValueError('Incorrect parameters: script mode is not set to a valid option.')
 
             # Temperature Maximum and Minimum Plot
-            plot_tmax_tmin = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_tmax,
-                                                          self.data_tmin, 1, '')
+            plot_tmax_tmin = plot.line_plot(x_size, y_size, self.dt_array, self.data_tmax,
+                                            self.data_tmin, 1, '')
             plot_list.append(plot_tmax_tmin)
             # Temperature Minimum and Dewpoint Plot
-            plot_tmin_tdew = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_tmin,
-                                                          self.data_tdew, 2, '', plot_tmax_tmin)
+            plot_tmin_tdew = plot.line_plot(x_size, y_size, self.dt_array, self.data_tmin,
+                                            self.data_tdew, 2, '', plot_tmax_tmin)
             plot_list.append(plot_tmin_tdew)
 
             # 'Completed' vapor pressure plot
-            plot_comp_ea = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.compiled_ea, self.data_null,
-                                                        7, 'Composite ', plot_tmax_tmin)
+            plot_comp_ea = plot.line_plot(x_size, y_size, self.dt_array, self.compiled_ea, self.data_null,
+                                          7, 'Composite ', plot_tmax_tmin)
             plot_list.append(plot_comp_ea)
 
             # vapor pressure plot that was just the provided dataset
             if self.column_ser.ea != -1:
-                plot_data_ea = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_ea, self.data_null,
-                                                            7, 'Provided ', plot_tmax_tmin)
+                plot_data_ea = plot.line_plot(x_size, y_size, self.dt_array, self.data_ea, self.data_null,
+                                              7, 'Provided ', plot_tmax_tmin)
                 plot_list.append(plot_data_ea)
 
             # rh max and rh min plot if it was provided in dataset
             if self.column_ser.rhmax != -1 and self.column_ser.rhmin != -1:  # RH max and RH min
-                plot_rhmax_rhmin = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_rhmax,
-                                                                self.data_rhmin, 8, '', plot_tmax_tmin)
+                plot_rhmax_rhmin = plot.line_plot(x_size, y_size, self.dt_array, self.data_rhmax,
+                                                  self.data_rhmin, 8, '', plot_tmax_tmin)
                 plot_list.append(plot_rhmax_rhmin)
 
             # rh avg if it was provided in the dataset
             if self.column_ser.rhavg != -1:  # RH Avg
-                plot_rhavg = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_rhavg,
-                                                          self.data_null, 9, '', plot_tmax_tmin)
+                plot_rhavg = plot.line_plot(x_size, y_size, self.dt_array, self.data_rhavg,
+                                            self.data_null, 9, '', plot_tmax_tmin)
                 plot_list.append(plot_rhavg)
 
             # Mean Monthly Temperature Minimum and Dewpoint
-            plot_mm_tmin_tdew = plotting_functions.line_plot(x_size, y_size, self.mm_dt_array, self.mm_tmin,
-                                                             self.mm_tdew, 2, 'MM ')
+            plot_mm_tmin_tdew = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_tmin,
+                                               self.mm_tdew, 2, 'MM ')
             plot_list.append(plot_mm_tmin_tdew)
 
             # Mean Monthly k0 curve (Tmin-Tdew)
-            plot_mm_k_not = plotting_functions.line_plot(x_size, y_size, self.mm_dt_array, self.mm_k_not,
-                                                         self.mm_data_null, 10, '', plot_mm_tmin_tdew)
+            plot_mm_k_not = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_k_not,
+                                           self.mm_data_null, 10, '', plot_mm_tmin_tdew)
             plot_list.append(plot_mm_k_not)
 
             # Solar radiation and clear sky solar radiation
-            plot_rs_rso = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_rs, self.rso,
-                                                       5, '', plot_tmax_tmin)
+            plot_rs_rso = plot.line_plot(x_size, y_size, self.dt_array, self.data_rs, self.rso,
+                                         5, '', plot_tmax_tmin)
             plot_list.append(plot_rs_rso)
 
             # Windspeed
-            plot_ws = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_ws, self.data_null,
-                                                   3, '', plot_tmax_tmin)
+            plot_ws = plot.line_plot(x_size, y_size, self.dt_array, self.data_ws, self.data_null,
+                                     3, '', plot_tmax_tmin)
             plot_list.append(plot_ws)
 
             # Precipitation
-            plot_precip = plotting_functions.line_plot(x_size, y_size, self.dt_array, self.data_precip, self.data_null,
-                                                       4, '', plot_tmax_tmin)
+            plot_precip = plot.line_plot(x_size, y_size, self.dt_array, self.data_precip, self.data_null,
+                                         4, '', plot_tmax_tmin)
             plot_list.append(plot_precip)
 
             # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
-            plot_mm_opt_rs_tr = plotting_functions.line_plot(x_size, y_size, self.mm_dt_array, self.mm_rs,
-                                                             self.mm_opt_rs_tr, 6, 'MM Optimized ', plot_mm_tmin_tdew)
+            plot_mm_opt_rs_tr = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_rs,
+                                               self.mm_opt_rs_tr, 6, 'MM Optimized ', plot_mm_tmin_tdew)
             plot_list.append(plot_mm_opt_rs_tr)
 
             # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
-            plot_mm_orig_rs_tr = plotting_functions.line_plot(x_size, y_size, self.mm_dt_array, self.mm_rs,
-                                                              self.mm_orig_rs_tr, 6, 'MM Original ', plot_mm_tmin_tdew)
+            plot_mm_orig_rs_tr = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_rs,
+                                                self.mm_orig_rs_tr, 6, 'MM Original ', plot_mm_tmin_tdew)
             plot_list.append(plot_mm_orig_rs_tr)
 
             # Now construct grid plot out of all the subplots
@@ -871,6 +890,24 @@ class AgWeatherQAQC:
         logger.close()
 
     def process_station(self):
+        """
+            This function serves as the structure for the overall workflow in
+            applying the QC process to an input data source. The standard process is as follows:
+
+            1. Read in the data.
+
+            2. Calculate any secondary variables (mean monthly values, clear-sky solar radiation, etc.).
+
+            3. Plot the data before any corrections are performed.
+
+            4. Allow the user to adjust/remove/QC data. Recompute any dependent secondary variables.
+
+            5. Plot the data after corrections are performed and save the output data.
+
+        Returns:
+            None
+
+        """
         self._obtain_data()
         self._calculate_secondary_vars()
         # first plot the data before correcting it

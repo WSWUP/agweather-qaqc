@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>agweather-qaqc - Interactive Graphical Weather Data Correction &mdash; agweather-qaqc 1.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=1ed6394b"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installing agweather-qaqc" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            agweather-qaqc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing agweather-qaqc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_preparation.html">Data Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qc_information.html">QC Procedure Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">agweatherqaqc</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">agweather-qaqc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">agweather-qaqc - Interactive Graphical Weather Data Correction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="agweather-qaqc-interactive-graphical-weather-data-correction">
+<h1>agweather-qaqc - Interactive Graphical Weather Data Correction<a class="headerlink" href="#agweather-qaqc-interactive-graphical-weather-data-correction" title="Link to this heading"></a></h1>
+<p>Flexible, command-line-driven software to QC daily weather data and then calculate reference
+evapotranspiration according to the <a class="reference external" href="_static/asce_refet_publication.pdf">ASCE (2005) method</a>.</p>
+<p>This package was designed to visualize weather variable time series data to enable rapid human data assessment and pattern recognition. The observation data are displayed in
+<a class="reference external" href="https://github.com/bokeh/bokeh">Bokeh</a> time series plots both before and after adjustment via the QAQC process,
+enabling users to readily visualize and assess data patterns and trends related to sensor drift,
+probable miscalibration, data outliers, sensor malfunction, etc. These plots are accompanied by interactive
+tools (ex. pan and zoom controls, display info on hover), and feature linked axes, allowing the user to
+readily visualize and assess how variables vary and covary over time and at different time scales
+(e.g. daily, monthly, annual). These graphs are saved as stand-alone HTML files to allow for
+easy sharing of results.</p>
+<p>While ease-of-use for a non-technical user was one of the principle goals, the software workflow can be
+automated with the inclusion of libraries such as <a class="reference external" href="https://github.com/asweigart/pyautogui">PyAutoGUI</a>.</p>
+<p><strong>The agweather-qaqc package features include:</strong></p>
+<ul class="simple">
+<li><p>Importing daily observational data without having to convert it to a standardized format, with unit conversions based on a user-specified configuration file.</p></li>
+<li><p>Converting multiple input formats from separate sources or networks into a single, uniform format for easier downstream analysis.</p></li>
+<li><p>Visualizing data before and after processing with interactive plots, as daily time series and as mean monthly averages.</p></li>
+<li><p>Filtering and removal of data, both manual and automatic, with statistics-based approaches to identify and correct issues such as sensor miscalibration.</p></li>
+<li><p>Calculation of theoretical clear-sky solar radiation using date, location and elevation information along with humidity data based on <a class="reference external" href="_static/asce_refet_appendices.pdf">ASCE standardizations</a>.</p></li>
+<li><p>Calculation of expected solar radiation using the empirical <a class="reference external" href="_static/thornton_running_1997.pdf">Thornton-Running</a> approach with Monte-Carlo optimized empirical parameters based on observed solar radiation data.</p></li>
+<li><p>Calculation of the daily dew point depression (i.e., daily minimum temperature minus daily average dew point temperature) used to assess whether the data collection environment included a well-watered surface having expected feedbacks on near-surface humidity and air temperature.</p></li>
+<li><p>Calculation of grass and alfalfa reference evapotranspiration according to the American Society of Civil Engineers (ASCE) <a class="reference external" href="_static/asce_refet_publication.pdf">Standardized Reference Evapotranspiration equation</a> via the <a class="reference external" href="https://github.com/WSWUP/RefET">RefET</a> library.</p></li>
+<li><p>Evaluating station aridity through the visualization of both relative humidity and dew point depression plots, with the option to adjust relative humidity if required.</p></li>
+<li><p>Optional gap-filling of data using station climatologies, empirical approaches (e.g. Thornton-Running solar), or random sampling from distributions based on previous observations, resulting in a complete record of daily reference evapotranspiration for cumulative monthly and annual totals.</p></li>
+<li><p>Creating archival charts and log files that record and flag how each variable was changed during the QAQC process.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>agweather-qaqc was developed for daily weather data. Support for sub-daily data may be added eventually.</p>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing agweather-qaqc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#anaconda">Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#setting-up-the-environment">Setting up the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#running-the-agweather-qaqc">Running the agweather-qaqc</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_preparation.html">Data Preparation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_preparation.html#directory-structure">Directory Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_preparation.html#setting-up-the-config-file">Setting up the Config File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_preparation.html#setting-up-the-metadata-file">Setting up the Metadata File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_preparation.html#running-agweather-qaqc">Running agweather-qaqc</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qc_information.html">QC Procedure Information</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="qc_information.html#limits-on-data">Limits on Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qc_information.html#suggested-correction-order">Suggested Correction Order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qc_information.html#suggested-correction-parameters">Suggested Correction Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qc_information.html#temperature-correction">Temperature Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qc_information.html#wind-and-precipitation">Wind and Precipitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qc_information.html#relative-humidity-max-min-correction">Relative Humidity Max/Min Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qc_information.html#solar-radiation-correction">Solar Radiation Correction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">agweatherqaqc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agweatherqaqc.html">agweatherqaqc package</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installing agweather-qaqc" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Christian Dunkerly.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

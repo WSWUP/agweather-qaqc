@@ -10,3 +10,5 @@ dependencies:
   - pytest >= 7.0
   - refet >= 0.4.0
   - xlsxwriter >= 3.0
+  - sphinx
+  - sphinx_rtd_theme

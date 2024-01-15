@@ -6,22 +6,21 @@ from refet.calcs import _air_pressure, _ra_daily, _rso_daily
 
 def calc_temperature_variables(month, tmax, tmin, tdew):
     """
-        Calculates all of the following temperature variables:
-            delta_t : the daily difference between maximum temperature and minimum temperature
-            k_not : the daily difference between minimum temperature and dewpoint temperature
-            monthly_tmin : monthly averaged minimum temperature (12 values total) values across all of record
-            monthly_tdew : monthly averaged dewpoint temperature (12 values total) values across all of record
-            monthly_delta_t : monthly averaged delta_t (12 values total) values across all of record
-            monthly_k_not : monthly averaged k_not (12 values total) values across all of record
+    Calculates the secondary temperature variables like mean monthly values
 
-        Parameters:
-            month : 1D numpy array of month values for use in mean monthly calculations
-            tmax : 1D numpy array of maximum temperature values
-            tmin : 1D numpy array of minimum temperature values
-            tdew : 1D numpy array of dewpoint temperature values
+    Args:
+        :month: (ndarray) 1D numpy array of month values for use in mean monthly calculations
+        :tmax: (ndarray) 1D numpy array of maximum temperature values
+        :tmin: (ndarray) 1D numpy array of minimum temperature values
+        :tdew: (ndarray) 1D numpy array of dewpoint temperature values
 
-        Returns:
-            Returns all variables listed above as 1D numpy arrays
+    Returns:
+        :delta_t: (ndarray) the daily difference between maximum temperature and minimum temperature
+        :monthly_delta_t: (ndarray) monthly averaged delta_t (12 values total) values
+        :k_not: (ndarray) the daily difference between minimum temperature and dewpoint temperature
+        :monthly_k_not: (ndarray) monthly averaged k_not (12 values total) values
+        :monthly_tmin: (ndarray) monthly averaged minimum temperature (12 values total) values
+        :monthly_tdew: (ndarray) monthly averaged dewpoint temperature (12 values total) values
     """
     delta_t = np.array(tmax - tmin)
     k_not = np.array(tmin - tdew)  # ASCE Ref Appendix E Eq. 1
@@ -46,38 +45,47 @@ def calc_temperature_variables(month, tmax, tmin, tdew):
     return delta_t, monthly_delta_t, k_not, monthly_k_not, monthly_tmin, monthly_tdew
 
 
-def calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col,
-                            rhavg, rhavg_col):
+def calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax, rhmax_col,
+                            rhmin, rhmin_col, rhavg, rhavg_col):
     """
-        Takes in all possible humidity variables and figures out which one to use for the calculation of TDew and Ea.
-        Unless otherwise cited, all equations are from ASCE refet manual
-        Which variables used is determined by the variable column values in the input file, but will follow this path:
-            If Ea exists but Tdew doesn't exist, use Ea to calculate Tdew.
-            If Ea doesn't exist but Tdew does, use Tdew to calculate Ea.
-            If neither exist but RHmax and RHmin exist, use those to calculate both Ea and Tdew.
-            If nothing else exists, use RHAvg to calculate both Ea and Tdew.
-            If both Ea and TDew exist, then the function just returns those values.
+    Takes in all possible humidity variables and figures out which one to use for the calculation of TDew and Ea.
 
-        Parameters:
-            tmax : 1D array of maximum temperature values
-            tmin : 1D array of minimum temperature values
-            tavg : 1D array of average temperature values
-            ea : 1D array of vapor pressure values, which may be empty
-            ea_col : column of ea variable in data file, if it was provided
-            tdew : 1D array of dewpoint temperature values, which may be empty
-            tdew_col : column of tdew variable in data file, if it was provided
-            rhmax : 1D array of maximum relative humidity values, which may be empty
-            rhmax_col : column of rhmax variable in data file, if it was provided
-            rhmin : 1D array of minimum relative humidity values, which may be empty
-            rhmin_col : column of rhmin variable in data file, if it was provided
-            rhavg : 1D array of average relative humidity values, which may be empty
-            rhavg_col : column of rhavg variable in data file, if it was provided
+    Unless otherwise cited, all equations are from ASCE refet manual
 
-        Returns:
-            Returns both Ea and TDew as numpy arrays
+    Which variables used is determined by the variable column values in the input file, only those
+    variables provided by the original data source will be used, and the decision tree follows this path:
+
+    1. If Ea exists but Tdew doesn't exist, use Ea to calculate Tdew.
+
+    2. If Ea doesn't exist but Tdew does, use Tdew to calculate Ea.
+
+    3. If neither exist but RHmax and RHmin exist, use those to calculate both Ea and Tdew.
+
+    4. If nothing else exists, use RHAvg to calculate both Ea and Tdew.
+
+    If both Ea and TDew exist, then the function just returns those values.
+
+    Args:
+        :tmax: (ndarray) 1D array of maximum temperature values
+        :tmin: (ndarray) 1D array of minimum temperature values
+        :tavg: (ndarray) 1D array of average temperature values
+        :ea: (ndarray) 1D array of vapor pressure values, which may be empty
+        :ea_col: (int) column of ea variable in data file, if it was provided
+        :tdew: (ndarray) 1D array of dewpoint temperature values, which may be empty
+        :tdew_col: (int) column of tdew variable in data file, if it was provided
+        :rhmax: (ndarray) 1D array of maximum relative humidity values, which may be empty
+        :rhmax_col: (int) column of rhmax variable in data file, if it was provided
+        :rhmin: (ndarray) 1D array of minimum relative humidity values, which may be empty
+        :rhmin_col: (int) column of rhmin variable in data file, if it was provided
+        :rhavg: (ndarray) 1D array of average relative humidity values, which may be empty
+        :rhavg_col: (int) column of rhavg variable in data file, if it was provided
+
+    Returns:
+        :calc_ea: (ndarray) 1D array of vapor pressure values
+        :calc_tdew: (ndarray) 1D array of dewpoint temperature values
     """
 
-    # Check to see if TDew exists, if it does not, then check to see what else exists so it can be calculated.
+    # Check to see if TDew exists, if it does not, then see what is provided to calculate it.
     if tdew_col == -1:  # We are not given TDew
 
         if ea_col != -1:  # Vapor Pressure exists, so it will be used to calculate TDew
@@ -134,28 +142,28 @@ def calc_humidity_variables(tmax, tmin, tavg, ea, ea_col, tdew, tdew_col, rhmax,
 
 def calc_rso_and_refet(lat, elev, wind_anemom, doy, month, tmax, tmin, ea, uz, rs):
     """
-        Calculates all of the following variables using the refet package (https://github.com/DRI-WSWUP/RefET):
-            rso : clear sky solar radiation
-            monthly_rs : : monthly averaged solar radiation (12 values total) values across all of record
-            eto : grass reference evapotranspiration in units mm/day
-            etr : alfalfa reference evapotranspiration in units mm/day
-            monthly_eto : monthly averaged grass reference ET (12 values total) values across all of record
-            monthly_etr : monthly averaged alfalfa reference ET (12 values total) values across all of record
+        Calculates clear-sky solar radiation and reference evapotranspiration
+        variables using the refet package (https://github.com/DRI-WSWUP/RefET)
 
-        Parameters:
-            lat : station latitude in decimal degrees
-            elev: station elevation in meters
-            wind_anemom : height of windspeed anemometer in meters
-            doy : 1D numpy array of day of year in record
-            month : 1D numpy array of current month in record
-            tmax : 1D numpy array of maximum temperature values
-            tmin : 1D numpy array of minimum temperature values
-            ea : 1D numpy array of vapor pressure in kPa
-            uz : 1D numpy array of average windspeed values
-            rs : 1D numpy array of solar radiation values
+        Args:
+            :lat: (float) station latitude in decimal degrees
+            :elev: (float) station elevation in meters
+            :wind_anemom: (float) height of windspeed anemometer in meters
+            :doy: (ndarray) 1D numpy array of day of year in record
+            :month: (ndarray) 1D numpy array of current month in record
+            :tmax: (ndarray) 1D numpy array of maximum temperature values
+            :tmin: (ndarray) 1D numpy array of minimum temperature values
+            :ea: (ndarray) 1D numpy array of vapor pressure in kPa
+            :uz: (ndarray) 1D numpy array of average windspeed values
+            :rs: (ndarray) 1D numpy array of solar radiation values
 
         Returns:
-            Returns all variables listed above as 1D numpy arrays
+            :rso: (ndarray) 1-D array of clear sky solar radiation
+            :monthly_rs: (ndarray) 1-D array of monthly averaged solar radiation (12 values total) values
+            :eto: (ndarray) 1-D array of  grass reference evapotranspiration in units mm/day
+            :etr: (ndarray)  1-D array of alfalfa reference evapotranspiration in units mm/day
+            :monthly_eto: (ndarray) 1-D array of monthly averaged grass reference ET (12 values total) values
+            :monthly_etr: (ndarray) 1-D array of monthly averaged alfalfa reference ET (12 values total) values
     """
 
     monthly_rs = np.empty(12)
@@ -198,21 +206,19 @@ def calc_rs_tr(month, rso, delta_t, mm_delta_t, b_zero, b_one, b_two):
     """
         Calculates theoretical daily solar radiation according to the Thornton and Running 1999 model.
         Paper can be found here: http://www.engr.scu.edu/~emaurer/chile/vic_taller/papers/thornton_running_1997.pdf
-        Brief summary: Estimates rs based on a b coeff that is unique per each month based on temperature history
-            and daily difference between maximum and minimum temperature and rso
 
-        Parameters:
-            month : 1D numpy array of months within dataset
-            rso : 1D numpy array of clear-sky solar radiation values in w/m2
-            delta_t : 1D numpy array of difference between maximum and minimum temperature values for the time step
-            mm_delta_t : monthly averaged delta_t (12 values total) values across all of record
-            b_zero : first B coefficient used in calculation of rs_tr, original value is 0.031
-            b_one : second B coefficient used in calculation of rs_tr, original value is 0.201
-            b_two :third B coefficient used in the calculation of rs_tr, original value is -0.185
+        Args:
+            :month: (ndarray) 1D numpy array of months within dataset
+            :rso: (ndarray) 1D numpy array of clear-sky solar radiation values in w/m2
+            :delta_t: (ndarray) 1D numpy array of difference between maximum and minimum temperature values
+            :mm_delta_t: (ndarray) monthly averaged delta_t (12 values total) values
+            :b_zero: (float) first B coefficient used in calculation of rs_tr, original value is 0.031
+            :b_one: (float) second B coefficient used in calculation of rs_tr, original value is 0.201
+            :b_two: (float) third B coefficient used in the calculation of rs_tr, original value is -0.185
 
         Returns:
-            rs_tr : 1D numpy array of thornton-running solar radiation
-            mm_rs_tr : monthly averaged rs_tr (12 values total) values across all of record
+            :rs_tr: (ndarray) 1D numpy array of thornton-running solar radiation
+            :mm_rs_tr: (ndarray) mean monthly averaged rs_tr (12 values total) values
     """
     mm_rs_tr = np.empty(12)
     b_coefficient = np.array(b_zero + b_one * np.exp(b_two * mm_delta_t))
@@ -232,32 +238,31 @@ def calc_rs_tr(month, rso, delta_t, mm_delta_t, b_zero, b_one, b_two):
 
 def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, rs, rso):
     """
-        This function performs a monte carlo simulation on the b coefficients that go into generating thornton-
-        running solar radiation in an attempt to optimize a model that best fits observed solar radiation data.
-        That best fit model will then be used to fill any missing observations in actual solar radiation for the
-        calculation of reference evapotranspiration. See the function calc_rs_tr for more information.
+    This function performs a monte carlo simulation on the b coefficients that go into generating thornton-
+    running solar radiation in an attempt to optimize a model that best fits observed solar radiation data.
+    That best fit model will then be used to fill any missing observations in actual solar radiation for the
+    calculation of reference evapotranspiration. See the function `calc_rs_tr()` for more information.
 
-        The bracket size with which to generate random values
-        is 0.5, this factor was chosen after trying different values on several stations and were a good balance of
-        minimizing RMSE and processing speed.
+    The bracket size with which to generate random values
+    is 0.5, this factor was chosen after trying different values on several stations and were a good balance of
+    minimizing RMSE and processing speed.
 
-        When running the script on the first mode, only 50 iterations are done to save time, it may be that optimized
-        has worse parameters than original in this case, so we just return the original paramaters as the optimized
+    When running the script on the first mode, only 100 iterations are done to save time, it may be that optimized
+    has worse parameters than original in this case, so we just return the original parameters as the optimized
 
-        Parameters:
-            mc_iterations : number of iterations in monte carlo simulation
-            log_path : path to log file that we will write the b coefficients and other relevant info to
-            month : 1D numpy array of months within dataset
-            rs : 1D numpy array of observed solar radiation values in w/m2
-            rso : 1D numpy array of clear-sky solar radiation values in w/m2
-            delta_t : 1D numpy array of difference between maximum and minimum temperature values for the time step
-            mm_delta_t : monthly averaged delta_t (12 values total) values across all of record
-
-        Returns:
-            org_rs_tr : 1D numpy array of thornton-running solar radiation with original B coefficient values
-            mm_org_rs_tr : monthly averaged org_rs_tr (12 values total) values across all of record
-            opt_rs_tr : 1D numpy array of thornton-running solar radiation with optimized B coefficient values
-            mm_opt_rs_tr : monthly averaged opt_rs_tr (12 values total) values across all of record
+    Args:
+        :mc_iterations: (int) number of iterations in monte carlo simulation
+        :log_path: (str) path to log file that we will write the b coefficients and other relevant info to
+        :month: (ndarray) 1D numpy array of months within dataset
+        :delta_t: (ndarray) 1D numpy array of difference between maximum and minimum temperature values
+        :mm_delta_t: (ndarray) monthly averaged delta_t (12 values total) values
+        :rs: (ndarray) 1D numpy array of observed solar radiation values in w/m2
+        :rso: (ndarray) 1D numpy array of clear-sky solar radiation values in w/m2
+    Returns:
+        :org_rs_tr: (ndarray) 1D numpy array of thornton-running solar radiation with original B coefficient values
+        :mm_org_rs_tr: (ndarray) 1D numpy array of monthly averaged org_rs_tr (12 values total) values
+        :opt_rs_tr: (ndarray) 1D numpy array of thornton-running solar radiation with optimized B coefficient values
+        :mm_opt_rs_tr: (ndarray) 1D numpy array of monthly averaged opt_rs_tr (12 values total) values
     """
     print("\nSystem: Now performing a Monte Carlo simulation to optimize Thornton Running solar radiation parameters.")
     print("System: %s iterations are being run, this may take some time." % mc_iterations)
@@ -308,12 +313,12 @@ def calc_org_and_opt_rs_tr(mc_iterations, log_path, month, delta_t, mm_delta_t, 
                    .format(orig_rmse))
     corr_log.close()
 
-    if orig_rmse < mc_rmse[min_rmse_index] and mc_iterations == 50:
+    if orig_rmse < mc_rmse[min_rmse_index] and mc_iterations == 100:
         # if original was better than optimized, it is likely because we didn't do enough iterations
         # which is likely because we're not correcting data, so just return original as optimized
         opt_rs_tr = orig_rs_tr
         mm_opt_rs_tr = mm_orig_rs_tr
-    elif orig_rmse < mc_rmse[min_rmse_index] and mc_iterations != 50:
+    elif orig_rmse < mc_rmse[min_rmse_index] and mc_iterations != 100:
         # this shouldn't happen, as we should have done enough iterations to beat original values, so raise an error
         raise ValueError('Thornton running optimization failed to beat original coefficient values.' +
                          ' Try running again, and if this error persists please report it on github.')
@@ -329,25 +334,25 @@ def calc_compiled_ea(tmax, tmin, tavg, ea, tdew, tdew_col,
     """
         This function is used to create a 'compiled' ea from all provided humidity variables, always using the best one
         provided within the dataset for each given day of the record. This function will work regardless of if ea is
-        provided by the dataset or not.
+        provided by the dataset or not. See `qaqc_functions.compiled_humidity_adjustment` for more information.
 
-        Parameters:
-            tmax : 1D array of maximum temperature values
-            tmin : 1D array of minimum temperature values
-            tavg : 1D array of average temperature values
-            ea : 1D array of vapor pressure values, which may be empty
-            tdew : 1D array of dewpoint temperature values, which may be empty
-            tdew_col : column of Tdew variable in data file, if it is provided
-            rhmax : 1D array of maximum relative humidity values, which may be empty
-            rhmax_col : column of rhmax variable in data file, if it was provided
-            rhmin : 1D array of minimum relative humidity values, which may be empty
-            rhmin_col : column of rhmin variable in data file, if it was provided
-            rhavg : 1D array of average relative humidity values, which may be empty
-            rhavg_col : column of rhavg variable in data file, if it was provided
-            tdew_ko : 1D array of tdew data filled in by tmin-ko curve
+        Args:
+            :tmax: (ndarray) 1D array of maximum temperature values
+            :tmin: (ndarray) 1D array of minimum temperature values
+            :tavg: (ndarray) 1D array of average temperature values
+            :ea: (ndarray) 1D array of vapor pressure values, which may be empty
+            :tdew: (ndarray) 1D array of dewpoint temperature values, which may be empty
+            :tdew_col: (int) column of Tdew variable in data file, if it is provided
+            :rhmax: (ndarray) 1D array of maximum relative humidity values, which may be empty
+            :rhmax_col: (int) column of rhmax variable in data file, if it was provided
+            :rhmin: (ndarray) 1D array of minimum relative humidity values, which may be empty
+            :rhmin_col: (int) column of rhmin variable in data file, if it was provided
+            :rhavg: (ndarray) 1D array of average relative humidity values, which may be empty
+            :rhavg_col: (int) column of rhavg variable in data file, if it was provided
+            :tdew_ko: (ndarray) 1D array of tdew data filled in by tmin-ko curve
 
         Returns:
-            Returns a "complete" ea array
+            :compiled_ea: (ndarray) 1D array of vapor pressure that has been compiled from the "best" data sources
     """
     data_length = ea.shape[0]
     compiled_ea = np.empty(data_length) * np.nan

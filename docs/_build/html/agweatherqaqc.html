@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>agweatherqaqc package &mdash; agweather-qaqc 1.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=1ed6394b"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="agweatherqaqc" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            agweather-qaqc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing agweather-qaqc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_preparation.html">Data Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qc_information.html">QC Procedure Information</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">agweatherqaqc</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">agweatherqaqc package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-agweatherqaqc">Package Contents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-agweatherqaqc.agweatherqaqc">agweatherqaqc.agweatherqaqc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.agweatherqaqc.WeatherQC"><code class="docutils literal notranslate"><span class="pre">WeatherQC</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-agweatherqaqc.calc_functions">agweatherqaqc.calc_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.calc_functions.calc_compiled_ea"><code class="docutils literal notranslate"><span class="pre">calc_compiled_ea()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.calc_functions.calc_humidity_variables"><code class="docutils literal notranslate"><span class="pre">calc_humidity_variables()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.calc_functions.calc_org_and_opt_rs_tr"><code class="docutils literal notranslate"><span class="pre">calc_org_and_opt_rs_tr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.calc_functions.calc_rs_tr"><code class="docutils literal notranslate"><span class="pre">calc_rs_tr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.calc_functions.calc_rso_and_refet"><code class="docutils literal notranslate"><span class="pre">calc_rso_and_refet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.calc_functions.calc_temperature_variables"><code class="docutils literal notranslate"><span class="pre">calc_temperature_variables()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-agweatherqaqc.qaqc_functions">agweatherqaqc.qaqc_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.additive_corr"><code class="docutils literal notranslate"><span class="pre">additive_corr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.compiled_humidity_adjustment"><code class="docutils literal notranslate"><span class="pre">compiled_humidity_adjustment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.correction"><code class="docutils literal notranslate"><span class="pre">correction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.generate_interval"><code class="docutils literal notranslate"><span class="pre">generate_interval()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.modified_z_score_outlier_detection"><code class="docutils literal notranslate"><span class="pre">modified_z_score_outlier_detection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.multiplicative_corr"><code class="docutils literal notranslate"><span class="pre">multiplicative_corr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.rh_yearly_percentile_corr"><code class="docutils literal notranslate"><span class="pre">rh_yearly_percentile_corr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.rs_period_ratio_corr"><code class="docutils literal notranslate"><span class="pre">rs_period_ratio_corr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.set_to_nan"><code class="docutils literal notranslate"><span class="pre">set_to_nan()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.qaqc_functions.temp_find_outliers"><code class="docutils literal notranslate"><span class="pre">temp_find_outliers()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-agweatherqaqc.utils">agweatherqaqc.utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.utils.get_float_input"><code class="docutils literal notranslate"><span class="pre">get_float_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.utils.get_int_input"><code class="docutils literal notranslate"><span class="pre">get_int_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#agweatherqaqc.utils.validate_file"><code class="docutils literal notranslate"><span class="pre">validate_file()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">agweather-qaqc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">agweatherqaqc</a></li>
+      <li class="breadcrumb-item active">agweatherqaqc package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/agweatherqaqc.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="agweatherqaqc-package">
+<h1>agweatherqaqc package<a class="headerlink" href="#agweatherqaqc-package" title="Link to this heading"></a></h1>
+<section id="module-agweatherqaqc">
+<span id="package-contents"></span><h2>Package Contents<a class="headerlink" href="#module-agweatherqaqc" title="Link to this heading"></a></h2>
+<p>A package for the correction of sensor drift and removal of bad/suspect data for weather stations.
+The process is CLI-driven and provides recommendations to the user for best practices.</p>
+<p>Also generates Reference Evapotranspiration according to the ASCE Evapotranspiration Equation (2005).</p>
+<p>This package is meant to be run by creating an instance of the <cite>agweatherqaqc.WeatherQC</cite> class and
+then calling <cite>process_station()</cite>, which handles running the workflow. From this point the user
+directs everything else through interactive prompts in the command line / terminal window.</p>
+<dl>
+<dt>Example:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">agweatherqaqc.agweatherqaqc</span> <span class="kn">import</span> <span class="n">WeatherQC</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config_path</span> <span class="o">=</span> <span class="s1">&#39;test_files/test_config.ini&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata_path</span> <span class="o">=</span> <span class="s1">&#39;test_files/test_metadata.xlsx&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">station_qaqc</span> <span class="o">=</span> <span class="n">WeatherQC</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">metadata_path</span><span class="p">,</span> <span class="n">gridplot_columns</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">station_qaqc</span><span class="o">.</span><span class="n">process_station</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The documentation on the rest of the correction and calculation functions is available to explain
+the methodology and thought process that went into them.</p>
+</section>
+<section id="module-agweatherqaqc.agweatherqaqc">
+<span id="agweatherqaqc-agweatherqaqc"></span><h2>agweatherqaqc.agweatherqaqc<a class="headerlink" href="#module-agweatherqaqc.agweatherqaqc" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="agweatherqaqc.agweatherqaqc.WeatherQC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">agweatherqaqc.agweatherqaqc.</span></span><span class="sig-name descname"><span class="pre">WeatherQC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'config.ini'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gridplot_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/agweatherqaqc.html#WeatherQC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.agweatherqaqc.WeatherQC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The WeatherQC class is a holistic package for the QC of agricultural weather data.</p>
+<p>It requires the filepath to a config file, and from that file does everything necessary for to enable
+the end user to QC the data from a station. The class handles the reading in of data, sanitizing of inputs,
+plotting and logging the correction of said data, and finally saving the final data for in other analyses.</p>
+<p>Usually, weather stations from the same source or network have the same file structure, so WeatherQC features
+an optional input of the filepath to a metadata file to process multiple stations using the same input file.</p>
+<dl>
+<dt># Example:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">agweatherqaqc.agweatherqaqc</span> <span class="kn">import</span> <span class="n">WeatherQC</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config_path</span> <span class="o">=</span> <span class="s1">&#39;test_files/test_config.ini&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata_path</span> <span class="o">=</span> <span class="s1">&#39;test_files/test_metadata.xlsx&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">station_qaqc</span> <span class="o">=</span> <span class="n">WeatherQC</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">metadata_path</span><span class="p">,</span> <span class="n">gridplot_columns</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">station_qaqc</span><span class="o">.</span><span class="n">process_station</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Both the config and metadata files have requirements on file structure and contents. The files
+contained within the <cite>./test_data/</cite> directory can serve as templates to copy from or modify.</p>
+<p>Please see the documentation of <cite>WeatherQC.process_station()</cite>, as well as the documentation for the functions
+within <cite>agweatherqaqc.qaqc_functions</cite> and <cite>agweatherqaqc.calc_functions</cite> for more information on
+the overall process and individual steps.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="agweatherqaqc.agweatherqaqc.WeatherQC.process_station">
+<span class="sig-name descname"><span class="pre">process_station</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/agweatherqaqc.html#WeatherQC.process_station"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.agweatherqaqc.WeatherQC.process_station" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>This function serves as the structure for the overall workflow in
+applying the QC process to an input data source. The standard process is as follows:</p>
+<ol class="arabic simple">
+<li><p>Read in the data.</p></li>
+<li><p>Calculate any secondary variables (mean monthly values, clear-sky solar radiation, etc.).</p></li>
+<li><p>Plot the data before any corrections are performed.</p></li>
+<li><p>Allow the user to adjust/remove/QC data. Recompute any dependent secondary variables.</p></li>
+<li><p>Plot the data after corrections are performed and save the output data.</p></li>
+</ol>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-agweatherqaqc.calc_functions">
+<span id="agweatherqaqc-calc-functions"></span><h2>agweatherqaqc.calc_functions<a class="headerlink" href="#module-agweatherqaqc.calc_functions" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.calc_functions.calc_compiled_ea">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.calc_functions.</span></span><span class="sig-name descname"><span class="pre">calc_compiled_ea</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tavg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ea</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdew_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmax_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmin_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhavg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhavg_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdew_ko</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/calc_functions.html#calc_compiled_ea"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.calc_functions.calc_compiled_ea" title="Link to this definition"></a></dt>
+<dd><p>This function is used to create a ‘compiled’ ea from all provided humidity variables, always using the best one
+provided within the dataset for each given day of the record. This function will work regardless of if ea is
+provided by the dataset or not. See <cite>qaqc_functions.compiled_humidity_adjustment</cite> for more information.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">tmax<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of maximum temperature values</p>
+</dd>
+<dt class="field-even">tmin<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D array of minimum temperature values</p>
+</dd>
+<dt class="field-odd">tavg<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of average temperature values</p>
+</dd>
+<dt class="field-even">ea<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D array of vapor pressure values, which may be empty</p>
+</dd>
+<dt class="field-odd">tdew<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of dewpoint temperature values, which may be empty</p>
+</dd>
+<dt class="field-even">tdew_col<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) column of Tdew variable in data file, if it is provided</p>
+</dd>
+<dt class="field-odd">rhmax<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of maximum relative humidity values, which may be empty</p>
+</dd>
+<dt class="field-even">rhmax_col<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) column of rhmax variable in data file, if it was provided</p>
+</dd>
+<dt class="field-odd">rhmin<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of minimum relative humidity values, which may be empty</p>
+</dd>
+<dt class="field-even">rhmin_col<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) column of rhmin variable in data file, if it was provided</p>
+</dd>
+<dt class="field-odd">rhavg<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of average relative humidity values, which may be empty</p>
+</dd>
+<dt class="field-even">rhavg_col<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) column of rhavg variable in data file, if it was provided</p>
+</dd>
+<dt class="field-odd">tdew_ko<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of tdew data filled in by tmin-ko curve</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">compiled_ea<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of vapor pressure that has been compiled from the “best” data sources</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.calc_functions.calc_humidity_variables">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.calc_functions.</span></span><span class="sig-name descname"><span class="pre">calc_humidity_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tavg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ea</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ea_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdew_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmax_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmin_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhavg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhavg_col</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/calc_functions.html#calc_humidity_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.calc_functions.calc_humidity_variables" title="Link to this definition"></a></dt>
+<dd><p>Takes in all possible humidity variables and figures out which one to use for the calculation of TDew and Ea.</p>
+<p>Unless otherwise cited, all equations are from ASCE refet manual</p>
+<p>Which variables used is determined by the variable column values in the input file, only those
+variables provided by the original data source will be used, and the decision tree follows this path:</p>
+<ol class="arabic simple">
+<li><p>If Ea exists but Tdew doesn’t exist, use Ea to calculate Tdew.</p></li>
+<li><p>If Ea doesn’t exist but Tdew does, use Tdew to calculate Ea.</p></li>
+<li><p>If neither exist but RHmax and RHmin exist, use those to calculate both Ea and Tdew.</p></li>
+<li><p>If nothing else exists, use RHAvg to calculate both Ea and Tdew.</p></li>
+</ol>
+<p>If both Ea and TDew exist, then the function just returns those values.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">tmax<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of maximum temperature values</p>
+</dd>
+<dt class="field-even">tmin<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D array of minimum temperature values</p>
+</dd>
+<dt class="field-odd">tavg<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of average temperature values</p>
+</dd>
+<dt class="field-even">ea<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D array of vapor pressure values, which may be empty</p>
+</dd>
+<dt class="field-odd">ea_col<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) column of ea variable in data file, if it was provided</p>
+</dd>
+<dt class="field-even">tdew<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D array of dewpoint temperature values, which may be empty</p>
+</dd>
+<dt class="field-odd">tdew_col<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) column of tdew variable in data file, if it was provided</p>
+</dd>
+<dt class="field-even">rhmax<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D array of maximum relative humidity values, which may be empty</p>
+</dd>
+<dt class="field-odd">rhmax_col<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) column of rhmax variable in data file, if it was provided</p>
+</dd>
+<dt class="field-even">rhmin<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D array of minimum relative humidity values, which may be empty</p>
+</dd>
+<dt class="field-odd">rhmin_col<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) column of rhmin variable in data file, if it was provided</p>
+</dd>
+<dt class="field-even">rhavg<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D array of average relative humidity values, which may be empty</p>
+</dd>
+<dt class="field-odd">rhavg_col<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) column of rhavg variable in data file, if it was provided</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">calc_ea<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D array of vapor pressure values</p>
+</dd>
+<dt class="field-even">calc_tdew<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D array of dewpoint temperature values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.calc_functions.calc_org_and_opt_rs_tr">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.calc_functions.</span></span><span class="sig-name descname"><span class="pre">calc_org_and_opt_rs_tr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mc_iterations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">month</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mm_delta_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rso</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/calc_functions.html#calc_org_and_opt_rs_tr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.calc_functions.calc_org_and_opt_rs_tr" title="Link to this definition"></a></dt>
+<dd><p>This function performs a monte carlo simulation on the b coefficients that go into generating thornton-
+running solar radiation in an attempt to optimize a model that best fits observed solar radiation data.
+That best fit model will then be used to fill any missing observations in actual solar radiation for the
+calculation of reference evapotranspiration. See the function <cite>calc_rs_tr()</cite> for more information.</p>
+<p>The bracket size with which to generate random values
+is 0.5, this factor was chosen after trying different values on several stations and were a good balance of
+minimizing RMSE and processing speed.</p>
+<p>When running the script on the first mode, only 100 iterations are done to save time, it may be that optimized
+has worse parameters than original in this case, so we just return the original parameters as the optimized</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">mc_iterations<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) number of iterations in monte carlo simulation</p>
+</dd>
+<dt class="field-even">log_path<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str) path to log file that we will write the b coefficients and other relevant info to</p>
+</dd>
+<dt class="field-odd">month<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of months within dataset</p>
+</dd>
+<dt class="field-even">delta_t<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of difference between maximum and minimum temperature values</p>
+</dd>
+<dt class="field-odd">mm_delta_t<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) monthly averaged delta_t (12 values total) values</p>
+</dd>
+<dt class="field-even">rs<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of observed solar radiation values in w/m2</p>
+</dd>
+<dt class="field-odd">rso<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of clear-sky solar radiation values in w/m2</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">org_rs_tr<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of thornton-running solar radiation with original B coefficient values</p>
+</dd>
+<dt class="field-even">mm_org_rs_tr<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of monthly averaged org_rs_tr (12 values total) values</p>
+</dd>
+<dt class="field-odd">opt_rs_tr<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of thornton-running solar radiation with optimized B coefficient values</p>
+</dd>
+<dt class="field-even">mm_opt_rs_tr<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of monthly averaged opt_rs_tr (12 values total) values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.calc_functions.calc_rs_tr">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.calc_functions.</span></span><span class="sig-name descname"><span class="pre">calc_rs_tr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">month</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rso</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mm_delta_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_zero</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_one</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_two</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/calc_functions.html#calc_rs_tr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.calc_functions.calc_rs_tr" title="Link to this definition"></a></dt>
+<dd><p>Calculates theoretical daily solar radiation according to the Thornton and Running 1999 model.
+Paper can be found here: <a class="reference external" href="http://www.engr.scu.edu/~emaurer/chile/vic_taller/papers/thornton_running_1997.pdf">http://www.engr.scu.edu/~emaurer/chile/vic_taller/papers/thornton_running_1997.pdf</a></p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">month<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of months within dataset</p>
+</dd>
+<dt class="field-even">rso<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of clear-sky solar radiation values in w/m2</p>
+</dd>
+<dt class="field-odd">delta_t<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of difference between maximum and minimum temperature values</p>
+</dd>
+<dt class="field-even">mm_delta_t<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) monthly averaged delta_t (12 values total) values</p>
+</dd>
+<dt class="field-odd">b_zero<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(float) first B coefficient used in calculation of rs_tr, original value is 0.031</p>
+</dd>
+<dt class="field-even">b_one<span class="colon">:</span></dt>
+<dd class="field-even"><p>(float) second B coefficient used in calculation of rs_tr, original value is 0.201</p>
+</dd>
+<dt class="field-odd">b_two<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(float) third B coefficient used in the calculation of rs_tr, original value is -0.185</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">rs_tr<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of thornton-running solar radiation</p>
+</dd>
+<dt class="field-even">mm_rs_tr<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) mean monthly averaged rs_tr (12 values total) values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.calc_functions.calc_rso_and_refet">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.calc_functions.</span></span><span class="sig-name descname"><span class="pre">calc_rso_and_refet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wind_anemom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">month</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ea</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/calc_functions.html#calc_rso_and_refet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.calc_functions.calc_rso_and_refet" title="Link to this definition"></a></dt>
+<dd><p>Calculates clear-sky solar radiation and reference evapotranspiration
+variables using the refet package (<a class="reference external" href="https://github.com/DRI-WSWUP/RefET">https://github.com/DRI-WSWUP/RefET</a>)</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">lat<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(float) station latitude in decimal degrees</p>
+</dd>
+<dt class="field-even">elev<span class="colon">:</span></dt>
+<dd class="field-even"><p>(float) station elevation in meters</p>
+</dd>
+<dt class="field-odd">wind_anemom<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(float) height of windspeed anemometer in meters</p>
+</dd>
+<dt class="field-even">doy<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of day of year in record</p>
+</dd>
+<dt class="field-odd">month<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of current month in record</p>
+</dd>
+<dt class="field-even">tmax<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of maximum temperature values</p>
+</dd>
+<dt class="field-odd">tmin<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of minimum temperature values</p>
+</dd>
+<dt class="field-even">ea<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of vapor pressure in kPa</p>
+</dd>
+<dt class="field-odd">uz<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of average windspeed values</p>
+</dd>
+<dt class="field-even">rs<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of solar radiation values</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">rso<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of clear sky solar radiation</p>
+</dd>
+<dt class="field-even">monthly_rs<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of monthly averaged solar radiation (12 values total) values</p>
+</dd>
+<dt class="field-odd">eto<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of  grass reference evapotranspiration in units mm/day</p>
+</dd>
+<dt class="field-even">etr<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray)  1-D array of alfalfa reference evapotranspiration in units mm/day</p>
+</dd>
+<dt class="field-odd">monthly_eto<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of monthly averaged grass reference ET (12 values total) values</p>
+</dd>
+<dt class="field-even">monthly_etr<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of monthly averaged alfalfa reference ET (12 values total) values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.calc_functions.calc_temperature_variables">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.calc_functions.</span></span><span class="sig-name descname"><span class="pre">calc_temperature_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">month</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdew</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/calc_functions.html#calc_temperature_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.calc_functions.calc_temperature_variables" title="Link to this definition"></a></dt>
+<dd><p>Calculates the secondary temperature variables like mean monthly values</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">month<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of month values for use in mean monthly calculations</p>
+</dd>
+<dt class="field-even">tmax<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of maximum temperature values</p>
+</dd>
+<dt class="field-odd">tmin<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1D numpy array of minimum temperature values</p>
+</dd>
+<dt class="field-even">tdew<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1D numpy array of dewpoint temperature values</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">delta_t<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) the daily difference between maximum temperature and minimum temperature</p>
+</dd>
+<dt class="field-even">monthly_delta_t<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) monthly averaged delta_t (12 values total) values</p>
+</dd>
+<dt class="field-odd">k_not<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) the daily difference between minimum temperature and dewpoint temperature</p>
+</dd>
+<dt class="field-even">monthly_k_not<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) monthly averaged k_not (12 values total) values</p>
+</dd>
+<dt class="field-odd">monthly_tmin<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) monthly averaged minimum temperature (12 values total) values</p>
+</dd>
+<dt class="field-even">monthly_tdew<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) monthly averaged dewpoint temperature (12 values total) values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-agweatherqaqc.qaqc_functions">
+<span id="agweatherqaqc-qaqc-functions"></span><h2>agweatherqaqc.qaqc_functions<a class="headerlink" href="#module-agweatherqaqc.qaqc_functions" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.additive_corr">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">additive_corr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_one</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_two</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#additive_corr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.additive_corr" title="Link to this definition"></a></dt>
+<dd><p>Corrects provided interval with a flat, user-provided additive modifier obtained via the CLI</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">log_writer<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Wrapper for writing to log file.</p>
+</dd>
+<dt class="field-even">start<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) starting index of correction interval.</p>
+</dd>
+<dt class="field-odd">end<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) ending index of correction interval.</p>
+</dd>
+<dt class="field-even">var_one<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of first variable.</p>
+</dd>
+<dt class="field-odd">var_two<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of second variable, may be entirely NaN.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">corr_var_one<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of first variable after correction.</p>
+</dd>
+<dt class="field-even">corr_var_two<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of second variable after correction, may be entirely NaN.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.compiled_humidity_adjustment">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">compiled_humidity_adjustment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">station</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tavg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compiled_ea</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ea</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ea_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdew_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdew_ko</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmax_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmin_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhavg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhavg_col</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#compiled_humidity_adjustment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.compiled_humidity_adjustment" title="Link to this definition"></a></dt>
+<dd><p>This function displays the ‘compiled’ ea generated from all available humidity data, and the user will have
+the option to overwrite sections of the ‘compiled’ ea with ea generated from a variable of their choice, should
+a higher priority humidity variable have worse data than a lower priority one.</p>
+<dl class="simple">
+<dt>Example 1: </dt><dd><p>A station has both vapor pressure (daily average calculated from 15 minute intervals)
+and RH Maximum and Minimum (daily values). The humidity compilation function will only use RHMax and RHMin
+to calculate vapor pressure if there is a gap in the provided vapor pressure data. However, for some reason the
+vapor pressure data is bad, either from a faulty sensor or problem with the sampling, while the contemporaneous
+RH data is good. This function will allow you to graphically select the ‘bad’ section of vapor pressure data
+and overwrite it with the vapor pressure calculated from the present RH Maximum and minimum data.</p>
+</dd>
+<dt>Example 2: </dt><dd><p>A station has both vapor pressure (daily average calculated from 15 minute intervals)
+and RH Maximum and Minimum (daily values). Data from all variables is bad for the periods of 01/2016-12/2016.
+This function would allow you to fill in the ‘compiled’ ea values from 2016 with values from Tmin - Ko</p>
+</dd>
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">station<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) station name for saving files</p>
+</dd>
+<dt class="field-even">log_path<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str) path to log file</p>
+</dd>
+<dt class="field-odd">folder_path<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) path to correction files directory</p>
+</dd>
+<dt class="field-even">dt_array<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D datetime array used for bokeh plots</p>
+</dd>
+<dt class="field-odd">tmax<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of maximum temperature values</p>
+</dd>
+<dt class="field-even">tmin<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of minimum temperature values</p>
+</dd>
+<dt class="field-odd">tavg<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of average temperature values</p>
+</dd>
+<dt class="field-even">compiled_ea<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) the array of ea values that has been generated from all provided humidity variables</p>
+</dd>
+<dt class="field-odd">ea<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of vapor pressure values, which may be empty</p>
+</dd>
+<dt class="field-even">ea_col<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) used to determine if ea was provided by the data source</p>
+</dd>
+<dt class="field-odd">tdew<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of dewpoint temperature values, which may be empty</p>
+</dd>
+<dt class="field-even">tdew_col<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) column of Tdew variable in data file, if it is provided</p>
+</dd>
+<dt class="field-odd">tdew_ko<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of dewpoint temperature values, where missing values are filled in by Tmin-Ko curve</p>
+</dd>
+<dt class="field-even">rhmax<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of maximum relative humidity values, which may be empty</p>
+</dd>
+<dt class="field-odd">rhmax_col<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) column of rhmax variable in data file, if it was provided</p>
+</dd>
+<dt class="field-even">rhmin<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of minimum relative humidity values, which may be empty</p>
+</dd>
+<dt class="field-odd">rhmin_col<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) column of rhmin variable in data file, if it was provided</p>
+</dd>
+<dt class="field-even">rhavg<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of average relative humidity values, which may be empty</p>
+</dd>
+<dt class="field-odd">rhavg_col<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) column of rhavg variable in data file, if it was provided</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">edited_compiled_ea<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) ea array that has had selected sections replaced by the selected sources</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.correction">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">station</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_one</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_two</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">month</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_corr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.correction" title="Link to this definition"></a></dt>
+<dd><p>This main qaqc function takes in two variables and, depending on the code provided, enables different
+correction methods for the user to use to correct data. This function serves as the
+wrapper/handler for all other correction method functions. Once a correction has been applied, user has the
+option to do multiple iterations before finishing. All actions taken are recorded into the log file.</p>
+<p>After each iteration a bokeh graph is generated that shows the changes that have occurred. After the user
+decides to completely finish with corrections, one final bokeh plot is generated that shows the final
+corrected product vs the uncorrected data that was initially passed in</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">station<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) station name for saving files</p>
+</dd>
+<dt class="field-even">log_path<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str) path to log file</p>
+</dd>
+<dt class="field-odd">folder_path<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) path to correction files directory</p>
+</dd>
+<dt class="field-even">var_one<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D numpy array of first variable passed</p>
+</dd>
+<dt class="field-odd">var_two<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D numpy array of second variable, may be all NaN</p>
+</dd>
+<dt class="field-even">dt_array<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D datetime array used for bokeh plotting</p>
+</dd>
+<dt class="field-odd">month<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D numpy array of month values</p>
+</dd>
+<dt class="field-even">year<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D numpy array of year values</p>
+</dd>
+<dt class="field-odd">code<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) used to determine what variables are actually passed as var_one and var_two</p>
+</dd>
+<dt class="field-even">auto_corr<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) flag for the “automatic first pass” mode, which auto-applies default correction first</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">corr_var_one<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D numpy array of corrected var_one values</p>
+</dd>
+<dt class="field-even">corr_var_two<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D numpy array of corrected var_two values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.generate_interval">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">generate_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#generate_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.generate_interval" title="Link to this definition"></a></dt>
+<dd><p>Generates menu and obtains user selection on what intervals the user wants to correct via the CLI</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">var_size<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) of input data size, to prevent creation of an out of bound index</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">int_start<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) of index user wants to start correction on</p>
+</dd>
+<dt class="field-even">int_end<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) of index user wants to end correction on</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.modified_z_score_outlier_detection">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">modified_z_score_outlier_detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#modified_z_score_outlier_detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.modified_z_score_outlier_detection" title="Link to this definition"></a></dt>
+<dd><p>Calculates the modified z scores of provided dataset and sets to nan any values that are above the threshold
+The modified z approach and threshold of 3.5 is recommended in:</p>
+<p>Boris Iglewicz and David Hoaglin (1993), “Volume 16: How to Detect and Handle Outliers”,
+The ASQC Basic References in Quality Control: Statistical Techniques</p>
+<p>Modified z scores are more robust than traditional z scores because they are determined by the median, which is
+less susceptible to outliers.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of values</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">cleaned_data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of values that have had outliers removed</p>
+</dd>
+<dt class="field-even">outlier_count<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) number of outliers removed</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.multiplicative_corr">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">multiplicative_corr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_one</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_two</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#multiplicative_corr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.multiplicative_corr" title="Link to this definition"></a></dt>
+<dd><p>Corrects provided interval with a user-provided multiplicative modifier obtained from the CLI</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">log_writer<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Wrapper for writing to log file</p>
+</dd>
+<dt class="field-even">start<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) starting index of correction interval</p>
+</dd>
+<dt class="field-odd">end<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) ending index of correction interval</p>
+</dd>
+<dt class="field-even">var_one<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D numpy array of first variable</p>
+</dd>
+<dt class="field-odd">var_two<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D numpy array of second variable, may be entirely nan’s</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">corr_var_one<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of first variable after correction</p>
+</dd>
+<dt class="field-even">corr_var_two<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of second variable after correction, may be entirely nan’s</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.rh_yearly_percentile_corr">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">rh_yearly_percentile_corr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentage</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#rh_yearly_percentile_corr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.rh_yearly_percentile_corr" title="Link to this definition"></a></dt>
+<dd><p>Performs a year-based percentile correction on relative humidity, works on the assumption that,
+in areas with significant agriculture, every year should have at least a few observations
+where RHMax hits 100% (such as when it rains). This is a concise way to solve sensor drift issues that may arise.
+The correction strength is determined only by RHMax values, but the correction is also applied to RHMin values
+as they are obtained by the same sensor and likely suffer the same sensor drift problem.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">log_writer<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Wrapper for writing to log file</p>
+</dd>
+<dt class="field-even">start<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) starting index of correction interval</p>
+</dd>
+<dt class="field-odd">end<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) ending index of correction interval</p>
+</dd>
+<dt class="field-even">rhmax<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of rhmax values</p>
+</dd>
+<dt class="field-odd">rhmin<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of rhmin</p>
+</dd>
+<dt class="field-even">year<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of year values</p>
+</dd>
+<dt class="field-odd">percentage<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) what top yearly percentage of observations user wants to base correction on</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">corr_rhmax<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of rhmax values after correction is applied</p>
+</dd>
+<dt class="field-even">corr_rhmin<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of rhmin values after correction is applied</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.rs_period_ratio_corr">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">rs_period_ratio_corr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rso</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size_per_period</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#rs_period_ratio_corr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.rs_period_ratio_corr" title="Link to this definition"></a></dt>
+<dd><p>This function corrects rs by applying a correction factor (a ratio of clear-sky solar radiation (rso) over
+observed solar radiation (rs)) to each user defined period to counteract sensor drift and other errors.</p>
+<p>The start and end of the correction interval is used to cut a section of both rs and rso,
+with these new sections being divided into user-defined periods. Each period then has a correction factor
+calculated based on the user-specified largest number of points for rs/rso.
+Averages are formed for both rs and rso of those largest points, and then this average rso
+is divided by this average rs to get a final ratio, which multiplied to all points within its corresponding period.</p>
+<p>Within each period, the code checks for the existence of potential isolated erroneous readings
+(electrical shorts, datalogger errors, etc.), which it does by looking at how the correction factor
+changes by shifting which values are included.</p>
+<p>The logic here being that erroneous values generally appear as a “spike” of Rs that is significantly
+higher than Rso, which would heavily influence the correction factor due to it being the ratio of averages.</p>
+<p>The existence of these “spikes” is evaluated numerically. We have the original correction factor of the
+six largest rs/rso ratios, and we compute it again by dropping the largest ratio and including the next
+largest. Ex: 1st-6th largest would become 2nd-7th largest. We check to see if this shifted in included
+values causes a larger than 2% change in the correction factor, and if so this whole process is repeated
+until the correction factor doesn’t significantly change. Values determined to be bad are set to
+a marker value and then later set to be equal to Rso * 1.05.</p>
+<dl>
+<dt>Example:</dt><dd><p>sorted_ratio_list = [2, 1.5, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.7, 0.7…]</p>
+<p>Correction factor doesn’t change significantly when computed between values 3rd-8th and 4th-9th</p>
+<p>Correction factor that will be applied to the data will be based on values 3rd-8th, and the values for
+1st and 2nd will set equal to the corresponding Rso values * 1.05 after the data is corrected</p>
+</dd>
+</dl>
+<p>If a period does not contain enough valid data points to fill the user-specified number, the entire period
+is thrown out. To prevent the code from correcting data beyond the point of believability, if the correction
+factor is below 0.5 or above 1.5, the data for that period is removed instead.</p>
+<p>In addition, if the correction factor is between 0.97 &lt; X &lt; 1.03, the data is unchanged under the assumption
+that the sensor was behaving as expected.</p>
+<p>Finally, the function returns the corrected solar radiation that has had erroneous readings removed (if applicable)
+and the period-based correction factor applied. Post-correction Rs data that exceeds Rso by 3% is clipped to Rso.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">log_writer<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Wrapper for writing to the log file</p>
+</dd>
+<dt class="field-even">start<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) starting index of correction interval</p>
+</dd>
+<dt class="field-odd">end<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) ending index of correction interval</p>
+</dd>
+<dt class="field-even">rs<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D numpy array of rs</p>
+</dd>
+<dt class="field-odd">rso<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D numpy array of rso</p>
+</dd>
+<dt class="field-even">sample_size_per_period<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) number of points in each period correction factors are calculated with</p>
+</dd>
+<dt class="field-odd">period<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) length of each correction period within the user-specified interval</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">corr_rs<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of corrected rs values</p>
+</dd>
+<dt class="field-even">rso<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array, not actually changed, is returned for consistent behavior in main qaqc function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.set_to_nan">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">set_to_nan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_one</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_two</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#set_to_nan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.set_to_nan" title="Link to this definition"></a></dt>
+<dd><p>Sets entire provided interval to nans, likely because the observations are bad and need to be thrown out.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">log_writer<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Wrapper for writing to log file</p>
+</dd>
+<dt class="field-even">start<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) starting index of correction interval</p>
+</dd>
+<dt class="field-odd">end<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) ending index of correction interval</p>
+</dd>
+<dt class="field-even">var_one<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of first variable</p>
+</dd>
+<dt class="field-odd">var_two<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of second variable, may be entirely nan’s</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">corr_var_one<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of first variable after data was removed</p>
+</dd>
+<dt class="field-even">corr_var_two<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of second variable after data was removed, may be entirely nan’s</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.qaqc_functions.temp_find_outliers">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.qaqc_functions.</span></span><span class="sig-name descname"><span class="pre">temp_find_outliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_one</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_one_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_two</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_two_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">month</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/qaqc_functions.html#temp_find_outliers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.qaqc_functions.temp_find_outliers" title="Link to this definition"></a></dt>
+<dd><p>Wrapper function for modified_z_score_outlier_detection() that will process provided temperature variables.
+Due to seasonal variation in temperature the overall temperature record is subset into months
+(ex. all January observations are grouped together) and modified_z_score_outlier_detection() is run 12 times.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">log_writer<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Wrapper for writing to log file</p>
+</dd>
+<dt class="field-even">var_one<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of first variable, either tmax, or tmin</p>
+</dd>
+<dt class="field-odd">var_one_name<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) name for var one</p>
+</dd>
+<dt class="field-even">var_two<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of second variable, either tmin or tdew</p>
+</dd>
+<dt class="field-odd">var_two_name<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) name for var two</p>
+</dd>
+<dt class="field-even">month<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of month values</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">corrected_var_one<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(ndarray) 1-D array of first variable after data was removed</p>
+</dd>
+<dt class="field-even">corrected_var_two<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) 1-D array of second variable after data was removed</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-agweatherqaqc.utils">
+<span id="agweatherqaqc-utils"></span><h2>agweatherqaqc.utils<a class="headerlink" href="#module-agweatherqaqc.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.utils.get_float_input">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.utils.</span></span><span class="sig-name descname"><span class="pre">get_float_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Enter</span> <span class="pre">your</span> <span class="pre">choice:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/utils.html#get_float_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.utils.get_float_input" title="Link to this definition"></a></dt>
+<dd><p>Prompts the user for a float input, with handling for if the input is bad</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">prompt<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) prompt to display to the user</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">float_input<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(float) sanitized value entered by the user</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.utils.get_int_input">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.utils.</span></span><span class="sig-name descname"><span class="pre">get_int_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Enter</span> <span class="pre">your</span> <span class="pre">choice:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/utils.html#get_int_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.utils.get_int_input" title="Link to this definition"></a></dt>
+<dd><p>Prompts the user for an integer input within a specified range,
+with handling for if the input is bad or falls outside the expected range.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">start_val<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) start of acceptable integer values</p>
+</dd>
+<dt class="field-even">end_val<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) end of acceptable integer values</p>
+</dd>
+<dt class="field-odd">prompt<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) prompt to display to the user</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">int_input<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int) sanitized integer value entered by the user</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agweatherqaqc.utils.validate_file">
+<span class="sig-prename descclassname"><span class="pre">agweatherqaqc.utils.</span></span><span class="sig-name descname"><span class="pre">validate_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_extensions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agweatherqaqc/utils.html#validate_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agweatherqaqc.utils.validate_file" title="Link to this definition"></a></dt>
+<dd><p>Checks to see if provided path is valid, while also checking to see if file is of expected type.
+Raises exceptions if either of those fail. Returns nothing.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">file_path<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) path to file</p>
+</dd>
+<dt class="field-even">expected_extensions<span class="colon">:</span></dt>
+<dd class="field-even"><p>(list) possible expected file types</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="agweatherqaqc" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Christian Dunkerly.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

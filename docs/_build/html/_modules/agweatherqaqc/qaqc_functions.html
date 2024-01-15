@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>agweatherqaqc.qaqc_functions &mdash; agweather-qaqc 1.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=1ed6394b"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            agweather-qaqc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installing agweather-qaqc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_preparation.html">Data Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../qc_information.html">QC Procedure Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">agweatherqaqc</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">agweather-qaqc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">agweatherqaqc.qaqc_functions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for agweatherqaqc.qaqc_functions</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">log</span>
+<span class="kn">import</span> <span class="nn">agweatherqaqc.plot</span> <span class="k">as</span> <span class="nn">plotting_functions</span>
+<span class="kn">from</span> <span class="nn">agweatherqaqc.utils</span> <span class="kn">import</span> <span class="n">get_int_input</span><span class="p">,</span> <span class="n">get_float_input</span><span class="p">,</span> <span class="n">FEATURES_DICT</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">bokeh.plotting</span> <span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">show</span>
+
+
+<div class="viewcode-block" id="additive_corr">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.additive_corr">[docs]</a>
+<span class="k">def</span> <span class="nf">additive_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Corrects provided interval with a flat, user-provided additive modifier obtained via the CLI</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :log_writer: Wrapper for writing to log file.</span>
+<span class="sd">        :start: (int) starting index of correction interval.</span>
+<span class="sd">        :end: (int) ending index of correction interval.</span>
+<span class="sd">        :var_one: (ndarray) 1-D array of first variable.</span>
+<span class="sd">        :var_two: (ndarray) 1-D array of second variable, may be entirely NaN.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :corr_var_one: (ndarray) 1-D array of first variable after correction.</span>
+<span class="sd">        :corr_var_two: (ndarray) 1-D array of second variable after correction, may be entirely NaN.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">corr_var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_one</span><span class="p">)</span>
+    <span class="n">corr_var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_two</span><span class="p">)</span>
+
+    <span class="n">mod</span> <span class="o">=</span> <span class="n">get_float_input</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Enter the additive modifier you want to apply to all values: &quot;</span><span class="p">)</span>
+    <span class="n">corr_var_one</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_one</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">+</span> <span class="n">mod</span>
+    <span class="n">corr_var_two</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_two</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">+</span> <span class="n">mod</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Selected correction interval started at </span><span class="si">%s</span><span class="s1"> and ended at </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Additive modifier applied for this interval was </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">mod</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_generate_corr_menu</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">auto_corr</span><span class="p">,</span> <span class="n">first_pass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates menu and obtains user selection on how they want to correct the variables they have provided</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :code: (int) integer code passed by main script that indicates what type of data has been passed</span>
+<span class="sd">        :auto_corr: (bool) flag for whether automatic correction has been enabled</span>
+<span class="sd">        :first_pass: (bool) flag for if this is the first iteration of correction or not</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :choice: (int) integer of user selection on how they want to correct data</span>
+<span class="sd">        :first_pass: (bool) flag for if this is the first iteration of correction or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">corr_method</span> <span class="o">=</span> <span class="s1">&#39;   To skip correcting this data, enter 4.&#39;</span>
+
+    <span class="c1"># code value is unordered here but matches what is expected by plotting functions</span>
+    <span class="k">if</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">var_type</span> <span class="o">=</span> <span class="s1">&#39;temperature&#39;</span>
+        <span class="n">corr_method</span> <span class="o">=</span> <span class="s1">&#39;   To remove outliers using a modified z-score approach, enter 4 (Recommended).&#39;</span>
+    <span class="k">elif</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">var_type</span> <span class="o">=</span> <span class="s1">&#39;wind speed&#39;</span>
+    <span class="k">elif</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">var_type</span> <span class="o">=</span> <span class="s1">&#39;precipitation&#39;</span>
+    <span class="k">elif</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">var_type</span> <span class="o">=</span> <span class="s1">&#39;solar radiation&#39;</span>
+        <span class="n">corr_method</span> <span class="o">=</span> <span class="s1">&#39;   To correct based on periodic percentile intervals, enter 4 (Recommended).&#39;</span>
+    <span class="k">elif</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="n">var_type</span> <span class="o">=</span> <span class="s1">&#39;vapor pressure&#39;</span>
+    <span class="k">elif</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+        <span class="n">var_type</span> <span class="o">=</span> <span class="s1">&#39;relative humidity&#39;</span>
+        <span class="n">corr_method</span> <span class="o">=</span> <span class="s1">&#39;   To correct based on yearly percentiles, enter 4 (Recommended).&#39;</span>
+    <span class="k">elif</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>
+        <span class="n">var_type</span> <span class="o">=</span> <span class="s1">&#39;relative humidity&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unsupported code type </span><span class="si">{}</span><span class="s1"> passed to qaqc_functions.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Please select the method to use to correct this </span><span class="si">{}</span><span class="s1"> data:&#39;</span>
+          <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   For user-defined additive value correction, enter 1.&#39;</span>
+          <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   For user-defined multiplicative value correction, enter 2.&#39;</span>
+          <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   To set everything in this interval to NaN, enter 3.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_type</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">corr_method</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">auto_corr</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">first_pass</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># automatic pass enabled</span>
+        <span class="n">choice</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">first_pass</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> Automatic first-pass correction is being performed, option 4 selected. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">choice</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;Enter your selection: &quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">choice</span><span class="p">,</span> <span class="n">first_pass</span>
+
+
+<div class="viewcode-block" id="generate_interval">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.generate_interval">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_interval</span><span class="p">(</span><span class="n">var_size</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates menu and obtains user selection on what intervals the user wants to correct via the CLI</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :var_size: (int) of input data size, to prevent creation of an out of bound index</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :int_start: (int) of index user wants to start correction on</span>
+<span class="sd">        :int_end: (int) of index user wants to end correction on</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Please enter the starting index of your correction interval.&#39;</span>
+          <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   You may also enter -1 to select all data points.&#39;</span><span class="p">)</span>
+
+    <span class="n">int_start</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">var_size</span><span class="p">,</span> <span class="s1">&#39;Enter your starting index: &#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">int_start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">int_start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">int_end</span> <span class="o">=</span> <span class="n">var_size</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># get ending of interval, add two to ensure at least some data is corrected</span>
+        <span class="n">int_end</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="n">int_start</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">var_size</span><span class="p">,</span> <span class="s1">&#39;Enter your ending index: &#39;</span><span class="p">)</span>
+        <span class="c1"># Check that user didn&#39;t select past the end of record.</span>
+        <span class="k">if</span> <span class="n">int_end</span> <span class="o">&gt;</span> <span class="n">var_size</span><span class="p">:</span>
+            <span class="n">int_end</span> <span class="o">=</span> <span class="n">var_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="c1"># Check that int_end isn&#39;t before int_start</span>
+    <span class="k">if</span> <span class="n">int_start</span> <span class="o">&gt;</span> <span class="n">int_end</span><span class="p">:</span>
+        <span class="n">temp_end</span> <span class="o">=</span> <span class="n">int_end</span>
+        <span class="n">int_end</span> <span class="o">=</span> <span class="n">int_start</span>
+        <span class="n">int_start</span> <span class="o">=</span> <span class="n">temp_end</span>
+    <span class="k">return</span> <span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span></div>
+
+
+
+<div class="viewcode-block" id="multiplicative_corr">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.multiplicative_corr">[docs]</a>
+<span class="k">def</span> <span class="nf">multiplicative_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Corrects provided interval with a user-provided multiplicative modifier obtained from the CLI</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :log_writer: Wrapper for writing to log file</span>
+<span class="sd">        :start: (int) starting index of correction interval</span>
+<span class="sd">        :end: (int) ending index of correction interval</span>
+<span class="sd">        :var_one: (ndarray) 1-D numpy array of first variable</span>
+<span class="sd">        :var_two: (ndarray) 1-D numpy array of second variable, may be entirely nan&#39;s</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        :corr_var_one: (ndarray) 1-D array of first variable after correction</span>
+<span class="sd">        :corr_var_two: (ndarray) 1-D array of second variable after correction, may be entirely nan&#39;s</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">corr_var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_one</span><span class="p">)</span>
+    <span class="n">corr_var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_two</span><span class="p">)</span>
+
+    <span class="n">mod</span> <span class="o">=</span> <span class="n">get_float_input</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Enter the multiplicative modifier you want to apply to all values: &quot;</span><span class="p">)</span>
+    <span class="n">corr_var_one</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_one</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">*</span> <span class="n">mod</span>
+    <span class="n">corr_var_two</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_two</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">*</span> <span class="n">mod</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Selected correction interval started at </span><span class="si">%s</span><span class="s1"> and ended at </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Multiplicative modifier applied for this interval was </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">mod</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span></div>
+
+
+
+<div class="viewcode-block" id="set_to_nan">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.set_to_nan">[docs]</a>
+<span class="k">def</span> <span class="nf">set_to_nan</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sets entire provided interval to nans, likely because the observations are bad and need to be thrown out.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :log_writer: Wrapper for writing to log file</span>
+<span class="sd">        :start: (int) starting index of correction interval</span>
+<span class="sd">        :end: (int) ending index of correction interval</span>
+<span class="sd">        :var_one: (ndarray) 1-D array of first variable</span>
+<span class="sd">        :var_two: (ndarray) 1-D array of second variable, may be entirely nan&#39;s</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :corr_var_one: (ndarray) 1-D array of first variable after data was removed</span>
+<span class="sd">        :corr_var_two: (ndarray) 1-D array of second variable after data was removed, may be entirely nan&#39;s</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">corr_var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_one</span><span class="p">)</span>
+    <span class="n">corr_var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_two</span><span class="p">)</span>
+
+    <span class="n">corr_var_one</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">corr_var_two</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Selected correction interval started at </span><span class="si">%s</span><span class="s1"> and ended at </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Observations within the interval were set to nan. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span></div>
+
+
+
+<div class="viewcode-block" id="modified_z_score_outlier_detection">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.modified_z_score_outlier_detection">[docs]</a>
+<span class="k">def</span> <span class="nf">modified_z_score_outlier_detection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the modified z scores of provided dataset and sets to nan any values that are above the threshold</span>
+<span class="sd">    The modified z approach and threshold of 3.5 is recommended in:</span>
+
+<span class="sd">    Boris Iglewicz and David Hoaglin (1993), &quot;Volume 16: How to Detect and Handle Outliers&quot;,</span>
+<span class="sd">    The ASQC Basic References in Quality Control: Statistical Techniques</span>
+
+<span class="sd">    Modified z scores are more robust than traditional z scores because they are determined by the median, which is</span>
+<span class="sd">    less susceptible to outliers.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :data: (ndarray) 1-D array of values</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :cleaned_data: (ndarray) 1-D array of values that have had outliers removed</span>
+<span class="sd">        :outlier_count: (int) number of outliers removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="mf">3.5</span>
+    <span class="n">cleaned_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">median_absolute_deviation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+    <span class="n">modified_z_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.6745</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">)</span> <span class="o">/</span> <span class="n">median_absolute_deviation</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+
+    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="s1">&#39;invalid value encountered&#39;</span><span class="p">)</span>  <span class="c1"># catch invalid value warning for nans in data</span>
+    <span class="n">removed_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">modified_z_scores</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">))</span>  <span class="c1"># array of indices for zscore &gt; thresh</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">resetwarnings</span><span class="p">()</span>  <span class="c1"># reset warning filter to default</span>
+
+    <span class="n">cleaned_data</span><span class="p">[</span><span class="n">removed_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>  <span class="c1"># set those indices to nan</span>
+    <span class="n">outlier_count</span> <span class="o">=</span> <span class="n">removed_indices</span><span class="o">.</span><span class="n">size</span>
+    <span class="k">return</span> <span class="n">cleaned_data</span><span class="p">,</span> <span class="n">outlier_count</span></div>
+
+
+
+<div class="viewcode-block" id="temp_find_outliers">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.temp_find_outliers">[docs]</a>
+<span class="k">def</span> <span class="nf">temp_find_outliers</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_one_name</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span> <span class="n">var_two_name</span><span class="p">,</span> <span class="n">month</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper function for modified_z_score_outlier_detection() that will process provided temperature variables.</span>
+<span class="sd">    Due to seasonal variation in temperature the overall temperature record is subset into months</span>
+<span class="sd">    (ex. all January observations are grouped together) and modified_z_score_outlier_detection() is run 12 times.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :log_writer: Wrapper for writing to log file</span>
+<span class="sd">        :var_one: (ndarray) 1-D array of first variable, either tmax, or tmin</span>
+<span class="sd">        :var_one_name: (str) name for var one</span>
+<span class="sd">        :var_two: (ndarray) 1-D array of second variable, either tmin or tdew</span>
+<span class="sd">        :var_two_name: (str) name for var two</span>
+<span class="sd">        :month: (ndarray) 1-D array of month values</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :corrected_var_one: (ndarray) 1-D array of first variable after data was removed</span>
+<span class="sd">        :corrected_var_two: (ndarray) 1-D array of second variable after data was removed</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;User has opted to use a modified z-score approach to identify and remove outliers. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">var_one_total_outliers</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">var_two_total_outliers</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">corrected_var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_one</span><span class="p">)</span>
+    <span class="n">corrected_var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_two</span><span class="p">)</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="mi">12</span><span class="p">:</span>
+        <span class="n">t_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">month</span> <span class="o">==</span> <span class="n">k</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="p">(</span><span class="n">corrected_var_one</span><span class="p">[</span><span class="n">t_index</span><span class="p">],</span> <span class="n">var_one_outlier_count</span><span class="p">)</span> <span class="o">=</span> <span class="n">modified_z_score_outlier_detection</span><span class="p">(</span><span class="n">var_one</span><span class="p">[</span><span class="n">t_index</span><span class="p">])</span>
+        <span class="p">(</span><span class="n">corrected_var_two</span><span class="p">[</span><span class="n">t_index</span><span class="p">],</span> <span class="n">var_two_outlier_count</span><span class="p">)</span> <span class="o">=</span> <span class="n">modified_z_score_outlier_detection</span><span class="p">(</span><span class="n">var_two</span><span class="p">[</span><span class="n">t_index</span><span class="p">])</span>
+
+        <span class="n">var_one_total_outliers</span> <span class="o">=</span> <span class="n">var_one_total_outliers</span> <span class="o">+</span> <span class="n">var_one_outlier_count</span>
+        <span class="n">var_two_total_outliers</span> <span class="o">=</span> <span class="n">var_two_total_outliers</span> <span class="o">+</span> <span class="n">var_two_outlier_count</span>
+        <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># check to make sure TMin isn&#39;t getting double-corrected</span>
+    <span class="k">if</span> <span class="n">var_one_name</span> <span class="o">==</span> <span class="s2">&quot;Temperature Minimum&quot;</span><span class="p">:</span>
+        <span class="c1"># Tmin/Tdew correction option</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Temperature Minimum is corrected as part of Temperature Maximum / Temperature Minimum.&#39;</span><span class="p">)</span>
+        <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Temperature Minimum is corrected as part of Temperature Maximum / Temperature Minimum.&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> outliers were removed on variable </span><span class="si">{1}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_two_total_outliers</span><span class="p">,</span> <span class="n">var_two_name</span><span class="p">))</span>
+        <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> outliers were removed on variable </span><span class="si">{1}</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_two_total_outliers</span><span class="p">,</span> <span class="n">var_two_name</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">corrected_var_two</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Tmax/Tmin correciton option</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> outliers were removed on variable </span><span class="si">{1}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_one_total_outliers</span><span class="p">,</span> <span class="n">var_one_name</span><span class="p">))</span>
+        <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> outliers were removed on variable </span><span class="si">{1}</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_one_total_outliers</span><span class="p">,</span> <span class="n">var_one_name</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> outliers were removed on variable </span><span class="si">{1}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_two_total_outliers</span><span class="p">,</span> <span class="n">var_two_name</span><span class="p">))</span>
+        <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> outliers were removed on variable </span><span class="si">{1}</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_two_total_outliers</span><span class="p">,</span> <span class="n">var_two_name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">corrected_var_one</span><span class="p">,</span> <span class="n">corrected_var_two</span></div>
+
+
+
+<div class="viewcode-block" id="rh_yearly_percentile_corr">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.rh_yearly_percentile_corr">[docs]</a>
+<span class="k">def</span> <span class="nf">rh_yearly_percentile_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">rhmax</span><span class="p">,</span> <span class="n">rhmin</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">percentage</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs a year-based percentile correction on relative humidity, works on the assumption that,</span>
+<span class="sd">    in areas with significant agriculture, every year should have at least a few observations</span>
+<span class="sd">    where RHMax hits 100% (such as when it rains). This is a concise way to solve sensor drift issues that may arise.</span>
+<span class="sd">    The correction strength is determined only by RHMax values, but the correction is also applied to RHMin values</span>
+<span class="sd">    as they are obtained by the same sensor and likely suffer the same sensor drift problem.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :log_writer: Wrapper for writing to log file</span>
+<span class="sd">        :start: (int) starting index of correction interval</span>
+<span class="sd">        :end: (int) ending index of correction interval</span>
+<span class="sd">        :rhmax: (ndarray) 1-D array of rhmax values</span>
+<span class="sd">        :rhmin: (ndarray) 1-D array of rhmin</span>
+<span class="sd">        :year: (ndarray) 1-D array of year values</span>
+<span class="sd">        :percentage: (int) what top yearly percentage of observations user wants to base correction on</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :corr_rhmax: (ndarray) 1-D array of rhmax values after correction is applied</span>
+<span class="sd">        :corr_rhmin: (ndarray) 1-D array of rhmin values after correction is applied</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Obtain sample size from percentage value provided</span>
+    <span class="n">percentage_sample_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mi">100</span><span class="o">/</span><span class="n">percentage</span><span class="p">)</span>
+    <span class="c1"># ID unique years in data set</span>
+    <span class="n">unique_years</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+    <span class="n">corr_sample_per_year</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">unique_years</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">rh_corr_per_year</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">unique_years</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+    <span class="n">corr_rhmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rhmax</span><span class="p">)</span>
+    <span class="n">corr_rhmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rhmin</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">unique_years</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+        <span class="n">t_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">year</span> <span class="o">==</span> <span class="n">unique_years</span><span class="p">[</span><span class="n">k</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">t_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">t_index</span><span class="p">)</span>
+
+        <span class="n">rh_year</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rhmax</span><span class="p">[</span><span class="n">t_index</span><span class="p">])</span>
+        <span class="n">rh_year</span> <span class="o">=</span> <span class="n">rh_year</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rh_year</span><span class="p">)]</span>
+
+        <span class="c1"># find the required number of days to sample each year by dividing the size of the year by percent_sample_size</span>
+        <span class="n">corr_sample_per_year</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">rh_year</span><span class="o">.</span><span class="n">size</span> <span class="o">/</span> <span class="n">percentage_sample_size</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">corr_sample_per_year</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">corr_sample_per_year</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">rh_year_sorted</span> <span class="o">=</span> <span class="n">rh_year</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
+        <span class="n">rh_values_to_pull</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">corr_sample_per_year</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="n">rh_sample_indexes</span> <span class="o">=</span> <span class="n">rh_year_sorted</span><span class="p">[</span><span class="o">-</span><span class="n">rh_values_to_pull</span><span class="p">:]</span>
+        <span class="n">rh_corr_per_year</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">rh_year</span><span class="p">[</span><span class="n">rh_sample_indexes</span><span class="p">])</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> days were included in year </span><span class="si">{1}</span><span class="s2"> of the RH correction process.&quot;</span>
+              <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rh_year</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">unique_years</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
+
+    <span class="c1"># Check to see if the years are lined up, Ex. data file starts in 2001 but correction starts in 2004</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># If the start of the interval is at 0 then we&#39;re already lined up</span>
+        <span class="n">align_bool</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">align_bool</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">year</span><span class="p">[</span><span class="n">start</span><span class="p">]</span> <span class="o">!=</span> <span class="n">unique_years</span><span class="p">[</span><span class="n">offset</span><span class="p">]:</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">align_bool</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># Now we apply the correction to both RHmax and RHmin</span>
+    <span class="n">rhmax_cutoff</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># tracks number of observations corrected above 100%</span>
+    <span class="n">rhmin_cutoff</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># tracks number of observations corrected above 100%</span>
+    <span class="n">invert_max_min_cutoff</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># tracks the number of times RHmax was less than RHmin (as an initial problem w/ data)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">unique_years</span><span class="p">[</span><span class="n">offset</span><span class="p">]</span> <span class="o">==</span> <span class="n">year</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>  <span class="c1"># Years are aligned</span>
+            <span class="n">corr_rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">rh_corr_per_year</span><span class="p">[</span><span class="n">offset</span><span class="p">]</span>
+            <span class="n">corr_rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">rh_corr_per_year</span><span class="p">[</span><span class="n">offset</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Encountered last day of year, increment to next correction year and continue</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">corr_rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">rh_corr_per_year</span><span class="p">[</span><span class="n">offset</span><span class="p">]</span>
+            <span class="n">corr_rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">rh_corr_per_year</span><span class="p">[</span><span class="n">offset</span><span class="p">]</span>
+
+        <span class="c1"># Check for corrected values exceeding 100%</span>
+        <span class="k">if</span> <span class="n">corr_rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="n">corr_rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="n">rhmax_cutoff</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">corr_rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># This should never really happen but need to control for it anyway.</span>
+            <span class="n">corr_rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="n">corr_rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="n">corr_rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="n">rhmin_cutoff</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">corr_rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># This should never really happen but need to control for it anyway</span>
+            <span class="n">corr_rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="n">corr_rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">corr_rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="n">corr_rhmax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">corr_rhmin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">invert_max_min_cutoff</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rhmax_cutoff</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; RHMax data points were removed for exceeding the logical limit of 100%.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rhmin_cutoff</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; RHMin data points were removed for exceeding the logical limit of 100%.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">invert_max_min_cutoff</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; indexes were removed because RHMax was less than RHMin.&quot;</span><span class="p">)</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Year-based RH correction used the top </span><span class="si">%s</span><span class="s1"> percentile (</span><span class="si">%s</span><span class="s1"> points for a full year), &#39;</span>
+                     <span class="s1">&#39;RHMax had </span><span class="si">%s</span><span class="s1"> points exceed 100 percent.&#39;</span>
+                     <span class="s1">&#39; RHMin had </span><span class="si">%s</span><span class="s1"> points exceed 100 percent. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                     <span class="o">%</span> <span class="p">(</span><span class="n">percentage</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="mi">365</span> <span class="o">/</span> <span class="n">percentage_sample_size</span><span class="p">))),</span> <span class="n">rhmax_cutoff</span><span class="p">,</span> <span class="n">rhmin_cutoff</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">corr_rhmax</span><span class="p">,</span> <span class="n">corr_rhmin</span></div>
+
+
+
+<div class="viewcode-block" id="rs_period_ratio_corr">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.rs_period_ratio_corr">[docs]</a>
+<span class="k">def</span> <span class="nf">rs_period_ratio_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">rs</span><span class="p">,</span> <span class="n">rso</span><span class="p">,</span> <span class="n">sample_size_per_period</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function corrects rs by applying a correction factor (a ratio of clear-sky solar radiation (rso) over</span>
+<span class="sd">    observed solar radiation (rs)) to each user defined period to counteract sensor drift and other errors.</span>
+
+<span class="sd">    The start and end of the correction interval is used to cut a section of both rs and rso,</span>
+<span class="sd">    with these new sections being divided into user-defined periods. Each period then has a correction factor</span>
+<span class="sd">    calculated based on the user-specified largest number of points for rs/rso.</span>
+<span class="sd">    Averages are formed for both rs and rso of those largest points, and then this average rso</span>
+<span class="sd">    is divided by this average rs to get a final ratio, which multiplied to all points within its corresponding period.</span>
+
+<span class="sd">    Within each period, the code checks for the existence of potential isolated erroneous readings</span>
+<span class="sd">    (electrical shorts, datalogger errors, etc.), which it does by looking at how the correction factor</span>
+<span class="sd">    changes by shifting which values are included.</span>
+
+<span class="sd">    The logic here being that erroneous values generally appear as a &quot;spike&quot; of Rs that is significantly</span>
+<span class="sd">    higher than Rso, which would heavily influence the correction factor due to it being the ratio of averages.</span>
+
+<span class="sd">    The existence of these &quot;spikes&quot; is evaluated numerically. We have the original correction factor of the</span>
+<span class="sd">    six largest rs/rso ratios, and we compute it again by dropping the largest ratio and including the next</span>
+<span class="sd">    largest. Ex: 1st-6th largest would become 2nd-7th largest. We check to see if this shifted in included</span>
+<span class="sd">    values causes a larger than 2% change in the correction factor, and if so this whole process is repeated</span>
+<span class="sd">    until the correction factor doesn&#39;t significantly change. Values determined to be bad are set to</span>
+<span class="sd">    a marker value and then later set to be equal to Rso * 1.05.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        sorted_ratio_list = [2, 1.5, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.7, 0.7...]</span>
+
+<span class="sd">        Correction factor doesn&#39;t change significantly when computed between values 3rd-8th and 4th-9th</span>
+
+<span class="sd">        Correction factor that will be applied to the data will be based on values 3rd-8th, and the values for</span>
+<span class="sd">        1st and 2nd will set equal to the corresponding Rso values * 1.05 after the data is corrected</span>
+
+<span class="sd">    If a period does not contain enough valid data points to fill the user-specified number, the entire period</span>
+<span class="sd">    is thrown out. To prevent the code from correcting data beyond the point of believability, if the correction</span>
+<span class="sd">    factor is below 0.5 or above 1.5, the data for that period is removed instead.</span>
+
+<span class="sd">    In addition, if the correction factor is between 0.97 &lt; X &lt; 1.03, the data is unchanged under the assumption</span>
+<span class="sd">    that the sensor was behaving as expected.</span>
+
+<span class="sd">    Finally, the function returns the corrected solar radiation that has had erroneous readings removed (if applicable)</span>
+<span class="sd">    and the period-based correction factor applied. Post-correction Rs data that exceeds Rso by 3% is clipped to Rso.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :log_writer: Wrapper for writing to the log file</span>
+<span class="sd">        :start: (int) starting index of correction interval</span>
+<span class="sd">        :end: (int) ending index of correction interval</span>
+<span class="sd">        :rs: (ndarray) 1-D numpy array of rs</span>
+<span class="sd">        :rso: (ndarray) 1-D numpy array of rso</span>
+<span class="sd">        :sample_size_per_period: (int) number of points in each period correction factors are calculated with</span>
+<span class="sd">        :period: (int) length of each correction period within the user-specified interval</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :corr_rs: (ndarray) 1-D array of corrected rs values</span>
+<span class="sd">        :rso: (ndarray) 1-D array, not actually changed, is returned for consistent behavior in main qaqc function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">corr_rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rs</span><span class="p">)</span>  <span class="c1"># corrected variable that all the corrections are going to be written to</span>
+    <span class="n">insufficient_period_counter</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># counter for the number of periods that were removed due to insufficient data</span>
+    <span class="n">insufficient_data_counter</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># counter for the number of rs data points that were removed due to insufficient data</span>
+    <span class="n">bad_vals_counter</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># counter for bad vals like voltage shorts, datalogger errors, etc.</span>
+
+    <span class="c1"># Determining correction factor for intervals based on pre-defined periods</span>
+    <span class="n">num_periods</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="n">period</span><span class="p">))</span>
+    <span class="n">rs_period</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+    <span class="n">rso_period</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+    <span class="n">period_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_periods</span><span class="p">)</span>
+
+    <span class="c1"># Placing intervals in separate array for easy handling</span>
+    <span class="n">rs_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rs</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+    <span class="n">rso_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rso</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+    <span class="n">cleaned_rs_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>  <span class="c1"># used to recreate interval of rs that will track the removal of bad obs</span>
+
+    <span class="c1"># separate the interval into predefined periods and compute correction</span>
+    <span class="n">interval_index</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># index for full correction interval</span>
+    <span class="n">within_period_index</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># index for within each period</span>
+    <span class="n">num_period_index</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># index for number of periods</span>
+    <span class="k">while</span> <span class="n">interval_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rs_interval</span><span class="p">):</span>
+
+        <span class="c1"># If statement to handle being at the end of the period, or at the end of the overall correction interval</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">within_period_index</span> <span class="o">&lt;</span> <span class="n">period</span><span class="p">)</span> <span class="ow">and</span> <span class="n">interval_index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">rs_interval</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="n">within_period_index</span> <span class="o">==</span> <span class="n">period</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">within_period_index</span> <span class="o">&lt;</span> <span class="n">period</span><span class="p">:</span>  <span class="c1"># We are dealing with the final period</span>
+                <span class="n">rs_period</span><span class="p">[</span><span class="n">within_period_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">rs_interval</span><span class="p">[</span><span class="n">interval_index</span><span class="p">]</span>
+                <span class="n">rso_period</span><span class="p">[</span><span class="n">within_period_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">rso_interval</span><span class="p">[</span><span class="n">interval_index</span><span class="p">]</span>
+
+                <span class="c1"># each period&#39;s data is overwritten by the subsequent period&#39;s data, because the final period may not</span>
+                <span class="c1"># have 60 days, chop off remaining days that have values from previous period.</span>
+                <span class="n">rs_period</span> <span class="o">=</span> <span class="n">rs_period</span><span class="p">[:</span><span class="n">within_period_index</span><span class="o">-</span><span class="p">(</span><span class="n">period</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">rso_period</span> <span class="o">=</span> <span class="n">rso_period</span><span class="p">[:</span><span class="n">within_period_index</span><span class="o">-</span><span class="p">(</span><span class="n">period</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">interval_index</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># increment by 1 to end the loop after this iteration</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># We have reached the end of a period, no special treatment needed</span>
+                <span class="k">pass</span>
+
+            <span class="c1"># Now that we are at the end of a period or finishing up the last period,</span>
+            <span class="c1"># we check for the existence of potential bad values</span>
+            <span class="n">period_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">rs_period</span><span class="p">,</span> <span class="n">rso_period</span><span class="p">)</span>
+            <span class="n">period_ratios_copy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">period_ratios</span><span class="p">)</span>  <span class="c1"># make a copy, we remove largest val to find the next largest</span>
+            <span class="n">max_ratio_indexes</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># tracks the indexes of the maximum values found</span>
+
+            <span class="n">invalid_period</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># boolean flag to specify if this period has the data necessary to calculate corr factor</span>
+            <span class="n">bad_vals_loop</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># boolean flag to specify if we should keep checking for bad values or not</span>
+
+            <span class="c1"># First, check to see if there are non-nan values present</span>
+            <span class="c1"># and the period has at least the sample size in days present</span>
+            <span class="c1"># and pull the 6 largest ratios to serve as the initial correction factor.</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">period_ratios_copy</span><span class="p">))</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">period_ratios_copy</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">sample_size_per_period</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sample_size_per_period</span><span class="p">):</span>  <span class="c1"># loop through and return enough largest non nan values</span>
+                    <span class="n">max_ratio_indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="n">period_ratios_copy</span><span class="p">))</span>
+                    <span class="n">period_ratios_copy</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="n">period_ratios_copy</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>  <span class="c1"># set to nan to find next largest</span>
+
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">period_ratios_copy</span><span class="p">)):</span>  <span class="c1"># are any non-nan values still present?</span>
+                        <span class="c1"># Yes, continue to find next largest value</span>
+                        <span class="k">pass</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># only nans are left, have to quit loop and throw out the data</span>
+                        <span class="n">invalid_period</span> <span class="o">=</span> <span class="mi">1</span>
+                        <span class="n">bad_vals_loop</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">A period was thrown out due to insufficient data, failed finding valid point # </span><span class="si">%s</span><span class="s1"> &#39;</span>
+                              <span class="s1">&#39; out of the required </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sample_size_per_period</span><span class="p">))</span>
+                        <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># there is not enough data in this final period to compute correction data</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">A period was thrown out due to insufficient data, either because it had no valid ratios,&#39;</span>
+                      <span class="s1">&#39;or because it had less than </span><span class="si">%s</span><span class="s1"> days.&#39;</span> <span class="o">%</span> <span class="n">sample_size_per_period</span><span class="p">)</span>
+                <span class="n">invalid_period</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">bad_vals_loop</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Start a loop that remains true as long as none of the ending conditions are met while iterating down</span>
+            <span class="c1"># the rest of the values until reasonably sure that remaining points don&#39;t massively shift the data</span>
+            <span class="n">cf_index_start</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">cf_index_end</span> <span class="o">=</span> <span class="n">cf_index_start</span> <span class="o">+</span> <span class="n">sample_size_per_period</span>  <span class="c1"># ending index is not inclusive</span>
+            <span class="n">new_cf_index_start</span> <span class="o">=</span> <span class="n">cf_index_start</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">new_cf_index_end</span> <span class="o">=</span> <span class="n">cf_index_end</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">while</span> <span class="n">bad_vals_loop</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">period_ratios_copy</span><span class="p">))</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">period_ratios_copy</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">sample_size_per_period</span><span class="p">:</span>
+                    <span class="n">max_ratio_indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="n">period_ratios_copy</span><span class="p">))</span>
+                    <span class="n">period_ratios_copy</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="n">period_ratios_copy</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>  <span class="c1"># set to nan to find next largest</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># only nans are left, end the loop and set the period as invalid</span>
+                    <span class="c1"># this is under the logic that if we&#39;ve iterated through all points without finding a</span>
+                    <span class="c1"># value that seems okay then something is obviously wrong with this period.</span>
+                    <span class="n">invalid_period</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="n">bad_vals_loop</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">A period was thrown out due to failing to find a sufficient &#39;</span>
+                          <span class="s1">&#39;number of valid values when testing for bad values.&#39;</span><span class="p">)</span>
+
+                <span class="n">rs_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">rs_period</span><span class="p">[</span><span class="n">max_ratio_indexes</span><span class="p">[</span><span class="n">cf_index_start</span><span class="p">:</span><span class="n">cf_index_end</span><span class="p">]])</span>
+                <span class="n">rso_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">rso_period</span><span class="p">[</span><span class="n">max_ratio_indexes</span><span class="p">[</span><span class="n">cf_index_start</span><span class="p">:</span><span class="n">cf_index_end</span><span class="p">]])</span>
+
+                <span class="n">new_rs_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">rs_period</span><span class="p">[</span><span class="n">max_ratio_indexes</span><span class="p">[</span><span class="n">new_cf_index_start</span><span class="p">:</span><span class="n">new_cf_index_end</span><span class="p">]])</span>
+                <span class="n">new_rso_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">rso_period</span><span class="p">[</span><span class="n">max_ratio_indexes</span><span class="p">[</span><span class="n">new_cf_index_start</span><span class="p">:</span><span class="n">new_cf_index_end</span><span class="p">]])</span>
+
+                <span class="c1"># Example: if current_cf uses largest points 0-5, new_cf uses largest points 1-6 (omitting the largest)</span>
+                <span class="n">current_cf</span> <span class="o">=</span> <span class="n">rso_avg</span> <span class="o">/</span> <span class="n">rs_avg</span>  <span class="c1"># current correction factor from currently used points</span>
+                <span class="n">new_cf</span> <span class="o">=</span> <span class="n">new_rso_avg</span> <span class="o">/</span> <span class="n">new_rs_avg</span>  <span class="c1"># exploratory correction factor used to check for large changes</span>
+                <span class="n">diff_cf</span> <span class="o">=</span> <span class="n">new_cf</span> <span class="o">-</span> <span class="n">current_cf</span>
+                <span class="n">percent_diff_cf</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff_cf</span> <span class="o">/</span> <span class="n">current_cf</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+
+                <span class="c1"># First of the two rules used to check for the existence of bad values, the logic is that if</span>
+                <span class="c1"># removing the largest point causes over a 2% change in the correction factor (which is an average of</span>
+                <span class="c1"># six largest points) then that point carried an undue influence and is a likely bad value</span>
+                <span class="c1"># We only need to care if Rs_average is above Rso_average</span>
+                <span class="k">if</span> <span class="n">percent_diff_cf</span> <span class="o">&gt;=</span> <span class="mf">2.0</span> <span class="ow">and</span> <span class="n">rs_avg</span> <span class="o">&gt;</span> <span class="n">rso_avg</span><span class="p">:</span>
+                    <span class="n">new_cf_significant_change</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_cf_significant_change</span> <span class="o">=</span> <span class="kc">False</span>
+
+                <span class="c1"># Second of the two rules used to check for the existence of bad values is if Rs average</span>
+                <span class="c1"># is sufficiently larger than rso average. This would occur with many  bad values with consistent values</span>
+                <span class="c1"># this should occur very infrequently</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">rs_avg</span> <span class="o">-</span> <span class="n">rso_avg</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">75</span><span class="p">:</span>
+                    <span class="n">rs_avg_greatly_exceeds_rso_avg</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rs_avg_greatly_exceeds_rso_avg</span> <span class="o">=</span> <span class="kc">False</span>
+
+                <span class="c1"># Now we see if either of the two rules were violated</span>
+                <span class="k">if</span> <span class="n">new_cf_significant_change</span> <span class="ow">or</span> <span class="n">rs_avg_greatly_exceeds_rso_avg</span><span class="p">:</span>
+                    <span class="c1"># at least one of the rules were violated, so continue forward with the next iteration</span>
+
+                    <span class="c1"># check for the rarer rule occurring:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">new_cf_significant_change</span> <span class="ow">and</span> <span class="n">rs_avg_greatly_exceeds_rso_avg</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">WARNING: The rule for rs greatly exceeding rso was triggered without triggering the&#39;</span>
+                              <span class="s1">&#39; significant change to correction factor rule. Look at the data to make sure the data&#39;</span>
+                              <span class="s1">&#39; has a lot of bad values. Period was </span><span class="si">{}</span><span class="s1"> starting around </span><span class="si">{}</span><span class="s1"> and ending around </span><span class="si">{}</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                              <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_period_index</span><span class="p">,</span> <span class="p">(</span><span class="n">interval_index</span> <span class="o">-</span> <span class="n">period</span><span class="p">),</span> <span class="n">interval_index</span><span class="p">))</span>
+
+                    <span class="c1"># increment indexes and keep iterating for more bad values</span>
+                    <span class="n">cf_index_start</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">cf_index_end</span> <span class="o">=</span> <span class="n">cf_index_start</span> <span class="o">+</span> <span class="n">sample_size_per_period</span>  <span class="c1"># ending index is not inclusive</span>
+                    <span class="n">new_cf_index_start</span> <span class="o">=</span> <span class="n">cf_index_start</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">new_cf_index_end</span> <span class="o">=</span> <span class="n">cf_index_end</span> <span class="o">+</span> <span class="mi">1</span>
+
+                    <span class="n">bad_vals_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># if neither of the two rules were violated, we can proceed with the assumption that all likely</span>
+                    <span class="c1"># bad values have been removed, and we use the current_cf as the correction factor</span>
+                    <span class="n">bad_vals_loop</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">if</span> <span class="n">invalid_period</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># period has valid data to compute correction factor</span>
+                <span class="n">rs_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">rs_period</span><span class="p">[</span><span class="n">max_ratio_indexes</span><span class="p">[</span><span class="n">cf_index_start</span><span class="p">:</span><span class="n">cf_index_end</span><span class="p">]])</span>
+                <span class="n">rso_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">rso_period</span><span class="p">[</span><span class="n">max_ratio_indexes</span><span class="p">[</span><span class="n">cf_index_start</span><span class="p">:</span><span class="n">cf_index_end</span><span class="p">]])</span>
+
+                <span class="n">period_corr</span><span class="p">[</span><span class="n">num_period_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">rso_avg</span> <span class="o">/</span> <span class="n">rs_avg</span>  <span class="c1"># compute the correction factor</span>
+
+                <span class="c1"># Go through and set the rs points marked as likely bad values to a unique identifier to find later</span>
+                <span class="n">rs_period</span><span class="p">[</span><span class="n">max_ratio_indexes</span><span class="p">[:</span><span class="n">cf_index_start</span><span class="p">]]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">12345</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># This period has insufficient data to correct, instead we will remove all points and track how many we</span>
+                <span class="c1"># remove</span>
+                <span class="n">removed_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rs_period</span><span class="p">))</span>  <span class="c1"># count number of points we&#39;re about to remove</span>
+                <span class="n">rs_period</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>  <span class="c1"># insufficient data exists to correct this period, so set it to nan</span>
+                <span class="n">period_corr</span><span class="p">[</span><span class="n">num_period_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="n">insufficient_period_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">insufficient_data_counter</span> <span class="o">+=</span> <span class="n">removed_points</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">This insufficient period contained </span><span class="si">%s</span><span class="s1"> datapoints for Rs, which have been set to nan.&#39;</span>
+                      <span class="o">%</span> <span class="n">removed_points</span><span class="p">)</span>
+
+            <span class="c1"># add this period&#39;s rs data, which has had potentially bad values removed, to the new interval of rs</span>
+            <span class="n">cleaned_rs_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned_rs_interval</span><span class="p">,</span> <span class="n">rs_period</span><span class="p">)</span>
+
+            <span class="c1"># adjust counters to move to next period, if this is the final period then does nothing.</span>
+            <span class="n">within_period_index</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">num_period_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">elif</span> <span class="n">within_period_index</span> <span class="o">&lt;</span> <span class="n">period</span><span class="p">:</span>
+            <span class="c1"># haven&#39;t run out of data points, and period still hasn&#39;t been filled</span>
+            <span class="n">rs_period</span><span class="p">[</span><span class="n">within_period_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">rs_interval</span><span class="p">[</span><span class="n">interval_index</span><span class="p">]</span>
+            <span class="n">rso_period</span><span class="p">[</span><span class="n">within_period_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">rso_interval</span><span class="p">[</span><span class="n">interval_index</span><span class="p">]</span>
+            <span class="n">interval_index</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">within_period_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># This should never happen</span>
+            <span class="k">pass</span>
+
+    <span class="c1"># Now that the correction factor has been computed for each period, we now step through each period again and</span>
+    <span class="c1"># apply those correction factors</span>
+    <span class="n">corr_rs</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">=</span> <span class="n">cleaned_rs_interval</span><span class="p">[:]</span>  <span class="c1"># save all the values removed for suspect values/insufficient data</span>
+    <span class="n">correction_cutoff_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">rso_clipping_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">unchanged_data_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">start</span>  <span class="c1"># index that tracks along data points for the full selected correction interval</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># index that tracks how far along a period we are</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># index that tracks which correction period we are in</span>
+    <span class="k">while</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rs</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">end</span> <span class="ow">and</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">period_corr</span><span class="p">):</span>
+        <span class="c1"># x is less than the length of var1 to prevent OOB,</span>
+        <span class="c1"># and is before or at the end of the correction interval,</span>
+        <span class="c1"># and we have not yet run out of correction periods</span>
+        <span class="c1"># and capping correction by a fifty percent increase or decrease</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="n">period</span><span class="p">:</span>
+            <span class="c1"># if y is less than the size of a correction period</span>
+
+            <span class="c1"># Check to see if rs correction factor is smaller than a 50% relative increase or decrease</span>
+            <span class="c1"># if it is larger than that we will remove it for a later fill with Rs_TR</span>
+            <span class="k">if</span> <span class="mf">0.50</span> <span class="o">&lt;=</span> <span class="n">period_corr</span><span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">1.50</span><span class="p">:</span>
+
+                <span class="c1"># was the current rs point removed for being a potentially bad value?</span>
+                <span class="c1"># if so, set it to 1.05*Rso and leave it there (do not later clip it)</span>
+                <span class="k">if</span> <span class="n">corr_rs</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">12345</span><span class="p">:</span>
+                    <span class="n">corr_rs</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">rso</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.05</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="mf">0.97</span> <span class="o">&lt;=</span> <span class="n">period_corr</span><span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">1.03</span><span class="p">:</span>
+                        <span class="c1"># don&#39;t change the data under the assumption that the sensor is working</span>
+                        <span class="n">unchanged_data_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># apply the correction to the data</span>
+                        <span class="n">corr_rs</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">rs</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">*</span> <span class="n">period_corr</span><span class="p">[</span><span class="n">z</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="n">corr_rs</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">rso</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.03</span><span class="p">):</span>  <span class="c1"># Check to see if Rs now sufficiently exceeds rso for clipping</span>
+                        <span class="n">corr_rs</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">rso</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+                        <span class="n">rso_clipping_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>  <span class="c1"># no special action needed</span>
+                        <span class="k">pass</span>
+
+            <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">period_corr</span><span class="p">[</span><span class="n">z</span><span class="p">]):</span>
+                <span class="c1"># This data was already set to nan during the steps above, so pass</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># correction factor would be too high, so throw out the data</span>
+                <span class="n">corr_rs</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="n">correction_cutoff_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">x</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">y</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># We have reached the end of the correction period, go to next period</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">z</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">%s</span><span class="s1"> data points were removed as part of the suspect values evaluation process. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">bad_vals_counter</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">%s</span><span class="s1"> Rs data points were removed due to their correction factor exceeding a &#39;</span>
+          <span class="s1">&#39;50 percent relative increase or decrease. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">correction_cutoff_counter</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">%s</span><span class="s1"> Rs data points in </span><span class="si">%s</span><span class="s1"> different periods were removed due to insufficient data present in either Rs or &#39;</span>
+          <span class="s1">&#39;Rso to compute a correction factor. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">insufficient_data_counter</span><span class="p">,</span> <span class="n">insufficient_period_counter</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">%s</span><span class="s1"> Rs data points were clipped to Rso due to exceeding 1.03 * Rso after correction.&#39;</span>
+          <span class="o">%</span> <span class="n">rso_clipping_counter</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">%s</span><span class="s1"> Rs data points were unchanged due to the correction factor being between 0.97 and 1.03.&#39;</span>
+          <span class="o">%</span> <span class="n">unchanged_data_counter</span><span class="p">)</span>
+
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Periodic ratio-based Rs corrections were applied,&#39;</span>
+                     <span class="s1">&#39; period length was </span><span class="si">%s</span><span class="s1">, and correction sample size was </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                     <span class="o">%</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">sample_size_per_period</span><span class="p">))</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> data points were removed as part of the suspect value evaluation process. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                     <span class="o">%</span> <span class="n">bad_vals_counter</span><span class="p">)</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> Rs data points in </span><span class="si">%s</span><span class="s1"> different periods were removed due to insufficient data present in&#39;</span>
+                     <span class="s1">&#39; either Rs or Rso to compute a correction factor. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                     <span class="o">%</span> <span class="p">(</span><span class="n">insufficient_data_counter</span><span class="p">,</span> <span class="n">insufficient_period_counter</span><span class="p">))</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> data points were removed due to their correction factor exceeding a &#39;</span>
+                     <span class="s1">&#39;50 percent relative increase or decrease. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">correction_cutoff_counter</span><span class="p">)</span>
+    <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">%s</span><span class="s1"> Rs data points were clipped to  1.03 * Rso due to exceeding 1.03 * Rso after correction.&#39;</span>
+                     <span class="o">%</span> <span class="n">rso_clipping_counter</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">corr_rs</span><span class="p">,</span> <span class="n">rso</span></div>
+
+
+
+<div class="viewcode-block" id="correction">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.correction">[docs]</a>
+<span class="k">def</span> <span class="nf">correction</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">auto_corr</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This main qaqc function takes in two variables and, depending on the code provided, enables different</span>
+<span class="sd">    correction methods for the user to use to correct data. This function serves as the</span>
+<span class="sd">    wrapper/handler for all other correction method functions. Once a correction has been applied, user has the</span>
+<span class="sd">    option to do multiple iterations before finishing. All actions taken are recorded into the log file.</span>
+
+<span class="sd">    After each iteration a bokeh graph is generated that shows the changes that have occurred. After the user</span>
+<span class="sd">    decides to completely finish with corrections, one final bokeh plot is generated that shows the final</span>
+<span class="sd">    corrected product vs the uncorrected data that was initially passed in</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :station: (str) station name for saving files</span>
+<span class="sd">        :log_path: (str) path to log file</span>
+<span class="sd">        :folder_path: (str) path to correction files directory</span>
+<span class="sd">        :var_one: (ndarray) 1-D numpy array of first variable passed</span>
+<span class="sd">        :var_two: (ndarray) 1-D numpy array of second variable, may be all NaN</span>
+<span class="sd">        :dt_array: (ndarray) 1-D datetime array used for bokeh plotting</span>
+<span class="sd">        :month: (ndarray) 1-D numpy array of month values</span>
+<span class="sd">        :year: (ndarray) 1-D numpy array of year values</span>
+<span class="sd">        :code: (int) used to determine what variables are actually passed as var_one and var_two</span>
+<span class="sd">        :auto_corr: (int) flag for the &quot;automatic first pass&quot; mode, which auto-applies default correction first</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :corr_var_one: (ndarray) 1-D numpy array of corrected var_one values</span>
+<span class="sd">        :corr_var_two: (ndarray) 1-D numpy array of corrected var_two values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">correction_loop</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">first_pass</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># boolean flag for whether it is the first pass, used in automation with auto_corr</span>
+    <span class="n">var_size</span> <span class="o">=</span> <span class="n">var_one</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">backup_var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_one</span><span class="p">)</span>
+    <span class="n">backup_var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_two</span><span class="p">)</span>
+    <span class="n">corr_var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_one</span><span class="p">)</span>
+    <span class="n">corr_var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_two</span><span class="p">)</span>
+
+    <span class="c1">####################</span>
+    <span class="c1"># Reopen log file and append correction actions taken to it.</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">()</span>
+    <span class="n">corr_log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">FEATURES_DICT</span><span class="p">[</span><span class="n">code</span><span class="p">][</span><span class="s1">&#39;var_two_name&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">Correcting </span><span class="si">%s</span><span class="s1"> at </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                       <span class="o">%</span> <span class="p">(</span><span class="n">FEATURES_DICT</span><span class="p">[</span><span class="n">code</span><span class="p">][</span><span class="s1">&#39;var_one_name&#39;</span><span class="p">],</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">Correcting </span><span class="si">%s</span><span class="s1"> and </span><span class="si">%s</span><span class="s1"> at </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                       <span class="o">%</span> <span class="p">(</span><span class="n">FEATURES_DICT</span><span class="p">[</span><span class="n">code</span><span class="p">][</span><span class="s1">&#39;var_one_name&#39;</span><span class="p">],</span> <span class="n">FEATURES_DICT</span><span class="p">[</span><span class="n">code</span><span class="p">][</span><span class="s1">&#39;var_two_name&#39;</span><span class="p">],</span>
+                          <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)))</span>
+
+    <span class="c1">####################</span>
+    <span class="c1"># Generate Before-Corrections Graph</span>
+    <span class="k">if</span> <span class="n">first_pass</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">auto_corr</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># first automatic pass, skip plotting variables for now</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">corr_fig</span> <span class="o">=</span> <span class="n">plotting_functions</span><span class="o">.</span><span class="n">variable_correction_plots</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span>
+                                                                <span class="n">corr_var_two</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">)</span>
+        <span class="n">show</span><span class="p">(</span><span class="n">corr_fig</span><span class="p">)</span>
+
+    <span class="c1">####################</span>
+    <span class="c1"># Correction Loop</span>
+    <span class="c1"># Give the user as many iterations to do corrections as they wish</span>
+    <span class="k">while</span> <span class="n">correction_loop</span><span class="p">:</span>
+        <span class="c1">####################</span>
+        <span class="c1"># Interval and Correction Method Selection</span>
+        <span class="c1"># Determine what subset of data the user wants to correct, then determine how they want to do it.</span>
+
+        <span class="k">if</span> <span class="n">first_pass</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">auto_corr</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># first automatic pass, select full bracket</span>
+            <span class="n">int_start</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">int_end</span> <span class="o">=</span> <span class="n">var_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span><span class="p">)</span> <span class="o">=</span> <span class="n">generate_interval</span><span class="p">(</span><span class="n">var_size</span><span class="p">)</span>
+
+        <span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="n">first_pass</span><span class="p">)</span> <span class="o">=</span> <span class="n">_generate_corr_menu</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">auto_corr</span><span class="p">,</span> <span class="n">first_pass</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span><span class="p">)</span> <span class="o">=</span> <span class="n">additive_corr</span><span class="p">(</span><span class="n">corr_log</span><span class="p">,</span> <span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span><span class="p">)</span> <span class="o">=</span> <span class="n">multiplicative_corr</span><span class="p">(</span><span class="n">corr_log</span><span class="p">,</span> <span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span><span class="p">)</span> <span class="o">=</span> <span class="n">set_to_nan</span><span class="p">(</span><span class="n">corr_log</span><span class="p">,</span> <span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="p">(</span><span class="n">code</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="p">(</span><span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span><span class="p">)</span> <span class="o">=</span> <span class="n">temp_find_outliers</span><span class="p">(</span><span class="n">corr_log</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">FEATURES_DICT</span><span class="p">[</span><span class="n">code</span><span class="p">][</span><span class="s1">&#39;var_one_name&#39;</span><span class="p">],</span>
+                                                              <span class="n">var_two</span><span class="p">,</span> <span class="n">FEATURES_DICT</span><span class="p">[</span><span class="n">code</span><span class="p">][</span><span class="s1">&#39;var_two_name&#39;</span><span class="p">],</span> <span class="n">month</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">auto_corr</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">corr_percentile</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">corr_percentile</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span>
+                    <span class="mi">1</span><span class="p">,</span> <span class="mi">365</span><span class="p">,</span>
+                    <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Enter which top percentile you want to base corrections on (rec. 1): &#39;</span><span class="p">)</span>
+
+            <span class="p">(</span><span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span><span class="p">)</span> <span class="o">=</span> <span class="n">rh_yearly_percentile_corr</span><span class="p">(</span><span class="n">corr_log</span><span class="p">,</span> <span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span>
+                                                                     <span class="n">year</span><span class="p">,</span> <span class="n">corr_percentile</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">auto_corr</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">corr_period</span> <span class="o">=</span> <span class="mi">60</span>
+                <span class="n">corr_sample</span> <span class="o">=</span> <span class="mi">6</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">corr_period</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span>
+                    <span class="mi">1</span><span class="p">,</span> <span class="mi">365</span><span class="p">,</span>
+                    <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Enter the number of days each correction period will last (rec. 60): &#39;</span><span class="p">)</span>
+                <span class="n">corr_sample</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span>
+                    <span class="mi">1</span><span class="p">,</span> <span class="n">corr_period</span><span class="p">,</span>
+                    <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Enter the number of points per period to correct based on (rec 6): &#39;</span><span class="p">)</span>
+
+            <span class="p">(</span><span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span><span class="p">)</span> <span class="o">=</span> <span class="n">rs_period_ratio_corr</span><span class="p">(</span><span class="n">corr_log</span><span class="p">,</span> <span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span>
+                                                                <span class="n">corr_sample</span><span class="p">,</span> <span class="n">corr_period</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="p">(</span><span class="n">code</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">7</span> <span class="ow">or</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">9</span><span class="p">):</span>
+            <span class="c1"># Data is either uz, precip, ea, or rhavg and user doesn&#39;t want to correct it.</span>
+            <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Selected correction interval started at </span><span class="si">%s</span><span class="s1"> and ended at </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span><span class="p">))</span>
+            <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;User decided to skip this interval without correcting it. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Shouldn&#39;t happen, raise an error</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unsupported code type </span><span class="si">{0}</span><span class="s1"> and choice type </span><span class="si">{1}</span><span class="s1"> passed to qaqc_functions.&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">choice</span><span class="p">))</span>
+
+        <span class="c1"># Generate After-Corrections Graph</span>
+        <span class="n">corr_fig</span> <span class="o">=</span> <span class="n">plotting_functions</span><span class="o">.</span><span class="n">variable_correction_plots</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span>
+                                                                <span class="n">corr_var_two</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">)</span>
+        <span class="n">show</span><span class="p">(</span><span class="n">corr_fig</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">auto_corr</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">auto_corr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">auto_corr</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># set to 0 to prevent another automatic correction loop</span>
+
+        <span class="c1"># Determine if user wants to keep correcting</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Are you done correcting?&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   Enter 1 for yes.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   Enter 2 for another iteration.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   Enter 3 to start over.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   Enter 4 to discard all changes.&#39;</span><span class="p">)</span>
+
+        <span class="n">choice</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;Enter your selection: &quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">correction_loop</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;---&gt; User has elected to end corrections. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">corr_var_one</span><span class="p">)</span>
+            <span class="n">var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">corr_var_two</span><span class="p">)</span>
+            <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;---&gt; User has elected to do another iteration of corrections. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">backup_var_one</span><span class="p">)</span>
+            <span class="n">var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">backup_var_two</span><span class="p">)</span>
+            <span class="n">corr_var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">backup_var_one</span><span class="p">)</span>
+            <span class="n">corr_var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">backup_var_two</span><span class="p">)</span>
+            <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;---&gt; User has elected to ignore previous iterations of corrections and start over. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">correction_loop</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">corr_var_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">backup_var_one</span><span class="p">)</span>
+            <span class="n">corr_var_two</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">backup_var_two</span><span class="p">)</span>
+            <span class="n">corr_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;---&gt; User has elected to end corrections without keeping any changes. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1">####################</span>
+    <span class="c1"># Generate Final Graph</span>
+    <span class="c1"># All previous graphs were either entirely before corrections, or showed differences between iterations</span>
+    <span class="c1"># This graph is between completely original values and final corrected product</span>
+    <span class="n">corr_fig</span> <span class="o">=</span> <span class="n">plotting_functions</span><span class="o">.</span><span class="n">variable_correction_plots</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">backup_var_one</span><span class="p">,</span> <span class="n">corr_var_one</span><span class="p">,</span>
+                                                            <span class="n">backup_var_two</span><span class="p">,</span> <span class="n">corr_var_two</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">)</span>
+    <span class="n">save</span><span class="p">(</span><span class="n">corr_fig</span><span class="p">)</span>
+
+    <span class="c1"># return corrected variables, or save original values as corrected values if correction was rejected</span>
+    <span class="n">corr_log</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span></div>
+
+
+
+<div class="viewcode-block" id="compiled_humidity_adjustment">
+<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.compiled_humidity_adjustment">[docs]</a>
+<span class="k">def</span> <span class="nf">compiled_humidity_adjustment</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">tavg</span><span class="p">,</span> <span class="n">compiled_ea</span><span class="p">,</span> <span class="n">ea</span><span class="p">,</span> <span class="n">ea_col</span><span class="p">,</span>
+                                 <span class="n">tdew</span><span class="p">,</span> <span class="n">tdew_col</span><span class="p">,</span> <span class="n">tdew_ko</span><span class="p">,</span> <span class="n">rhmax</span><span class="p">,</span> <span class="n">rhmax_col</span><span class="p">,</span> <span class="n">rhmin</span><span class="p">,</span> <span class="n">rhmin_col</span><span class="p">,</span> <span class="n">rhavg</span><span class="p">,</span> <span class="n">rhavg_col</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function displays the &#39;compiled&#39; ea generated from all available humidity data, and the user will have</span>
+<span class="sd">    the option to overwrite sections of the &#39;compiled&#39; ea with ea generated from a variable of their choice, should</span>
+<span class="sd">    a higher priority humidity variable have worse data than a lower priority one.</span>
+
+<span class="sd">    Example 1: </span>
+<span class="sd">        A station has both vapor pressure (daily average calculated from 15 minute intervals)</span>
+<span class="sd">        and RH Maximum and Minimum (daily values). The humidity compilation function will only use RHMax and RHMin</span>
+<span class="sd">        to calculate vapor pressure if there is a gap in the provided vapor pressure data. However, for some reason the</span>
+<span class="sd">        vapor pressure data is bad, either from a faulty sensor or problem with the sampling, while the contemporaneous</span>
+<span class="sd">        RH data is good. This function will allow you to graphically select the &#39;bad&#39; section of vapor pressure data</span>
+<span class="sd">        and overwrite it with the vapor pressure calculated from the present RH Maximum and minimum data.</span>
+<span class="sd">        </span>
+<span class="sd">    Example 2: </span>
+<span class="sd">        A station has both vapor pressure (daily average calculated from 15 minute intervals)</span>
+<span class="sd">        and RH Maximum and Minimum (daily values). Data from all variables is bad for the periods of 01/2016-12/2016.</span>
+<span class="sd">        This function would allow you to fill in the &#39;compiled&#39; ea values from 2016 with values from Tmin - Ko </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        :station: (str) station name for saving files</span>
+<span class="sd">        :log_path: (str) path to log file</span>
+<span class="sd">        :folder_path: (str) path to correction files directory</span>
+<span class="sd">        :dt_array: (ndarray) 1-D datetime array used for bokeh plots</span>
+<span class="sd">        :tmax: (ndarray) 1-D array of maximum temperature values</span>
+<span class="sd">        :tmin: (ndarray) 1-D array of minimum temperature values</span>
+<span class="sd">        :tavg: (ndarray) 1-D array of average temperature values</span>
+<span class="sd">        :compiled_ea: (ndarray) the array of ea values that has been generated from all provided humidity variables</span>
+<span class="sd">        :ea: (ndarray) 1-D array of vapor pressure values, which may be empty</span>
+<span class="sd">        :ea_col: (int) used to determine if ea was provided by the data source</span>
+<span class="sd">        :tdew: (ndarray) 1-D array of dewpoint temperature values, which may be empty</span>
+<span class="sd">        :tdew_col: (int) column of Tdew variable in data file, if it is provided</span>
+<span class="sd">        :tdew_ko: (ndarray) 1-D array of dewpoint temperature values, where missing values are filled in by Tmin-Ko curve</span>
+<span class="sd">        :rhmax: (ndarray) 1-D array of maximum relative humidity values, which may be empty</span>
+<span class="sd">        :rhmax_col: (int) column of rhmax variable in data file, if it was provided</span>
+<span class="sd">        :rhmin: (ndarray) 1-D array of minimum relative humidity values, which may be empty</span>
+<span class="sd">        :rhmin_col: (int) column of rhmin variable in data file, if it was provided</span>
+<span class="sd">        :rhavg: (ndarray) 1-D array of average relative humidity values, which may be empty</span>
+<span class="sd">        :rhavg_col: (int) column of rhavg variable in data file, if it was provided</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        :edited_compiled_ea: (ndarray) ea array that has had selected sections replaced by the selected sources</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">adjustment_loop</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">var_size</span> <span class="o">=</span> <span class="n">compiled_ea</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">backup_compiled_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">compiled_ea</span><span class="p">)</span>
+    <span class="n">edited_compiled_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">compiled_ea</span><span class="p">)</span>
+
+    <span class="c1">####################</span>
+    <span class="c1"># Logging</span>
+    <span class="c1"># Reopen log file and append correction actions taken to it.</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">()</span>
+    <span class="n">humidity_log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">------------------------------------------------------------------------------------------</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Now beginning humidity record adjustment. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">humidity_fig</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">plotting_functions</span><span class="o">.</span><span class="n">humidity_adjustment_plots</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">edited_compiled_ea</span><span class="p">,</span> <span class="n">ea</span><span class="p">,</span> <span class="n">ea_col</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span>
+                                                     <span class="n">tdew</span><span class="p">,</span> <span class="n">tdew_col</span><span class="p">,</span> <span class="n">rhmax</span><span class="p">,</span> <span class="n">rhmax_col</span><span class="p">,</span> <span class="n">rhmin</span><span class="p">,</span> <span class="n">rhmin_col</span><span class="p">,</span>
+                                                     <span class="n">rhavg</span><span class="p">,</span> <span class="n">rhavg_col</span><span class="p">,</span> <span class="n">tdew_ko</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">))</span>
+    <span class="n">show</span><span class="p">(</span><span class="n">humidity_fig</span><span class="p">)</span>
+
+    <span class="c1">####################</span>
+    <span class="c1"># Adjustment Loop</span>
+    <span class="c1"># User gets to repeat this process as many times as they want</span>
+    <span class="k">while</span> <span class="n">adjustment_loop</span><span class="p">:</span>
+
+        <span class="c1">####################</span>
+        <span class="c1"># First the user will select an interval, then they will choose a variable to copy from.</span>
+        <span class="p">(</span><span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span><span class="p">)</span> <span class="o">=</span> <span class="n">generate_interval</span><span class="p">(</span><span class="n">var_size</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Please select which variable you want to use for this interval:&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   To use Ea data provided by the input file, enter 1.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   To use Dewpoint Temperature data provided by the input file, enter 2.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   To use RH Max and Min data provided by the input file, enter 3.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   To use RH Avg data provided by the input file, enter 4.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   To use Dewpoint temperature data that was filled in from TMin - Ko, enter 5.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   To skip this selected interval, enter 6.&#39;</span><span class="p">)</span>
+
+        <span class="n">choice</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span> <span class="s2">&quot;Enter your selection: &quot;</span><span class="p">)</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">while</span> <span class="n">loop</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">ea_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ea was not provided by the dataset, please select a provided option.&#39;</span><span class="p">)</span>
+                    <span class="n">choice</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;Specify which variable you would like to use: &#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">tdew_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;TDew was not provided by the dataset, please select a provided option.&#39;</span><span class="p">)</span>
+                    <span class="n">choice</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;Specify which variable you would like to use: &#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="p">(</span><span class="n">rhmax_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">rhmin_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;RH Max and Min were not provided by the dataset, please select a provided option.&#39;</span><span class="p">)</span>
+                    <span class="n">choice</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;Specify which variable you would like to use: &#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">rhavg_col</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;RH Avg was not provided by the dataset, please select a provided option.&#39;</span><span class="p">)</span>
+                    <span class="n">choice</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;Specify which variable you would like to use: &#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Ko Tdew and skipping always a possible option</span>
+                    <span class="n">loop</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Selected interval started at </span><span class="si">%s</span><span class="s1"> and ended at </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># User wants provided Ea</span>
+            <span class="n">edited_compiled_ea</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">ea</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> The selected interval was overwritten by provided vapor pressure.&#39;</span><span class="p">)</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Variable used was provided vapor pressure. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># User wants provided TDew</span>
+            <span class="n">s_tdew</span> <span class="o">=</span> <span class="n">tdew</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span>  <span class="c1"># Selected interval of tdew</span>
+            <span class="n">calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">s_tdew</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">s_tdew</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># EQ 8, units kPa</span>
+            <span class="n">edited_compiled_ea</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">calc_ea</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> The selected interval was overwritten by provided dewpoint temperature.&#39;</span><span class="p">)</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Variable used was provided dewpoint temperature. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># User wants provided RHMax and RHMin</span>
+            <span class="n">s_tmax</span> <span class="o">=</span> <span class="n">tmax</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span>
+            <span class="n">s_tmin</span> <span class="o">=</span> <span class="n">tmin</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span>
+            <span class="n">s_rhmax</span> <span class="o">=</span> <span class="n">rhmax</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span>
+            <span class="n">s_rhmin</span> <span class="o">=</span> <span class="n">rhmin</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span>
+
+            <span class="n">eo_tmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">s_tmax</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">s_tmax</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># units kPa, EQ 7</span>
+            <span class="n">eo_tmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">s_tmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">s_tmin</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># units kPa, EQ 7</span>
+            <span class="n">calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(((</span><span class="n">eo_tmin</span> <span class="o">*</span> <span class="p">(</span><span class="n">s_rhmax</span> <span class="o">/</span> <span class="mi">100</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">eo_tmax</span> <span class="o">*</span> <span class="p">(</span><span class="n">s_rhmin</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># EQ 11</span>
+            <span class="n">edited_compiled_ea</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">calc_ea</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> The selected interval was overwritten by RH Maximum and Minimum.&#39;</span><span class="p">)</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Variable used was provided RH Maximum and Minimum. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="c1"># User wants provided RHAvg</span>
+            <span class="n">s_tavg</span> <span class="o">=</span> <span class="n">tavg</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span>
+            <span class="n">s_rhavg</span> <span class="o">=</span> <span class="n">rhavg</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span>
+
+            <span class="n">eo_tavg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">s_tavg</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">s_tavg</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># units kPa, EQ 7</span>
+            <span class="n">calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eo_tavg</span> <span class="o">*</span> <span class="p">(</span><span class="n">s_rhavg</span> <span class="o">/</span> <span class="mi">100</span><span class="p">))</span>  <span class="c1"># EQ 14</span>
+            <span class="n">edited_compiled_ea</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">calc_ea</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> The selected interval was overwritten by RH Average.&#39;</span><span class="p">)</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Variable used was provided RH Average. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="c1"># User wants provided TDew that was completed by Tmin-Ko curve</span>
+            <span class="n">s_tdew_ko</span> <span class="o">=</span> <span class="n">tdew_ko</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span>  <span class="c1"># Selected interval of tdew</span>
+            <span class="n">calc_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.6108</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mf">17.27</span> <span class="o">*</span> <span class="n">s_tdew_ko</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">s_tdew_ko</span> <span class="o">+</span> <span class="mf">237.3</span><span class="p">)))</span>  <span class="c1"># EQ 8, units kPa</span>
+            <span class="n">edited_compiled_ea</span><span class="p">[</span><span class="n">int_start</span><span class="p">:</span><span class="n">int_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">calc_ea</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> The selected interval was overwritten by dewpoint temperature filled in with the k0 curve.&#39;</span><span class="p">)</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Variable used was provided dewpoint temperature filled in by the Ko curve. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> The selected interval was not modified.&#39;</span><span class="p">)</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;The selected interval was skipped. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Incorrect choice was passed, raise an error</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Incorrect parameters: CHOICE in humidity adjustment was an unexpected value.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Now that the section has been overwritten, replot the variables</span>
+        <span class="n">humidity_fig</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">plotting_functions</span><span class="o">.</span><span class="n">humidity_adjustment_plots</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">edited_compiled_ea</span><span class="p">,</span> <span class="n">ea</span><span class="p">,</span> <span class="n">ea_col</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span>
+                                                         <span class="n">tdew</span><span class="p">,</span> <span class="n">tdew_col</span><span class="p">,</span> <span class="n">rhmax</span><span class="p">,</span> <span class="n">rhmax_col</span><span class="p">,</span> <span class="n">rhmin</span><span class="p">,</span> <span class="n">rhmin_col</span><span class="p">,</span>
+                                                         <span class="n">rhavg</span><span class="p">,</span> <span class="n">rhavg_col</span><span class="p">,</span> <span class="n">tdew_ko</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">))</span>
+        <span class="n">show</span><span class="p">(</span><span class="n">humidity_fig</span><span class="p">)</span>
+
+        <span class="c1">####################</span>
+        <span class="c1"># Determine if user wants to keep correcting</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Are you done adjusting humidity?&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   Enter 1 for yes.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   Enter 2 for another iteration.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   Enter 3 to start over.&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   Enter 4 to discard all changes.&#39;</span><span class="p">)</span>
+
+        <span class="n">choice</span> <span class="o">=</span> <span class="n">get_int_input</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span> <span class="s2">&quot;Enter your selection: &quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">adjustment_loop</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;---&gt; User has elected to end adjustments. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;---&gt; User has elected to do another iteration of adjustments. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">edited_compiled_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">backup_compiled_ea</span><span class="p">)</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;---&gt; User has elected to ignore previous iterations of adjustments and start over. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">adjustment_loop</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">edited_compiled_ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">backup_compiled_ea</span><span class="p">)</span>
+            <span class="n">humidity_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;---&gt; User has elected to end adjustments without keeping any changes. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">humidity_log</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">edited_compiled_ea</span></div>
+
+
+
+<span class="c1"># This is never run by itself</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">This module is called as a part of the QAQC script, it does nothing by itself.&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Christian Dunkerly.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
