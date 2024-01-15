@@ -3,5 +3,6 @@
 __pycache__/
 agweatherqaqc/__pycache__/
 venv/
+.docs_build/
 *.pyc
 *.iml
