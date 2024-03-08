@@ -2,9 +2,7 @@
 Installing agweather-qaqc
 #########################
 
-The package agweatherqaqc includes an environment.yml file for easy installation. The file is located at: **"/agweatherqaqc/env/environment.yml"**
-
-The rest of this page is written for a generalist audience.
+This page is written for a generalist audience.
 
 Anaconda
 ========
@@ -12,27 +10,41 @@ Anaconda is a free and open-source distribution of Python that, in exchange for 
 
 Visit the `Anaconda website <https://www.anaconda.com/download/>`_ to download the correct Anaconda version (agweather-qaqc requires a version >= 3.9) for your operating system, and then follow the prompts to install it.
 
-Once you're done installing Anaconda, open the Anaconda prompt and type::
+Once you're done installing Anaconda, open the Anaconda prompt (on Windows) or Terminal (on MacOS or Linux) and type::
 
     >conda info
 
 You should see some text regarding the version of Anaconda you've installed. If you get an error, you may have made a mistake during the installation.
 
+Cloning the Repository
+======================
+
+You can get the latest version of agweather-qaqc by cloning its `Github Repository <https://github.com/WSWUP/agweather-qaqc>`_ or by `clicking here. <https://github.com/WSWUP/agweather-qaqc/archive/master.zip>`_
+
+    >git clone https://github.com/WSWUP/agweather-qaqc
+
+And then change into the repository root directory
+
+    >cd agweatherqaqc
+
+
 Setting up the Environment
 ==========================
 
-Using the Anaconda prompt, navigate to the environment.yml file found at **"/agweatherqaqc/env/environment.yml"**, and then type::
+The package agweatherqaqc includes an environment.yml file for easy installation. The file is located at: **"agweatherqaqc/env/environment.yml"**
 
-    >conda env create -f environment.yml
+To set up the conda environment, type::
 
-And then follow the prompts. This will setup a new environment called **"agweatherqaqc"**, which can be activated by typing::
+    >conda env create -f agweatherqaqc/env/environment.yml
 
-    >activate agweatherqaqc
+Then follow the prompts to setup a new environment called **"agweatherqaqc"**::
 
-After this, setup is complete. Once your `input files are configured <data_preparation.html>`_ agweather-qaqc is ready to run.
+    >conda activate agweatherqaqc
+
+After this, setup is complete. The next step is to configure input files.
 
 .. note::
-   You will have to activate your environment whenever you close the Anaconda prompt.
+   You will have to reactivate your environment whenever you open a new Anaconda prompt or Terminal.
 
 Running the agweather-qaqc
 ==========================
@@ -41,7 +53,6 @@ This package is run locally, so the directory can be placed wherever you want it
 
 You will run the code by directing the Anaconda prompt to the location of the file **qaqc_single_station.py** and running it from there.
 
-You can get the latest version of agweather-qaqc by cloning its `Github Repository <https://github.com/WSWUP/agweather-qaqc>`_ or by `clicking here. <https://github.com/WSWUP/agweather-qaqc/archive/master.zip>`_
 
 
 
