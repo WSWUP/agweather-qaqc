@@ -1,23 +1,21 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>QC Procedure Information &mdash; agweather-qaqc 1.0.2 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=1ed6394b"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -30,15 +28,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="index.html" class="icon icon-home">
-            agweather-qaqc
+            <a href="index.html" class="icon icon-home"> agweather-qaqc
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -77,7 +71,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
       <li class="breadcrumb-item active">QC Procedure Information</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/qc_information.rst.txt" rel="nofollow"> View page source</a>
@@ -89,11 +83,11 @@
            <div itemprop="articleBody">
              
   <section id="qc-procedure-information">
-<h1>QC Procedure Information<a class="headerlink" href="#qc-procedure-information" title="Link to this heading"></a></h1>
+<h1>QC Procedure Information<a class="headerlink" href="#qc-procedure-information" title="Permalink to this heading"></a></h1>
 <p>This page contains details on the correction methods used by agweather-qaqc. The methods chosen could be summed up as:</p>
 <p><strong>Make as few changes as possible to fix bad trends in data without sacrificing the real measured qualities of said data.</strong></p>
 <section id="limits-on-data">
-<h2>Limits on Data<a class="headerlink" href="#limits-on-data" title="Link to this heading"></a></h2>
+<h2>Limits on Data<a class="headerlink" href="#limits-on-data" title="Permalink to this heading"></a></h2>
 <p>The following limits are used when reading in the data to determine any unreasonable values, which are then removed.</p>
 <ul class="simple">
 <li><p>-50 C &lt;= Temperature &lt;= 60 C</p></li>
@@ -106,7 +100,7 @@
 <p>The number of points from each variable removed by these limits are saved in the log file.</p>
 </section>
 <section id="suggested-correction-order">
-<h2>Suggested Correction Order<a class="headerlink" href="#suggested-correction-order" title="Link to this heading"></a></h2>
+<h2>Suggested Correction Order<a class="headerlink" href="#suggested-correction-order" title="Permalink to this heading"></a></h2>
 <p>Because some variables are reliant on others (Ex. correction solar radiation is dependent on clear-sky solar radiation
 which is dependent on humidity) there is a suggested order to the QC process:</p>
 <ol class="arabic simple">
@@ -118,7 +112,7 @@ which is dependent on humidity) there is a suggested order to the QC process:</p
 </ol>
 </section>
 <section id="suggested-correction-parameters">
-<h2>Suggested Correction Parameters<a class="headerlink" href="#suggested-correction-parameters" title="Link to this heading"></a></h2>
+<h2>Suggested Correction Parameters<a class="headerlink" href="#suggested-correction-parameters" title="Permalink to this heading"></a></h2>
 <p>When using this package, you will be asked for what correction parameters you want, which will
 change how the correction factors are calculated and applied. In the process of developing this software,
 certain parameters were found to provide good results. Those parameters are listed here, and appear in the
@@ -136,7 +130,7 @@ enough to get an accurate sampling of variations within the period but it should
 a correction that would force cloudy days to represent clear days.</p>
 </section>
 <section id="temperature-correction">
-<h2>Temperature Correction<a class="headerlink" href="#temperature-correction" title="Link to this heading"></a></h2>
+<h2>Temperature Correction<a class="headerlink" href="#temperature-correction" title="Permalink to this heading"></a></h2>
 <p>Temperature correction is done by removing outliers using a modified z-score approach based on median absolute deviation as described in:</p>
 <p>Boris Iglewicz and David Hoaglin (1993) Volume 16: How to Detect and Handle Outliers, The ASQC Basic References in Quality Control: Statistical Techniques</p>
 <p>The process occurs in the following steps:</p>
@@ -152,13 +146,13 @@ Checking for outliers with an outlier-resistant method such as this allows for t
 the data.</p>
 </section>
 <section id="wind-and-precipitation">
-<h2>Wind and Precipitation<a class="headerlink" href="#wind-and-precipitation" title="Link to this heading"></a></h2>
+<h2>Wind and Precipitation<a class="headerlink" href="#wind-and-precipitation" title="Permalink to this heading"></a></h2>
 <p>There are no easy, reliable ways for us to infer what reasonable wind or precipitation data should be when presented with bad values,
 such as suspiciously high amounts of rainfall or wind data that remains constant over time. For these variables it is recommended to
 just throw remove bad or suspect values.</p>
 </section>
 <section id="relative-humidity-max-min-correction">
-<h2>Relative Humidity Max/Min Correction<a class="headerlink" href="#relative-humidity-max-min-correction" title="Link to this heading"></a></h2>
+<h2>Relative Humidity Max/Min Correction<a class="headerlink" href="#relative-humidity-max-min-correction" title="Permalink to this heading"></a></h2>
 <p>Relative humidity correction is done through a year-based percentile approach, broken down into these steps:</p>
 <ol class="arabic simple">
 <li><p>Divide the entire record into periods based on calendar years (365-366 values per year).</p></li>
@@ -186,14 +180,14 @@ measured dewpoint temperature then this method is not reliable. However, if dewp
 and directly measured, using dewpoint data is preferable to using relative humidity data.</p>
 </div>
 <section id="vapor-pressure-and-rh-average">
-<h3>Vapor Pressure and RH Average<a class="headerlink" href="#vapor-pressure-and-rh-average" title="Link to this heading"></a></h3>
+<h3>Vapor Pressure and RH Average<a class="headerlink" href="#vapor-pressure-and-rh-average" title="Permalink to this heading"></a></h3>
 <p>As with wind and precipitation data, there are no easy, reliable ways for us to infer what vapor pressure or average relative humidity should
 be when presented with bad values, for these variables it is recommended to just throw remove bad or suspect values, or instead choose
 to use a variable like RH Max/Min and Dewpoint Temperature than you can QC.</p>
 </section>
 </section>
 <section id="solar-radiation-correction">
-<h2>Solar Radiation Correction<a class="headerlink" href="#solar-radiation-correction" title="Link to this heading"></a></h2>
+<h2>Solar Radiation Correction<a class="headerlink" href="#solar-radiation-correction" title="Permalink to this heading"></a></h2>
 <p>Correcting solar radiation data is done through a period-based percentile correction, which occurs in the following steps:</p>
 <ol class="arabic simple">
 <li><p>The user-selected interval of both Rs and Rso new sections being divided into user-defined periods.</p></li>

@@ -67,7 +67,7 @@ The majority of work in setting up the config.ini file is done in this section, 
 are in which columns of data, and what units those variables are in. The configuration file has explanations
 for the various prompts in this section.
 
-**In Python, indexes start at 0.**,
+**In Python, indexes start at 0.**
 If an .xlsx data file has Maximum Temperature data was in Column A, the appropriate setting would be "TEMPERATURE_MAX_COL = 0".
 If Solar Radiation data was in Column E, the appropriate setting would be "SOLAR_RADIATION_COL = 4", and so on.
 

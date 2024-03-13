@@ -1,22 +1,20 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="../../">
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>agweatherqaqc.qaqc_functions &mdash; agweather-qaqc 1.0.2 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
-
-  
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=1ed6394b"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -27,15 +25,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../../index.html" class="icon icon-home">
-            agweather-qaqc
+            <a href="../../index.html" class="icon icon-home"> agweather-qaqc
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -62,7 +56,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
       <li class="breadcrumb-item active">agweatherqaqc.qaqc_functions</li>
       <li class="wy-breadcrumbs-aside">
@@ -85,9 +79,7 @@
 <span class="kn">from</span> <span class="nn">bokeh.plotting</span> <span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">show</span>
 
 
-<div class="viewcode-block" id="additive_corr">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.additive_corr">[docs]</a>
-<span class="k">def</span> <span class="nf">additive_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">):</span>
+<div class="viewcode-block" id="additive_corr"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.additive_corr">[docs]</a><span class="k">def</span> <span class="nf">additive_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Corrects provided interval with a flat, user-provided additive modifier obtained via the CLI</span>
 
@@ -112,7 +104,6 @@
     <span class="n">log_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Additive modifier applied for this interval was </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">mod</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span></div>
-
 
 
 <span class="k">def</span> <span class="nf">_generate_corr_menu</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">auto_corr</span><span class="p">,</span> <span class="n">first_pass</span><span class="p">):</span>
@@ -167,9 +158,7 @@
     <span class="k">return</span> <span class="n">choice</span><span class="p">,</span> <span class="n">first_pass</span>
 
 
-<div class="viewcode-block" id="generate_interval">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.generate_interval">[docs]</a>
-<span class="k">def</span> <span class="nf">generate_interval</span><span class="p">(</span><span class="n">var_size</span><span class="p">):</span>
+<div class="viewcode-block" id="generate_interval"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.generate_interval">[docs]</a><span class="k">def</span> <span class="nf">generate_interval</span><span class="p">(</span><span class="n">var_size</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generates menu and obtains user selection on what intervals the user wants to correct via the CLI</span>
 
@@ -203,10 +192,7 @@
     <span class="k">return</span> <span class="n">int_start</span><span class="p">,</span> <span class="n">int_end</span></div>
 
 
-
-<div class="viewcode-block" id="multiplicative_corr">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.multiplicative_corr">[docs]</a>
-<span class="k">def</span> <span class="nf">multiplicative_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">):</span>
+<div class="viewcode-block" id="multiplicative_corr"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.multiplicative_corr">[docs]</a><span class="k">def</span> <span class="nf">multiplicative_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Corrects provided interval with a user-provided multiplicative modifier obtained from the CLI</span>
 
@@ -232,10 +218,7 @@
     <span class="k">return</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span></div>
 
 
-
-<div class="viewcode-block" id="set_to_nan">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.set_to_nan">[docs]</a>
-<span class="k">def</span> <span class="nf">set_to_nan</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">):</span>
+<div class="viewcode-block" id="set_to_nan"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.set_to_nan">[docs]</a><span class="k">def</span> <span class="nf">set_to_nan</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sets entire provided interval to nans, likely because the observations are bad and need to be thrown out.</span>
 
@@ -261,10 +244,7 @@
     <span class="k">return</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span></div>
 
 
-
-<div class="viewcode-block" id="modified_z_score_outlier_detection">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.modified_z_score_outlier_detection">[docs]</a>
-<span class="k">def</span> <span class="nf">modified_z_score_outlier_detection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="modified_z_score_outlier_detection"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.modified_z_score_outlier_detection">[docs]</a><span class="k">def</span> <span class="nf">modified_z_score_outlier_detection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the modified z scores of provided dataset and sets to nan any values that are above the threshold</span>
 <span class="sd">    The modified z approach and threshold of 3.5 is recommended in:</span>
@@ -298,10 +278,7 @@
     <span class="k">return</span> <span class="n">cleaned_data</span><span class="p">,</span> <span class="n">outlier_count</span></div>
 
 
-
-<div class="viewcode-block" id="temp_find_outliers">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.temp_find_outliers">[docs]</a>
-<span class="k">def</span> <span class="nf">temp_find_outliers</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_one_name</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span> <span class="n">var_two_name</span><span class="p">,</span> <span class="n">month</span><span class="p">):</span>
+<div class="viewcode-block" id="temp_find_outliers"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.temp_find_outliers">[docs]</a><span class="k">def</span> <span class="nf">temp_find_outliers</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_one_name</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span> <span class="n">var_two_name</span><span class="p">,</span> <span class="n">month</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper function for modified_z_score_outlier_detection() that will process provided temperature variables.</span>
 <span class="sd">    Due to seasonal variation in temperature the overall temperature record is subset into months</span>
@@ -359,10 +336,7 @@
         <span class="k">return</span> <span class="n">corrected_var_one</span><span class="p">,</span> <span class="n">corrected_var_two</span></div>
 
 
-
-<div class="viewcode-block" id="rh_yearly_percentile_corr">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.rh_yearly_percentile_corr">[docs]</a>
-<span class="k">def</span> <span class="nf">rh_yearly_percentile_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">rhmax</span><span class="p">,</span> <span class="n">rhmin</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">percentage</span><span class="p">):</span>
+<div class="viewcode-block" id="rh_yearly_percentile_corr"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.rh_yearly_percentile_corr">[docs]</a><span class="k">def</span> <span class="nf">rh_yearly_percentile_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">rhmax</span><span class="p">,</span> <span class="n">rhmin</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">percentage</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Performs a year-based percentile correction on relative humidity, works on the assumption that,</span>
 <span class="sd">    in areas with significant agriculture, every year should have at least a few observations</span>
@@ -477,10 +451,7 @@
     <span class="k">return</span> <span class="n">corr_rhmax</span><span class="p">,</span> <span class="n">corr_rhmin</span></div>
 
 
-
-<div class="viewcode-block" id="rs_period_ratio_corr">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.rs_period_ratio_corr">[docs]</a>
-<span class="k">def</span> <span class="nf">rs_period_ratio_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">rs</span><span class="p">,</span> <span class="n">rso</span><span class="p">,</span> <span class="n">sample_size_per_period</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+<div class="viewcode-block" id="rs_period_ratio_corr"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.rs_period_ratio_corr">[docs]</a><span class="k">def</span> <span class="nf">rs_period_ratio_corr</span><span class="p">(</span><span class="n">log_writer</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">rs</span><span class="p">,</span> <span class="n">rso</span><span class="p">,</span> <span class="n">sample_size_per_period</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function corrects rs by applying a correction factor (a ratio of clear-sky solar radiation (rso) over</span>
 <span class="sd">    observed solar radiation (rs)) to each user defined period to counteract sensor drift and other errors.</span>
@@ -820,10 +791,7 @@
     <span class="k">return</span> <span class="n">corr_rs</span><span class="p">,</span> <span class="n">rso</span></div>
 
 
-
-<div class="viewcode-block" id="correction">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.correction">[docs]</a>
-<span class="k">def</span> <span class="nf">correction</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">auto_corr</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="correction"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.correction">[docs]</a><span class="k">def</span> <span class="nf">correction</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">,</span> <span class="n">var_one</span><span class="p">,</span> <span class="n">var_two</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">auto_corr</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This main qaqc function takes in two variables and, depending on the code provided, enables different</span>
 <span class="sd">    correction methods for the user to use to correct data. This function serves as the</span>
@@ -987,10 +955,7 @@
     <span class="k">return</span> <span class="n">corr_var_one</span><span class="p">,</span> <span class="n">corr_var_two</span></div>
 
 
-
-<div class="viewcode-block" id="compiled_humidity_adjustment">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.compiled_humidity_adjustment">[docs]</a>
-<span class="k">def</span> <span class="nf">compiled_humidity_adjustment</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">tavg</span><span class="p">,</span> <span class="n">compiled_ea</span><span class="p">,</span> <span class="n">ea</span><span class="p">,</span> <span class="n">ea_col</span><span class="p">,</span>
+<div class="viewcode-block" id="compiled_humidity_adjustment"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.qaqc_functions.compiled_humidity_adjustment">[docs]</a><span class="k">def</span> <span class="nf">compiled_humidity_adjustment</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">,</span> <span class="n">dt_array</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">tavg</span><span class="p">,</span> <span class="n">compiled_ea</span><span class="p">,</span> <span class="n">ea</span><span class="p">,</span> <span class="n">ea_col</span><span class="p">,</span>
                                  <span class="n">tdew</span><span class="p">,</span> <span class="n">tdew_col</span><span class="p">,</span> <span class="n">tdew_ko</span><span class="p">,</span> <span class="n">rhmax</span><span class="p">,</span> <span class="n">rhmax_col</span><span class="p">,</span> <span class="n">rhmin</span><span class="p">,</span> <span class="n">rhmin_col</span><span class="p">,</span> <span class="n">rhavg</span><span class="p">,</span> <span class="n">rhavg_col</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function displays the &#39;compiled&#39; ea generated from all available humidity data, and the user will have</span>
@@ -1179,7 +1144,6 @@
 
     <span class="n">humidity_log</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">edited_compiled_ea</span></div>
-
 
 
 <span class="c1"># This is never run by itself</span>

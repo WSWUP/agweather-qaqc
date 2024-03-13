@@ -1,22 +1,20 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="../../">
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>agweatherqaqc.utils &mdash; agweather-qaqc 1.0.2 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
-
-  
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=1ed6394b"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -27,15 +25,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../../index.html" class="icon icon-home">
-            agweather-qaqc
+            <a href="../../index.html" class="icon icon-home"> agweather-qaqc
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -62,7 +56,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
       <li class="breadcrumb-item active">agweatherqaqc.utils</li>
       <li class="wy-breadcrumbs-aside">
@@ -148,9 +142,7 @@
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="get_int_input">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.utils.get_int_input">[docs]</a>
-<span class="k">def</span> <span class="nf">get_int_input</span><span class="p">(</span><span class="n">start_val</span><span class="p">,</span> <span class="n">end_val</span><span class="p">,</span> <span class="n">prompt</span><span class="o">=</span><span class="s2">&quot;Enter your choice: &quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="get_int_input"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.utils.get_int_input">[docs]</a><span class="k">def</span> <span class="nf">get_int_input</span><span class="p">(</span><span class="n">start_val</span><span class="p">,</span> <span class="n">end_val</span><span class="p">,</span> <span class="n">prompt</span><span class="o">=</span><span class="s2">&quot;Enter your choice: &quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prompts the user for an integer input within a specified range,</span>
 <span class="sd">        with handling for if the input is bad or falls outside the expected range.</span>
@@ -183,10 +175,7 @@
     <span class="k">return</span> <span class="n">int_input</span></div>
 
 
-
-<div class="viewcode-block" id="get_float_input">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.utils.get_float_input">[docs]</a>
-<span class="k">def</span> <span class="nf">get_float_input</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="s2">&quot;Enter your choice: &quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="get_float_input"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.utils.get_float_input">[docs]</a><span class="k">def</span> <span class="nf">get_float_input</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="s2">&quot;Enter your choice: &quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prompts the user for a float input, with handling for if the input is bad</span>
 
@@ -211,10 +200,7 @@
     <span class="k">return</span> <span class="n">float_input</span></div>
 
 
-
-<div class="viewcode-block" id="validate_file">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.utils.validate_file">[docs]</a>
-<span class="k">def</span> <span class="nf">validate_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">expected_extensions</span><span class="p">):</span>
+<div class="viewcode-block" id="validate_file"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.utils.validate_file">[docs]</a><span class="k">def</span> <span class="nf">validate_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">expected_extensions</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks to see if provided path is valid, while also checking to see if file is of expected type.</span>
 <span class="sd">    Raises exceptions if either of those fail. Returns nothing.</span>
@@ -239,10 +225,7 @@
         <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">Unable to find the file at path </span><span class="se">\&#39;</span><span class="si">{}</span><span class="se">\&#39;</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span></div>
 
 
-
-<div class="viewcode-block" id="determine_delimiter">
-<a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.utils.determine_delimiter">[docs]</a>
-<span class="k">def</span> <span class="nf">determine_delimiter</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<div class="viewcode-block" id="determine_delimiter"><a class="viewcode-back" href="../../agweatherqaqc.html#agweatherqaqc.utils.determine_delimiter">[docs]</a><span class="k">def</span> <span class="nf">determine_delimiter</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Uses the csv.Sniffer class to determine the delimiter of an input file</span>
 <span class="sd">    Will parse the first 5 lines and raise an error if the delimiter is not consistent</span>
@@ -273,7 +256,6 @@
 
     <span class="c1"># Uniform delimiters found, return delimiter</span>
     <span class="k">return</span> <span class="n">delim</span></div>
-
 </pre></div>
 
            </div>
