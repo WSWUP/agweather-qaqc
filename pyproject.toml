@@ -1,0 +1,26 @@
+[project]
+name = "agweatherqaqc"
+version = "1.0.3"
+description = "Required Packages for the agweatherqaqc library"
+authors = [
+    {name = "Christian Dunkerly", email = "christian.dunkerly@dri.edu"},
+]
+dependencies = [
+    "bokeh>=3.0",
+    "numpy>=1.2",
+    "openpyxl>=3.0",
+    "pandas>=1.5",
+    "pathlib>=1.0",
+    "pytest>=7.0",
+    "refet>=0.4.0",
+    "xlsxwriter>=3.0",
+    "sphinx",
+    "sphinx-rtd-theme",
+]
+requires-python = ">=3.9.*"
+readme = "README.md"
+license = {text = "Apache 2.0"}
+
+
+[tool.pdm]
+distribution = false
