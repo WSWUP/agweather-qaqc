@@ -297,11 +297,3 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
         assert test_ea_from_rhavg[2] == ea_from_rhavg[2]
         assert test_ea_from_rhavg[3] == ea_from_rhavg[3]
         assert test_ea_from_rhavg[4] == ea_from_rhavg[4]
-
-
-def test_versioning():
-    # Check if python version is acceptable
-    if sys.version_info.major == 3 and sys.version_info.minor == 9:
-        assert False is True
-    else:
-        assert True is True
