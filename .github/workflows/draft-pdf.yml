@@ -1,4 +1,7 @@
-on: [push]
+name: build_joss_paper
+
+on:
+  push:
 
 jobs:
   paper:

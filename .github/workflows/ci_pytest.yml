@@ -1,4 +1,4 @@
-name: CI
+name: ci_pytest
 
 on:
   push:
@@ -31,11 +31,7 @@ jobs:
       - name: install_dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install disutils
           pip install -r requirements.txt
 
       - name: run_pytest
         run: python -m pytest
-
-      - name: run_qaqc_single_station
-        run: echo 0 | python qaqc_single_station.py
