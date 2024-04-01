@@ -1,6 +1,6 @@
 # agweather-qaqc output files
-# *.csv
-# *.xlsx
+*.csv
+*.xlsx
 *.txt
 *.html
 
