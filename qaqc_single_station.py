@@ -17,7 +17,6 @@ if __name__ == "__main__":
 
     # Check if user has passed in a config file, or else just grab the default.
     # Also see if user has passed a metadata file to allow for automatic reading/writing into the metadata file.
-    print("\nSystem: Starting single station data QAQC script.")
     if len(sys.argv) == 2:
         config_path = sys.argv[1]
         metadata_path = None
@@ -25,10 +24,13 @@ if __name__ == "__main__":
         config_path = sys.argv[1]
         metadata_path = sys.argv[2]
     else:
-        config_path = 'config.ini'
+        config_path = 'tests/test_files/test_config.ini'
         metadata_path = None
+        print(f"\nSystem: no configuration file provided, using test config file located at \'{config_path}\'.\n"
+              f"     To use your own configuration file, specify it when running qaqc_single_station.py like so: \n"
+              f"\'python qaqc_single_station.py PATH/TO/CONFIG.INI\'\n")
 
-
+    print("\nSystem: Starting single station data QAQC script.")
     station_qaqc = WeatherQC(config_path, metadata_path, gridplot_columns=1)
     station_qaqc.process_station()
     print("\nSystem: Now ending single station QAQC script.")

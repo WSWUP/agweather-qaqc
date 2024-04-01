@@ -9,13 +9,6 @@ config_file_path = 'test_files/test_config.ini'
 data_file_path = 'test_files/test_data.csv'
 nan = np.nan
 
-# todo change handling of input dates to handle them all and sort it out
-# todo remove metadata_mode from script, it should just be automatic
-# todo update docs format on all functions, only have read config, validate file, and convert units so far
-# todo update rest of code to use config_dict
-# todo make date input section of config file more verbose
-# todo check cutoff of rhmax/min before ea calc
-
 # First: CIMIS data from station 6 (Davis) on 8/18/18-8/22/18, no rain
 # Second: CIMIS data from station 250 (Williams) on 9/15/16-9/19/16, no rain
 # Third: CoAgMet data from station CTR02 (Coors Research Farm) on 8/18/18-8/22/18, no rain
