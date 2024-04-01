@@ -4,9 +4,9 @@ import numpy as np
 import agweatherqaqc.utils
 from agweatherqaqc import input_functions, calc_functions
 
-metadata_file_path = 'test_files/test_metadata.xlsx'
-config_file_path = 'test_files/test_config.ini'
-data_file_path = 'test_files/test_data.csv'
+metadata_file_path = 'tests/test_files/test_metadata.xlsx'
+config_file_path = 'tests/test_files/test_config.ini'
+data_file_path = 'tests/test_files/test_data.csv'
 nan = np.nan
 
 # First: CIMIS data from station 6 (Davis) on 8/18/18-8/22/18, no rain
