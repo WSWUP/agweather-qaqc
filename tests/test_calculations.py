@@ -1,5 +1,6 @@
 import pytest as pt
 import numpy as np
+import sys
 
 import agweatherqaqc.utils
 from agweatherqaqc import input_functions, calc_functions
@@ -298,5 +299,9 @@ def test_ea_calculations(ea, tmax, tmin, tavg, tdew, rhmax, rhmin, rhavg):
         assert test_ea_from_rhavg[4] == ea_from_rhavg[4]
 
 
-def blank():
-    pass
+def test_versioning():
+    # Check if python version is acceptable
+    if sys.version_info.major == 3 and sys.version_info.minor == 9:
+        assert False is True
+    else:
+        assert True is True
