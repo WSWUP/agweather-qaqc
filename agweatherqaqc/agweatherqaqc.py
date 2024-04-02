@@ -744,6 +744,7 @@ class WeatherQC:
             fig = gridplot(grid_of_plots, toolbar_location='left', sizing_mode='stretch_width')
             save(fig)
 
+
     def _write_outputs(self):
         """
             Creates all the output files
@@ -805,7 +806,7 @@ class WeatherQC:
         #     Delta : Magnitude of difference between original data and corrected data
         #     Filled Data : Tracks which data points have been filled by script generated values instead of provided
         # Data that is provided and subsequently corrected by the script do not count as filled values.
-        print("\nSystem: Saving corrected data to .xslx file.")
+        print("\nSystem: Saving corrected data to output file.")
 
         # Create any individually-requested output data
         ws_2m = _wind_height_adjust(uz=self.data_ws, zw=self.ws_anemometer_height)
@@ -865,14 +866,27 @@ class WeatherQC:
         output_df.index.name = 'date'
         delta_df.index.name = 'date'
         fill_df.index.name = 'date'
-        # Open up pandas excel writer
-        output_writer = pd.ExcelWriter(self.output_file_path, engine='xlsxwriter')
-        # Convert data frames to xlsxwriter excel objects
-        output_df.to_excel(output_writer, sheet_name='Corrected Data', na_rep=self.missing_fill_value)
-        delta_df.to_excel(output_writer, sheet_name='Delta (Corr - Orig)', na_rep=self.missing_fill_value)
-        fill_df.to_excel(output_writer, sheet_name='Filled Data', na_rep=self.missing_fill_value)
-        # Save output file
-        output_writer.close()
+
+        # Save outputs, either as 1 xlsx or 3 csvs depending on config file choice
+        if str(self.config_dict['output_file_format']).lower() == 'xlsx':
+            # Open up pandas excel writer
+            output_writer = pd.ExcelWriter(self.output_file_path, engine='xlsxwriter')
+            # Convert data frames to xlsxwriter excel objects
+            output_df.to_excel(output_writer, sheet_name='Corrected Data', na_rep=self.missing_fill_value)
+            delta_df.to_excel(output_writer, sheet_name='Delta (Corr - Orig)', na_rep=self.missing_fill_value)
+            fill_df.to_excel(output_writer, sheet_name='Filled Data', na_rep=self.missing_fill_value)
+            # Save output file
+            output_writer.close()
+        elif str(self.config_dict['output_file_format']).lower() == 'csv':
+            # cut off .xlsx from output file name
+            self.output_file_path = self.output_file_path[:-5]
+            output_df.to_csv(f'{self.output_file_path}.csv', na_rep=self.missing_fill_value)
+            delta_df.to_csv(f'{self.output_file_path}_deltas.csv', na_rep=self.missing_fill_value)
+            fill_df.to_csv(f'{self.output_file_path}_filled_data.csv', na_rep=self.missing_fill_value)
+        else:
+            raise ValueError(f"Config file found at {self.config_path} contained an invalid setting"
+                             f" for \'OUTPUT_DATA_FORMAT\', must be one of [\'CSV\',\'XLSX\'], currently set to:"
+                             f" \'{self.config_dict['output_file_format']}\'")
 
         logger = open(self.log_file, 'a')
         if self.fill_mode == 1:

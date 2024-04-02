@@ -42,6 +42,7 @@ def _read_config(config_file_path):
     config_dict['lines_of_footer'] = config_reader['METADATA'].getint('LINES_OF_FOOTER')  # Lines of header to skip
 
     # OPTIONS Section
+    config_dict['output_file_format'] = config_reader['OPTIONS']['OUTPUT_DATA_FORMAT']  # either .csv or .xlsx
     config_dict['auto_flag'] = config_reader['OPTIONS'].getboolean('AUTOMATIC_OPTION')  # auto first iteration of QAQC
     config_dict['fill_flag'] = config_reader['OPTIONS'].getboolean('FILL_OPTION')  # Option to fill in missing data
 
