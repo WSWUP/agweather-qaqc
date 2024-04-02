@@ -7,7 +7,7 @@ Also generates Reference Evapotranspiration according to the ASCE Evapotranspira
 
 __name__ = 'agweatherqaqc'
 __author__ = 'Christian Dunkerly'
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 from agweatherqaqc import agweatherqaqc
 from agweatherqaqc import utils
