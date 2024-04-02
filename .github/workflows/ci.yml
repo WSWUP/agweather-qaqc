@@ -27,10 +27,10 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
           cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          cache-dependency-path: 'requirements.txt'
 
       - name: install_dependencies
-        run: pip install -r pyproject.toml
+        run: pip install -r requirements.txt
 
       - name: run_pytest
         run: python -m pytest
