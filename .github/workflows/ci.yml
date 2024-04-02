@@ -22,15 +22,15 @@ jobs:
       - name: checkout_code
         uses: actions/checkout/@v4
 
-      - name: setup_python
-        uses: actions/setup-python@v5
+      - name: setup_pdm
+        uses: pdm-project/setup-pdm@v4
         with:
           python-version: ${{ matrix.python_version }}
-          cache: 'pip'
-          cache-dependency-path: '**/requirements.txt'
+          cache: true
+          cache-dependency-path: 'pyproject.toml'
 
       - name: install_dependencies
-        run: pip install -r requirements.txt
+        run: pdm install
 
       - name: run_pytest
         run: python -m pytest
