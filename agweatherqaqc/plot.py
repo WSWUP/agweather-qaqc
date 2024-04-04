@@ -116,6 +116,11 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
     subplot.legend.location = 'bottom_left'
     subplot.add_tools(HoverTool(tooltips=tooltips, formatters=formatters))
 
+    # Format font size
+    subplot.title.text_font_size = '12pt'
+    subplot.legend.label_text_font_size = '10pt'
+    subplot.xaxis.axis_label_text_font_size = '12pt'
+    subplot.yaxis.axis_label_text_font_size = '12pt'
     return subplot
 
 
