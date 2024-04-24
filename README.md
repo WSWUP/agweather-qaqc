@@ -35,7 +35,7 @@ Installation
      conda env create -f environment.yml
      ```
      ```
-     activate agweatherqaqc
+     conda activate agweatherqaqc
      ```
    * Pipenv Environment:
      ```
