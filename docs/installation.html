@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Installing agweather-qaqc &mdash; agweather-qaqc 1.0.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -28,11 +30,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> agweather-qaqc
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            agweather-qaqc
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -41,10 +47,9 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installing agweather-qaqc</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#anaconda">Anaconda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cloning-the-repository">Cloning the Repository</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up-the-environment">Setting up the Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-the-agweather-qaqc">Running the agweather-qaqc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-environment">Installing Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-agweather-qaqc">Running agweather-qaqc</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="data_preparation.html">Data Preparation</a></li>
@@ -65,7 +70,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Installing agweather-qaqc</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
@@ -78,49 +83,53 @@
              
   <section id="installing-agweather-qaqc">
 <h1>Installing agweather-qaqc<a class="headerlink" href="#installing-agweather-qaqc" title="Permalink to this heading"></a></h1>
-<p>This page is written for a generalist audience.</p>
-<section id="anaconda">
-<h2>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this heading"></a></h2>
-<p>Anaconda is a free and open-source distribution of Python that, in exchange for a larger download, will simplify your setup experience. It also comes pre-installed with the majority of the package requirements for agweather-qaqc.</p>
-<p>Visit the <a class="reference external" href="https://www.anaconda.com/download/">Anaconda website</a> to download the correct Anaconda version (agweather-qaqc requires a version &gt;= 3.9) for your operating system, and then follow the prompts to install it.</p>
-<p>Once you’re done installing Anaconda, open the Anaconda prompt (on Windows) or Terminal (on MacOS or Linux) and type:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">conda</span> <span class="n">info</span>
-</pre></div>
-</div>
-<p>You should see some text regarding the version of Anaconda you’ve installed. If you get an error, you may have made a mistake during the installation.</p>
-</section>
 <section id="cloning-the-repository">
 <h2>Cloning the Repository<a class="headerlink" href="#cloning-the-repository" title="Permalink to this heading"></a></h2>
 <p>You can get the latest version of agweather-qaqc by cloning its <a class="reference external" href="https://github.com/WSWUP/agweather-qaqc">Github Repository</a> or by <a class="reference external" href="https://github.com/WSWUP/agweather-qaqc/archive/master.zip">clicking here.</a></p>
-<blockquote>
-<div><p>&gt;git clone <a class="reference external" href="https://github.com/WSWUP/agweather-qaqc">https://github.com/WSWUP/agweather-qaqc</a></p>
-</div></blockquote>
-<p>And then change into the repository root directory</p>
-<blockquote>
-<div><p>&gt;cd agweatherqaqc</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">WSWUP</span><span class="o">/</span><span class="n">agweather</span><span class="o">-</span><span class="n">qaqc</span>
+</pre></div>
+</div>
+<p>Navigate the command line/terminal into the repository root directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">agweather</span><span class="o">-</span><span class="n">qaqc</span>
+</pre></div>
+</div>
 </section>
-<section id="setting-up-the-environment">
-<h2>Setting up the Environment<a class="headerlink" href="#setting-up-the-environment" title="Permalink to this heading"></a></h2>
-<p>The package agweatherqaqc includes an environment.yml file for easy installation. The file is located at: <strong>“agweatherqaqc/env/environment.yml”</strong></p>
-<p>To set up the conda environment, type:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">conda</span> <span class="n">env</span> <span class="n">create</span> <span class="o">-</span><span class="n">f</span> <span class="n">agweatherqaqc</span><span class="o">/</span><span class="n">env</span><span class="o">/</span><span class="n">environment</span><span class="o">.</span><span class="n">yml</span>
+<section id="installing-environment">
+<h2>Installing Environment<a class="headerlink" href="#installing-environment" title="Permalink to this heading"></a></h2>
+<dl>
+<dt>Setting up and activating the environment can be done one of three ways:</dt><dd><ul>
+<li><p><a class="reference external" href="https://www.anaconda.com/">Anaconda</a> Environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">env</span> <span class="n">create</span> <span class="o">-</span><span class="n">f</span> <span class="n">environment</span><span class="o">.</span><span class="n">yml</span>
+<span class="n">conda</span> <span class="n">activate</span> <span class="n">agweatherqaqc</span>
 </pre></div>
 </div>
-<p>Then follow the prompts to setup a new environment called <strong>“agweatherqaqc”</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">conda</span> <span class="n">activate</span> <span class="n">agweatherqaqc</span>
+</li>
+<li><p><a class="reference external" href="https://pipenv.pypa.io/en/latest/">Pipenv</a> Environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">pipenv</span> <span class="n">shell</span>
 </pre></div>
 </div>
-<p>After this, setup is complete. The next step is to configure input files.</p>
+</li>
+<li><p><a class="reference external" href="https://pdm-project.org/en/latest/">PDM</a> Environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pdm</span> <span class="n">install</span>
+<span class="n">pdm</span> <span class="n">shell</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</dd>
+</dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>You will have to reactivate your environment whenever you open a new Anaconda prompt or Terminal.</p>
+<p>You will have to reactivate your environment whenever you start a new session in the command prompt or terminal.</p>
 </div>
 </section>
-<section id="running-the-agweather-qaqc">
-<h2>Running the agweather-qaqc<a class="headerlink" href="#running-the-agweather-qaqc" title="Permalink to this heading"></a></h2>
-<p>This package is run locally, so the directory can be placed wherever you want it. See <a class="reference external" href="data_preparation.html">Data Preparation</a> for more information.</p>
-<p>You will run the code by directing the Anaconda prompt to the location of the file <strong>qaqc_single_station.py</strong> and running it from there.</p>
+<section id="running-agweather-qaqc">
+<h2>Running agweather-qaqc<a class="headerlink" href="#running-agweather-qaqc" title="Permalink to this heading"></a></h2>
+<p>After setup is complete, the next step is to configure input files. See <a class="reference external" href="data_preparation.html">Data Preparation</a> for more information. Once those files are configured, the code can be run via calling <code class="docutils literal notranslate"><span class="pre">qaqc_single_station.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">qaqc_single_station</span><span class="o">.</span><span class="n">py</span> <span class="o">&lt;</span><span class="n">OPTIONAL</span> <span class="n">ARGUMENTS</span><span class="o">&gt;</span>
+</pre></div>
+</div>
 </section>
 </section>
 
