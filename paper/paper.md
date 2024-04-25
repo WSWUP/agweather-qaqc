@@ -104,11 +104,11 @@ After adjustment of R~s~ is performed, a time series plot of percent difference 
 
 ``agweather-qaqc`` was developed through the following efforts:
 
-  * Christian Dunkerly: Principal developer and maintainer of the repository. 
-  * Justin Huntington: Provided project direction, advised on scientific foundation of work, and suggested features.
-  * Richard Allen: Advised on scientific foundation of work and reviewed methodologies.
-  * Daniel McEvoy: Provided additional project direction and suggested features.
-  * Asa Morway: Wrote tests and provided feedback on user experience.
+* Christian Dunkerly: Methodology, Software, Validation, Writing - original draft
+* Justin Huntington: Conceptualization, Resources, Writing - review and editing, Funding acquisition
+* Richard Allen: Methodology, Writing - review and editing, Resources
+* Daniel McEvoy: Conceptualization, Writing - review and editing
+* Asa Morway: Software
 
 # Acknowledgements
 
