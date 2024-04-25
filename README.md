@@ -27,7 +27,7 @@ Installation
     ```
 2. Navigate the command line/terminal into the repository root directory:
     ```
-    cd path/to/agweatherqaqc
+    cd path/to/agweather-qaqc
     ```
 3. Setting up and activating the environment can be done one of three ways:
    * Conda Environment:
