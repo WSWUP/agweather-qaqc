@@ -78,13 +78,13 @@ In addition to already described process, ``agweather-qaqc`` also performs the f
 * Evaluating station aridity through the visualization of both relative humidity and dew point depression plots, with the option to adjust relative humidity if required.
 * Creating archival charts and log files that record and flag how each variable was changed during the QAQC process.
 
-The [documentation](https://wswup.github.io/agweather-qaqc/) provides more detail on these features and includes a tutorial with usage examples. An environment.yml is included for installation and third-party package management.
+The [documentation](https://wswup.github.io/agweather-qaqc/) provides more detail on these features and includes a tutorial with usage examples. Both environment.yml and requirements.txt files are included for installation and third-party package management.
 
 # Selected Example
 
 Inaccuracies in measured incoming shortwave solar radiation (R~s~) are common due to pyranometer calibration drift, non-level baseplate, sensor degradation, and sensor obstructions or debris covering the sensor (e.g. accumulated dust or residue).
 
-``agweather-qaqc`` can be used to visualize measurements of R~s~ with respect to theoretical clear-sky R~s~ (R~so~). A common use of ``agweather-qaqc`` is to perform corrections of measured R~s~. Corrections are performed by dividing the record into specified periods of time (e.g., 60 days), and comparing R~s~ measurements for specified periods against R~so~, which is a function of day of year, atmospheric water vapor, elevation, and latitude [@allen1996]. R~s~ should approach R~so~ when a cloud-free day occurs, and potentially slightly surpass it due to incident reflected R~s~ (e.g., distant cloud that doesn’t obstruct sunlight) [@asce-ewri2005]. 
+``agweather-qaqc`` can be used to visualize measurements of R~s~ with respect to theoretical clear-sky R~s~ (R~so~). A common use of ``agweather-qaqc`` is to perform corrections of measured R~s~. Corrections are performed by dividing the record into specified periods of time (e.g., 60 days), and comparing R~s~ measurements for specified periods against R~so~, which is a function of day of year, atmospheric water vapor, elevation, and latitude [@allen1996; @allen2008]. R~s~ should approach R~so~ when a cloud-free day occurs, and potentially slightly surpass it due to incident reflected R~s~ (e.g., distant cloud that doesn’t obstruct sunlight) [@asce-ewri2005]. 
 
 It is expected that a cloud-free day should occur with some regularity for areas with significant agriculture, especially in semi-arid and arid areas. In this example time series (\autoref{fig:fig2}), observed R~s~ from before July 2013 frequently approaches R~so~, and after this time period, R~s~ rarely approaches R~so~, especially during summer and winter months, indicating that the pyranometer is likely reporting inaccurate values and that observed data should be adjusted.
 
