@@ -17,7 +17,7 @@ authors:
     affiliation: 1, 2
   - name: Asa Morway
     affiliation: 3, 4 
-  - name: Richard Allen
+  - name: Richard G. Allen
     affiliation: 5
 affiliations:
   - name: Desert Research Institute
@@ -30,7 +30,7 @@ affiliations:
     index: 4
   - name: University of Idaho (ret.)
     index: 5
-date: January 2024
+date: May 2024
 bibliography: paper.bib
 ---
 
