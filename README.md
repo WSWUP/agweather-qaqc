@@ -1,6 +1,6 @@
 agweather-qaqc (Weather Data QAQC Script)
 ==============================================
-``agweather-qaqc`` provides a flexible workflow for the visualization, review, and QAQC of daily weather data. This script intended to be used as an early step in any analysis that might use daily sources of agricultural weather data, particularly for projects with an interest in reference evapotranspiration (ET) data, or where observational data are considered to be 'truth' when evaluating model predictions. ``agweather-qaqc`` is command-line interface driven, and provides reminders, prompts, and recommendations to assist users who may not be overly proficient with Python.
+``agweather-qaqc`` provides a flexible workflow for the visualization, review, and QAQC of daily weather data. This script is intended to be used as an early step in any analysis that might use daily sources of agricultural weather data, particularly for projects with an interest in reference evapotranspiration (ET) data, or where observational data are considered to be 'truth' when evaluating model predictions. ``agweather-qaqc`` is command-line interface driven, and provides reminders, prompts, and recommendations to assist users who may not be overly proficient with Python.
 
 Functionalities include:
 * Importing data without having to convert it to a standardized format, with unit conversions based on a user-specified configuration file.
