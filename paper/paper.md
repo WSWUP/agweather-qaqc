@@ -12,8 +12,10 @@ authors:
     orcid: 0000-0003-3592-4118
     affiliation: 1
   - name: Justin Huntington
+    orcid: 0009-0008-2006-2969
     affiliation: 1
   - name: Daniel McEvoy
+    orcid: 0000-0003-3800-718X
     affiliation: 1, 2
   - name: Asa Morway
     affiliation: 3, 4 
