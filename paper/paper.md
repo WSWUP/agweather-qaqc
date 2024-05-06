@@ -107,10 +107,11 @@ After adjustment of R~s~ is performed, a time series plot of percent difference 
 ``agweather-qaqc`` was developed through the following efforts:
 
 * Christian Dunkerly: Methodology, Software, Validation, Writing - original draft
-* Justin Huntington: Conceptualization, Resources, Writing - review and editing, Funding acquisition
-* Richard Allen: Methodology, Writing - review and editing, Resources
+* Justin L. Huntington: Conceptualization, Resources, Writing - review and editing, Funding acquisition
 * Daniel McEvoy: Conceptualization, Writing - review and editing
 * Asa Morway: Software
+* Richard G. Allen: Methodology, Writing - review and editing, Resources
+
 
 # Acknowledgements
 
