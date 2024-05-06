@@ -11,7 +11,7 @@ authors:
   - name: Christian Dunkerly^[corresponding author]
     orcid: 0000-0003-3592-4118
     affiliation: 1
-  - name: Justin Huntington
+  - name: Justin L. Huntington
     orcid: 0009-0008-2006-2969
     affiliation: 1
   - name: Daniel McEvoy
