@@ -9,7 +9,7 @@ import warnings
 from bokeh.plotting import save, show
 
 
-def additive_corr(log_writer, start, end, var_one, var_two):
+def additive_corr(log_writer, start, end, var_one, var_two, var_three):
     """
     Corrects provided interval with a flat, user-provided additive modifier obtained via the CLI
 
@@ -19,21 +19,25 @@ def additive_corr(log_writer, start, end, var_one, var_two):
         :end: (int) ending index of correction interval.
         :var_one: (ndarray) 1-D array of first variable.
         :var_two: (ndarray) 1-D array of second variable, may be entirely NaN.
+        :var_three: (ndarray) 1-D array of third variable, may be entirely NaN.
 
     Returns:
         :corr_var_one: (ndarray) 1-D array of first variable after correction.
         :corr_var_two: (ndarray) 1-D array of second variable after correction, may be entirely NaN.
+        :corr_var_three: (ndarray) 1-D array of third variable after correction, may be entirely NaN.
     """
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
+    corr_var_three = np.array(var_three)
 
     mod = get_float_input("\nEnter the additive modifier you want to apply to all values: ")
     corr_var_one[start:end] = var_one[start:end] + mod
     corr_var_two[start:end] = var_two[start:end] + mod
+    corr_var_three[start:end] = var_three[start:end] + mod
     log_writer.write('Selected correction interval started at %s and ended at %s. \n' % (start, end))
     log_writer.write('Additive modifier applied for this interval was %s. \n' % mod)
 
-    return corr_var_one, corr_var_two
+    return corr_var_one, corr_var_two, corr_var_three
 
 
 def _generate_corr_menu(code, auto_corr, first_pass):
@@ -52,7 +56,7 @@ def _generate_corr_menu(code, auto_corr, first_pass):
     corr_method = '   To skip correcting this data, enter 4.'
 
     # code value is unordered here but matches what is expected by plotting functions
-    if code == 1 or code == 2:
+    if code == 1 or code == 2 or code == 10:
         var_type = 'temperature'
         corr_method = '   To remove outliers using a modified z-score approach, enter 4 (Recommended).'
     elif code == 3:
@@ -69,6 +73,8 @@ def _generate_corr_menu(code, auto_corr, first_pass):
         corr_method = '   To correct based on yearly percentiles, enter 4 (Recommended).'
     elif code == 9:
         var_type = 'relative humidity'
+    elif code == 11:
+        var_type = 'soil moisture'
     else:
         raise ValueError('Unsupported code type {} passed to qaqc_functions.'.format(code))
 
@@ -122,7 +128,7 @@ def generate_interval(var_size):
     return int_start, int_end
 
 
-def multiplicative_corr(log_writer, start, end, var_one, var_two):
+def multiplicative_corr(log_writer, start, end, var_one, var_two, var_three):
     """
     Corrects provided interval with a user-provided multiplicative modifier obtained from the CLI
 
@@ -132,23 +138,27 @@ def multiplicative_corr(log_writer, start, end, var_one, var_two):
         :end: (int) ending index of correction interval
         :var_one: (ndarray) 1-D numpy array of first variable
         :var_two: (ndarray) 1-D numpy array of second variable, may be entirely nan's
+        :var_three: (ndarray) 1-D numpy array of third variable, may be entirely nan's
     Returns:
         :corr_var_one: (ndarray) 1-D array of first variable after correction
         :corr_var_two: (ndarray) 1-D array of second variable after correction, may be entirely nan's
+        :corr_var_three: (ndarray) 1-D array of third variable after correction, may be entirely nan's
     """
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
+    corr_var_three = np.array(var_three)
 
     mod = get_float_input("\nEnter the multiplicative modifier you want to apply to all values: ")
     corr_var_one[start:end] = var_one[start:end] * mod
     corr_var_two[start:end] = var_two[start:end] * mod
+    corr_var_three[start:end] = var_three[start:end] * mod
     log_writer.write('Selected correction interval started at %s and ended at %s. \n' % (start, end))
     log_writer.write('Multiplicative modifier applied for this interval was %s. \n' % mod)
 
-    return corr_var_one, corr_var_two
+    return corr_var_one, corr_var_two, corr_var_three
 
 
-def set_to_nan(log_writer, start, end, var_one, var_two):
+def set_to_nan(log_writer, start, end, var_one, var_two, var_three):
     """
     Sets entire provided interval to nans, likely because the observations are bad and need to be thrown out.
 
@@ -158,57 +168,28 @@ def set_to_nan(log_writer, start, end, var_one, var_two):
         :end: (int) ending index of correction interval
         :var_one: (ndarray) 1-D array of first variable
         :var_two: (ndarray) 1-D array of second variable, may be entirely nan's
+        :var_third: (ndarray) 1-D array of third variable, may be entirely nan's
 
     Returns:
         :corr_var_one: (ndarray) 1-D array of first variable after data was removed
         :corr_var_two: (ndarray) 1-D array of second variable after data was removed, may be entirely nan's
+        :corr_var_three: (ndarray) 1-D array of third variable after data was removed, may be entirely nan's
     """
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
+    corr_var_three = np.array(var_three)
 
     corr_var_one[start:end] = np.nan
     corr_var_two[start:end] = np.nan
+    corr_var_three[start:end] = np.nan
+
     log_writer.write('Selected correction interval started at %s and ended at %s. \n' % (start, end))
     log_writer.write('Observations within the interval were set to nan. \n')
 
-    return corr_var_one, corr_var_two
+    return corr_var_one, corr_var_two, corr_var_three
 
 
-def modified_z_score_outlier_detection(data):
-    """
-    Calculates the modified z scores of provided dataset and sets to nan any values that are above the threshold
-    The modified z approach and threshold of 3.5 is recommended in:
-
-    Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and Handle Outliers",
-    The ASQC Basic References in Quality Control: Statistical Techniques
-
-    Modified z scores are more robust than traditional z scores because they are determined by the median, which is
-    less susceptible to outliers.
-
-    Args:
-        :data: (ndarray) 1-D array of values
-
-    Returns:
-        :cleaned_data: (ndarray) 1-D array of values that have had outliers removed
-        :outlier_count: (int) number of outliers removed
-    """
-    threshold = 3.5
-    cleaned_data = np.array(data)
-
-    median = np.nanmedian(data)
-    median_absolute_deviation = np.nanmedian([np.abs(x - median) for x in data])
-    modified_z_scores = np.array([0.6745 * (x - median) / median_absolute_deviation for x in data])
-
-    warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans in data
-    removed_indices = np.array(np.where(np.abs(modified_z_scores) > threshold))  # array of indices for zscore > thresh
-    warnings.resetwarnings()  # reset warning filter to default
-
-    cleaned_data[removed_indices] = np.nan  # set those indices to nan
-    outlier_count = removed_indices.size
-    return cleaned_data, outlier_count
-
-
-def temp_find_outliers(log_writer, var_one, var_one_name, var_two, var_two_name, month):
+def temp_find_outliers(log_writer, var_one, var_one_name, var_two, var_two_name, var_three, var_three_name, month):
     """
     Wrapper function for modified_z_score_outlier_detection() that will process provided temperature variables.
     Due to seasonal variation in temperature the overall temperature record is subset into months
@@ -216,33 +197,79 @@ def temp_find_outliers(log_writer, var_one, var_one_name, var_two, var_two_name,
 
     Args:
         :log_writer: Wrapper for writing to log file
-        :var_one: (ndarray) 1-D array of first variable, either tmax, or tmin
+        :var_one: (ndarray) 1-D array of first variable, either tmax, or tmin or tsoil
         :var_one_name: (str) name for var one
-        :var_two: (ndarray) 1-D array of second variable, either tmin or tdew
+        :var_two: (ndarray) 1-D array of second variable, either tmin or tdew or tsoil
         :var_two_name: (str) name for var two
+        :var_three: (ndarray) 1-D array of third variable, either tsoil or nothing
+        :var_three_name: (str) name for var three
         :month: (ndarray) 1-D array of month values
 
     Returns:
         :corrected_var_one: (ndarray) 1-D array of first variable after data was removed
         :corrected_var_two: (ndarray) 1-D array of second variable after data was removed
+        :corrected_var_third: (ndarray) 1-D array of third variable after data was removed
 
     """
+
+    def _modified_z_score_outlier_detection(data):
+        """
+        Calculates the modified z scores of provided dataset and sets to nan any values that are above the threshold
+        The modified z approach and threshold of 3.5 is recommended in:
+
+        Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and Handle Outliers",
+        The ASQC Basic References in Quality Control: Statistical Techniques
+
+        Modified z scores are more robust than traditional z scores because they are determined by the median, which is
+        less susceptible to outliers.
+
+        Args:
+            :data: (ndarray) 1-D array of values
+
+        Returns:
+            :cleaned_data: (ndarray) 1-D array of values that have had outliers removed
+            :outlier_count: (int) number of outliers removed
+        """
+        threshold = 3.5
+        cleaned_data = np.array(data)
+
+        median = np.nanmedian(data)
+        median_absolute_deviation = np.nanmedian([np.abs(x - median) for x in data])
+        modified_z_scores = np.array([0.6745 * (x - median) / median_absolute_deviation for x in data])
+
+        warnings.filterwarnings('ignore', 'invalid value encountered')  # catch invalid value warning for nans in data
+        removed_indices = np.array(
+            np.where(np.abs(modified_z_scores) > threshold))  # array of indices for zscore > thresh
+        warnings.resetwarnings()  # reset warning filter to default
+
+        cleaned_data[removed_indices] = np.nan  # set those indices to nan
+        outlier_count = removed_indices.size
+        return cleaned_data, outlier_count
+
     log_writer.write('User has opted to use a modified z-score approach to identify and remove outliers. \n')
     var_one_total_outliers = 0
     var_two_total_outliers = 0
+    var_three_total_outliers = 0
 
     corrected_var_one = np.array(var_one)
     corrected_var_two = np.array(var_two)
+    corrected_var_three = np.array(var_three)
 
     k = 1
     while k <= 12:
         t_index = np.where(month == k)[0]
 
-        (corrected_var_one[t_index], var_one_outlier_count) = modified_z_score_outlier_detection(var_one[t_index])
-        (corrected_var_two[t_index], var_two_outlier_count) = modified_z_score_outlier_detection(var_two[t_index])
+        (corrected_var_one[t_index], var_one_outlier_count) = _modified_z_score_outlier_detection(var_one[t_index])
+        (corrected_var_two[t_index], var_two_outlier_count) = _modified_z_score_outlier_detection(var_two[t_index])
+
+        # var_three may be empty if it's not soil temperature data
+        if var_three_name is not None:
+            (corrected_var_three[t_index], var_three_outlier_count) = (
+                _modified_z_score_outlier_detection(var_three[t_index]))
 
         var_one_total_outliers = var_one_total_outliers + var_one_outlier_count
         var_two_total_outliers = var_two_total_outliers + var_two_outlier_count
+        var_three_total_outliers = var_three_total_outliers + var_three_outlier_count
         k += 1
 
     # check to make sure TMin isn't getting double-corrected
@@ -254,16 +281,28 @@ def temp_find_outliers(log_writer, var_one, var_one_name, var_two, var_two_name,
         log_writer.write('{0} outliers were removed on variable {1}. \n'
                          .format(var_two_total_outliers, var_two_name))
 
-        return var_one, corrected_var_two
-    else:
-        # Tmax/Tmin correciton option
+        return var_one, corrected_var_two, var_three
+    elif var_one_name == "Temperature Maximum":
+        # Tmax/Tmin correction option
         print('{0} outliers were removed on variable {1}.'.format(var_one_total_outliers, var_one_name))
         log_writer.write('{0} outliers were removed on variable {1}. \n'
                          .format(var_one_total_outliers, var_one_name))
         print('{0} outliers were removed on variable {1}.'.format(var_two_total_outliers, var_two_name))
         log_writer.write('{0} outliers were removed on variable {1}. \n'
                          .format(var_two_total_outliers, var_two_name))
-        return corrected_var_one, corrected_var_two
+        return corrected_var_one, corrected_var_two, var_three
+    else:
+        # Soil Temperature correction option
+        print('{0} outliers were removed on variable {1}.'.format(var_one_total_outliers, var_one_name))
+        log_writer.write('{0} outliers were removed on variable {1}. \n'
+                         .format(var_one_total_outliers, var_one_name))
+        print('{0} outliers were removed on variable {1}.'.format(var_two_total_outliers, var_two_name))
+        log_writer.write('{0} outliers were removed on variable {1}. \n'
+                         .format(var_two_total_outliers, var_two_name))
+        print('{0} outliers were removed on variable {1}.'.format(var_three_total_outliers, var_three_name))
+        log_writer.write('{0} outliers were removed on variable {1}. \n'
+                         .format(var_three_total_outliers, var_three_name))
+        return corrected_var_one, corrected_var_two, corrected_var_three
 
 
 def rh_yearly_percentile_corr(log_writer, start, end, rhmax, rhmin, year, percentage):
@@ -721,7 +760,7 @@ def rs_period_ratio_corr(log_writer, start, end, rs, rso, sample_size_per_period
     return corr_rs, rso
 
 
-def correction(station, log_path, folder_path, var_one, var_two, dt_array, month, year, code, auto_corr=0):
+def correction(station, log_path, folder_path, var_one, var_two, var_three, dt_array, month, year, code, auto_corr=0):
     """
     This main qaqc function takes in two variables and, depending on the code provided, enables different
     correction methods for the user to use to correct data. This function serves as the
@@ -738,35 +777,43 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
         :folder_path: (str) path to correction files directory
         :var_one: (ndarray) 1-D numpy array of first variable passed
         :var_two: (ndarray) 1-D numpy array of second variable, may be all NaN
+        :var_three: (ndarray) 1-D numpy array of third variable, may be all NaN
         :dt_array: (ndarray) 1-D datetime array used for bokeh plotting
         :month: (ndarray) 1-D numpy array of month values
         :year: (ndarray) 1-D numpy array of year values
-        :code: (int) used to determine what variables are actually passed as var_one and var_two
+        :code: (int) used to determine what variables are actually passed as var_one, var_two, and var_three
         :auto_corr: (int) flag for the "automatic first pass" mode, which auto-applies default correction first
 
     Returns:
         :corr_var_one: (ndarray) 1-D numpy array of corrected var_one values
         :corr_var_two: (ndarray) 1-D numpy array of corrected var_two values
+        :corr_var_three: (ndarray) 1-D numpy array of corrected var_three values
     """
     correction_loop = 1
     first_pass = 1  # boolean flag for whether it is the first pass, used in automation with auto_corr
     var_size = var_one.shape[0]
     backup_var_one = np.array(var_one)
     backup_var_two = np.array(var_two)
+    backup_var_three = np.array(var_three)
     corr_var_one = np.array(var_one)
     corr_var_two = np.array(var_two)
+    corr_var_three = np.array(var_three)
 
     ####################
     # Reopen log file and append correction actions taken to it.
     log.basicConfig()
     corr_log = open(log_path, 'a')
-    if FEATURES_DICT[code]['var_two_name'] is None:
-        corr_log.write('\n\nCorrecting %s at %s. \n'
-                       % (FEATURES_DICT[code]['var_one_name'], dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-    else:
+    if FEATURES_DICT[code]['var_three_name'] is not None:
+        corr_log.write('\n\nCorrecting %s, %s, and %s at %s. \n'
+                       % (FEATURES_DICT[code]['var_one_name'], FEATURES_DICT[code]['var_two_name'],
+                          FEATURES_DICT[code]['var_three_name'], dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    elif FEATURES_DICT[code]['var_two_name'] is not None:
         corr_log.write('\n\nCorrecting %s and %s at %s. \n'
                        % (FEATURES_DICT[code]['var_one_name'], FEATURES_DICT[code]['var_two_name'],
                           dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    else:
+        corr_log.write('\n\nCorrecting %s at %s. \n'
+                       % (FEATURES_DICT[code]['var_one_name'], dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
     ####################
     # Generate Before-Corrections Graph
@@ -774,7 +821,8 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
         pass
     else:
         corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
-                                                                corr_var_two, code, folder_path)
+                                                                corr_var_two, var_three, corr_var_three,
+                                                                code, folder_path)
         show(corr_fig)
 
     ####################
@@ -794,14 +842,19 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
         (choice, first_pass) = _generate_corr_menu(code, auto_corr, first_pass)
 
         if choice == 1:
-            (corr_var_one, corr_var_two) = additive_corr(corr_log, int_start, int_end, var_one, var_two)
+            (corr_var_one, corr_var_two, corr_var_three) = (
+                additive_corr(corr_log, int_start, int_end, var_one, var_two, var_three))
         elif choice == 2:
-            (corr_var_one, corr_var_two) = multiplicative_corr(corr_log, int_start, int_end, var_one, var_two)
+            (corr_var_one, corr_var_two, corr_var_three) = (
+                multiplicative_corr(corr_log, int_start, int_end, var_one, var_two, var_three))
         elif choice == 3:
-            (corr_var_one, corr_var_two) = set_to_nan(corr_log, int_start, int_end, var_one, var_two)
-        elif choice == 4 and (code == 1 or code == 2):
-            (corr_var_one, corr_var_two) = temp_find_outliers(corr_log, var_one, FEATURES_DICT[code]['var_one_name'],
-                                                              var_two, FEATURES_DICT[code]['var_two_name'], month)
+            (corr_var_one, corr_var_two, corr_var_three) = (
+                set_to_nan(corr_log, int_start, int_end, var_one, var_two, var_three))
+        elif choice == 4 and (code == 1 or code == 2 or code == 10):
+            (corr_var_one, corr_var_two, corr_var_three) = temp_find_outliers(
+                corr_log, var_one, FEATURES_DICT[code]['var_one_name'],
+                var_two, FEATURES_DICT[code]['var_two_name'],
+                var_three, FEATURES_DICT[code]['var_three_name'], month)
         elif choice == 4 and code == 8:
             if auto_corr != 0:
                 corr_percentile = 1
@@ -827,7 +880,7 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
             (corr_var_one, corr_var_two) = rs_period_ratio_corr(corr_log, int_start, int_end, var_one, var_two,
                                                                 corr_sample, corr_period)
 
-        elif choice == 4 and (code == 3 or code == 4 or code == 7 or code == 9):
+        elif choice == 4 and (code == 3 or code == 4 or code == 7 or code == 9 or code == 10 or code == 11):
             # Data is either uz, precip, ea, or rhavg and user doesn't want to correct it.
             corr_log.write('Selected correction interval started at %s and ended at %s. \n' % (int_start, int_end))
             corr_log.write('User decided to skip this interval without correcting it. \n')
@@ -837,8 +890,9 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
                              .format(code, choice))
 
         # Generate After-Corrections Graph
-        corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
-                                                                corr_var_two, code, folder_path)
+        corr_fig = plotting_functions.variable_correction_plots(
+            station, dt_array, var_one, corr_var_one, var_two,
+            corr_var_two, var_three, corr_var_three, code, folder_path)
         show(corr_fig)
 
         if auto_corr == 1 or auto_corr == 0:
@@ -859,17 +913,21 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
         elif choice == 2:
             var_one = np.array(corr_var_one)
             var_two = np.array(corr_var_two)
+            var_three = np.array(corr_var_three)
             corr_log.write('---> User has elected to do another iteration of corrections. \n')
         elif choice == 3:
             var_one = np.array(backup_var_one)
             var_two = np.array(backup_var_two)
+            var_three = np.array(backup_var_three)
             corr_var_one = np.array(backup_var_one)
             corr_var_two = np.array(backup_var_two)
+            corr_var_three = np.array(backup_var_three)
             corr_log.write('---> User has elected to ignore previous iterations of corrections and start over. \n')
         else:
             correction_loop = 0
             corr_var_one = np.array(backup_var_one)
             corr_var_two = np.array(backup_var_two)
+            corr_var_three = np.array(backup_var_three)
             corr_log.write('---> User has elected to end corrections without keeping any changes. \n')
 
     ####################
@@ -877,12 +935,13 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
     # All previous graphs were either entirely before corrections, or showed differences between iterations
     # This graph is between completely original values and final corrected product
     corr_fig = plotting_functions.variable_correction_plots(station, dt_array, backup_var_one, corr_var_one,
-                                                            backup_var_two, corr_var_two, code, folder_path)
+                                                            backup_var_two, corr_var_two, backup_var_three,
+                                                            corr_var_three, code, folder_path)
     save(corr_fig)
 
     # return corrected variables, or save original values as corrected values if correction was rejected
     corr_log.close()
-    return corr_var_one, corr_var_two
+    return corr_var_one, corr_var_two, corr_var_three
 
 
 def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax, tmin, tavg, compiled_ea, ea, ea_col,

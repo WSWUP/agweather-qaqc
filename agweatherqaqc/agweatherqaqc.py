@@ -78,6 +78,12 @@ class WeatherQC:
         self.data_rs = np.array(self.data_df.rs)
         self.data_ws = np.array(self.data_df.ws)
         self.data_precip = np.array(self.data_df.precip)
+        self.data_tsoil_one = np.array(self.data_df.tsoil_one)
+        self.data_tsoil_two = np.array(self.data_df.tsoil_two)
+        self.data_tsoil_three = np.array(self.data_df.tsoil_three)
+        self.data_tmoisture_one = np.array(self.data_df.tmoisture_one)
+        self.data_tmoisture_two = np.array(self.data_df.tmoisture_two)
+        self.data_tmoisture_three = np.array(self.data_df.tmoisture_three)
 
         self.output_file_path = (self.folder_path +
                                  "/correction_files/output_data/" + self.station_name + "_output" + ".xlsx")
@@ -187,7 +193,9 @@ class WeatherQC:
         self.dt_array = np.array(self.dt_array, dtype=np.datetime64)
         self.mm_dt_array = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
         self.data_null = np.empty(self.data_length) * np.nan
+        self.data_null_two = np.empty(self.data_length) * np.nan
         self.mm_data_null = np.zeros(12) * np.nan
+        self.mm_data_null_two = np.zeros(12) * np.nan
 
     def _correct_data(self):
         """
@@ -229,22 +237,28 @@ class WeatherQC:
                   '\n   Enter 7 for RH Maximum and Minimum, if they were provided.'
                   '\n   Enter 8 for RH Average, if it was provided.'
                   '\n   Enter 9 to adjust how compiled humidity is sourced.'
+                  '\n   Enter 10 for soil temperature.'
+                  '\n   Enter 11 for soil moisture.'
                   '\n   Enter 0 to stop applying corrections.'
                   )
 
             choice_loop = True
             while choice_loop:
-                user = utils.get_int_input(0, 9, "\nEnter your selection: ")
+                user = utils.get_int_input(0, 11, "\nEnter your selection: ")
                 # The following if statements check whether user tries to correct a variable that was not provided
                 # or make sure correction is being done in the ideal order
                 if user == 2 and self.column_ser.tdew == -1:
                     print('\nDewpoint temperature was not provided by the file, please choose a different option.')
                 elif user == 6 and self.column_ser.ea == -1:
-                    print('\nVapor Pressure was not provided by the file, please choose a different option.')
+                    print('\nVapor pressure was not provided by the file, please choose a different option.')
                 elif user == 7 and (self.column_ser.rhmax == -1 or self.column_ser.rhmin == -1):
                     print('\nRHMax and RHMin were not provided by the file, please choose a different option.')
                 elif user == 8 and self.column_ser.rhavg == -1:
                     print('\nRHAvg was not provided by the file, please choose a different option.')
+                elif user == 10 and self.column_ser.tsoil_one == -1:
+                    print('\nSoil temperature was not provided by the file, please choose a different option.')
+                elif user == 11 and self.column_ser.tmoisture_one == -1:
+                    print('\nSoil moisture was not provided by the file, please choose a different option.')
                 elif user == 5 and not self.humidity_adjusted:
                     print('\n\nBefore correcting solar radiation, did you want to adjust compiled humidity?.')
                     print('Doing so may allow you to get the best possible humidity record for Rs correction.')
@@ -261,51 +275,51 @@ class WeatherQC:
             # Correcting individual variables based on user choice
             # Correcting Max/Min Temperature data
             if user == 1:
-                (self.data_tmax, self.data_tmin) = qaqc_functions.\
+                (self.data_tmax, self.data_tmin, self.data_null) = qaqc_functions.\
                     correction(self.station_name, self.log_file, self.folder_path,
-                               self.data_tmax, self.data_tmin, self.dt_array,
+                               self.data_tmax, self.data_tmin, self.data_null, self.dt_array,
                                self.data_month, self.data_year, 1, self.auto_mode)
             # Correcting Min/Dew Temperature data
             elif user == 2:
-                (self.data_tmin, self.data_tdew) = qaqc_functions.\
+                (self.data_tmin, self.data_tdew, self.data_null) = qaqc_functions.\
                     correction(self.station_name, self.log_file, self.folder_path,
-                               self.data_tmin, self.data_tdew, self.dt_array,
+                               self.data_tmin, self.data_tdew, self.data_null, self.dt_array,
                                self.data_month, self.data_year, 2, self.auto_mode)
             # Correcting Windspeed
             elif user == 3:
-                (self.data_ws, self.data_null) = qaqc_functions.\
+                (self.data_ws, self.data_null, self.data_null_two) = qaqc_functions.\
                     correction(self.station_name, self.log_file, self.folder_path,
-                               self.data_ws, self.data_null, self.dt_array,
+                               self.data_ws, self.data_null, self.data_null_two, self.dt_array,
                                self.data_month, self.data_year, 3, self.auto_mode)
             # Correcting Precipitation
             elif user == 4:
-                (self.data_precip, self.data_null) = qaqc_functions.\
+                (self.data_precip, self.data_null, self.data_null_two) = qaqc_functions.\
                     correction(self.station_name, self.log_file, self.folder_path,
-                               self.data_precip, self.data_null, self.dt_array,
+                               self.data_precip, self.data_null, self.data_null_two, self.dt_array,
                                self.data_month, self.data_year, 4, self.auto_mode)
             # Correcting Solar radiation
             elif user == 5:
-                (self.data_rs, self.data_null) = qaqc_functions.\
+                (self.data_rs, self.data_null, self.data_null_two) = qaqc_functions.\
                     correction(self.station_name, self.log_file, self.folder_path,
-                               self.data_rs, self.rso, self.dt_array,
+                               self.data_rs, self.rso, self.data_null, self.dt_array,
                                self.data_month, self.data_year, 5, self.auto_mode)
             # Correcting Vapor Pressure
             elif user == 6:
-                (self.data_ea, self.data_null) = qaqc_functions.\
+                (self.data_ea, self.data_null, self.data_null_two) = qaqc_functions.\
                     correction(self.station_name, self.log_file, self.folder_path,
-                               self.data_ea, self.data_null, self.dt_array,
+                               self.data_ea, self.data_null, self.data_null_two, self.dt_array,
                                self.data_month, self.data_year, 7, self.auto_mode)
             # Correcting Relative Humidity Max and Min
             elif user == 7:
-                (self.data_rhmax, self.data_rhmin) = qaqc_functions.\
+                (self.data_rhmax, self.data_rhmin, self.data_null) = qaqc_functions.\
                     correction(self.station_name, self.log_file, self.folder_path,
-                               self.data_rhmax, self.data_rhmin, self.dt_array,
+                               self.data_rhmax, self.data_rhmin, self.data_null, self.dt_array,
                                self.data_month, self.data_year, 8, self.auto_mode)
             # Correcting Relative Humidity Average
             elif user == 8:
-                (self.data_rhavg, self.data_null) = qaqc_functions.\
+                (self.data_rhavg, self.data_null, self.data_null_two) = qaqc_functions.\
                     correction(self.station_name, self.log_file, self.folder_path,
-                               self.data_rhavg, self.data_null, self.dt_array,
+                               self.data_rhavg, self.data_null, self.data_null, self.dt_array,
                                self.data_month, self.data_year, 9, self.auto_mode)
             # Adjusting compiled_ea
             elif user == 9:
@@ -317,6 +331,17 @@ class WeatherQC:
                                                  self.data_rhmin, self.column_ser.rhmin,
                                                  self.data_rhavg, self.column_ser.rhavg)
                 self.humidity_adjusted = True
+            elif user == 10:
+                (self.data_tsoil_one, self.data_tsoil_two, self.data_tsoil_three) = qaqc_functions. \
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_tsoil_one, self.data_tsoil_two, self.data_tsoil_three, self.dt_array,
+                               self.data_month, self.data_year, 10, self.auto_mode)
+
+            elif user == 11:
+                (self.data_tmoisture_one, self.data_tmoisture_two, self.data_tmoisture_three) = qaqc_functions. \
+                    correction(self.station_name, self.log_file, self.folder_path,
+                               self.data_tmoisture_one, self.data_tmoisture_two, self.data_tmoisture_three, self.dt_array,
+                               self.data_month, self.data_year, 11, self.auto_mode)
             else:
                 # user quits, exit out of loop
                 print('\nSystem: Now finishing up corrections.')
@@ -662,68 +687,68 @@ class WeatherQC:
 
             # Temperature Maximum and Minimum Plot
             plot_tmax_tmin = plot.line_plot(x_size, y_size, self.dt_array, self.data_tmax,
-                                            self.data_tmin, 1, '')
+                                            self.data_tmin, self.data_null, 1, '')
             plot_list.append(plot_tmax_tmin)
             # Temperature Minimum and Dewpoint Plot
             plot_tmin_tdew = plot.line_plot(x_size, y_size, self.dt_array, self.data_tmin,
-                                            self.data_tdew, 2, '', plot_tmax_tmin)
+                                            self.data_tdew, self.data_null, 2, '', plot_tmax_tmin)
             plot_list.append(plot_tmin_tdew)
 
             # 'Completed' vapor pressure plot
             plot_comp_ea = plot.line_plot(x_size, y_size, self.dt_array, self.compiled_ea, self.data_null,
-                                          7, 'Composite ', plot_tmax_tmin)
+                                          self.data_null_two, 7, 'Composite ', plot_tmax_tmin)
             plot_list.append(plot_comp_ea)
 
             # vapor pressure plot that was just the provided dataset
             if self.column_ser.ea != -1:
                 plot_data_ea = plot.line_plot(x_size, y_size, self.dt_array, self.data_ea, self.data_null,
-                                              7, 'Provided ', plot_tmax_tmin)
+                                              self.data_null_two, 7, 'Provided ', plot_tmax_tmin)
                 plot_list.append(plot_data_ea)
 
             # rh max and rh min plot if it was provided in dataset
             if self.column_ser.rhmax != -1 and self.column_ser.rhmin != -1:  # RH max and RH min
                 plot_rhmax_rhmin = plot.line_plot(x_size, y_size, self.dt_array, self.data_rhmax,
-                                                  self.data_rhmin, 8, '', plot_tmax_tmin)
+                                                  self.data_rhmin, self.data_null, 8, '', plot_tmax_tmin)
                 plot_list.append(plot_rhmax_rhmin)
 
             # rh avg if it was provided in the dataset
             if self.column_ser.rhavg != -1:  # RH Avg
                 plot_rhavg = plot.line_plot(x_size, y_size, self.dt_array, self.data_rhavg,
-                                            self.data_null, 9, '', plot_tmax_tmin)
+                                            self.data_null, self.data_null_two, 9, '', plot_tmax_tmin)
                 plot_list.append(plot_rhavg)
 
             # Mean Monthly Temperature Minimum and Dewpoint
             plot_mm_tmin_tdew = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_tmin,
-                                               self.mm_tdew, 2, 'MM ')
+                                               self.mm_tdew, self.mm_data_null, 2, 'MM ')
             plot_list.append(plot_mm_tmin_tdew)
 
             # Mean Monthly k0 curve (Tmin-Tdew)
             plot_mm_k_not = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_k_not,
-                                           self.mm_data_null, 10, '', plot_mm_tmin_tdew)
+                                           self.mm_data_null, self.mm_data_null_two, 12, '', plot_mm_tmin_tdew)
             plot_list.append(plot_mm_k_not)
 
             # Solar radiation and clear sky solar radiation
-            plot_rs_rso = plot.line_plot(x_size, y_size, self.dt_array, self.data_rs, self.rso,
+            plot_rs_rso = plot.line_plot(x_size, y_size, self.dt_array, self.data_rs, self.rso, self.data_null,
                                          5, '', plot_tmax_tmin)
             plot_list.append(plot_rs_rso)
 
             # Windspeed
-            plot_ws = plot.line_plot(x_size, y_size, self.dt_array, self.data_ws, self.data_null,
+            plot_ws = plot.line_plot(x_size, y_size, self.dt_array, self.data_ws, self.data_null, self.data_null_two,
                                      3, '', plot_tmax_tmin)
             plot_list.append(plot_ws)
 
             # Precipitation
-            plot_precip = plot.line_plot(x_size, y_size, self.dt_array, self.data_precip, self.data_null,
+            plot_precip = plot.line_plot(x_size, y_size, self.dt_array, self.data_precip, self.data_null, self.data_null_two,
                                          4, '', plot_tmax_tmin)
             plot_list.append(plot_precip)
 
             # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
-            plot_mm_opt_rs_tr = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_rs,
+            plot_mm_opt_rs_tr = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_rs, self.mm_data_null,
                                                self.mm_opt_rs_tr, 6, 'MM Optimized ', plot_mm_tmin_tdew)
             plot_list.append(plot_mm_opt_rs_tr)
 
             # Optimized mean monthly Thornton-Running solar radiation and Mean Monthly solar radiation
-            plot_mm_orig_rs_tr = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_rs,
+            plot_mm_orig_rs_tr = plot.line_plot(x_size, y_size, self.mm_dt_array, self.mm_rs, self.mm_data_null,
                                                 self.mm_orig_rs_tr, 6, 'MM Original ', plot_mm_tmin_tdew)
             plot_list.append(plot_mm_orig_rs_tr)
 
@@ -827,6 +852,12 @@ class WeatherQC:
         diff_precip = np.array(self.data_precip - self.original_df.precip)
         diff_etr = np.array(self.etr - self.original_df.etr)
         diff_eto = np.array(self.eto - self.original_df.eto)
+        diff_tsoil_one = np.array(self.data_tsoil_one - self.original_df.tsoil_one)
+        diff_tsoil_two = np.array(self.data_tsoil_two - self.original_df.tsoil_two)
+        diff_tsoil_three = np.array(self.data_tsoil_three - self.original_df.tsoil_three)
+        diff_tmoisture_one = np.array(self.data_tmoisture_one - self.original_df.tmoisture_one)
+        diff_tmoisture_two = np.array(self.data_tmoisture_two - self.original_df.tmoisture_two)
+        diff_tmoisture_three = np.array(self.data_tmoisture_three - self.original_df.tmoisture_three)
 
         # Create k0 array to output values
         k_not_vals = np.zeros(self.data_length)
@@ -845,7 +876,14 @@ class WeatherQC:
                                   'RHMax (%)': self.data_rhmax, 'RHMin (%)': self.data_rhmin, 'Rs (w/m2)': self.data_rs,
                                   'Opt_Rs_TR (w/m2)': self.opt_rs_tr, 'Rso (w/m2)': self.rso,
                                   'Windspeed (m/s)': self.data_ws, 'Precip (mm)': self.data_precip,
-                                  'ETr (mm)': self.etr, 'ETo (mm)': self.eto, 'ws_2m (m/s)': ws_2m},
+                                  'ETr (mm)': self.etr, 'ETo (mm)': self.eto, 'ws_2m (m/s)': ws_2m,
+                                  'Soil Temperature 1 (C)': self.data_tsoil_one,
+                                  'Soil Temperature 2 (C)': self.data_tsoil_two,
+                                  'Soil Temperature 3 (C)': self.data_tsoil_three,
+                                  'Soil Moisture 1 (%)': self.data_tmoisture_one,
+                                  'Soil Moisture 2 (%)': self.data_tmoisture_two,
+                                  'Soil Moisture 3 (%)': self.data_tmoisture_three,
+                                  },
                                  index=datetime_df)
 
         # Creating difference dataframe to track amount of correction
@@ -855,7 +893,14 @@ class WeatherQC:
                                  'Vapor Pres (kPa)': diff_ea, 'RHAvg (%)': diff_rhavg, 'RHMax (%)': diff_rhmax,
                                  'RHMin (%)': diff_rhmin, 'Rs (w/m2)': diff_rs, 'Opt - Orig Rs_TR (w/m2)': diff_rs_tr,
                                  'Rso (w/m2)': diff_rso, 'Windspeed (m/s)': diff_ws, 'Precip (mm)': diff_precip,
-                                 'ETr (mm)': diff_etr, 'ETo (mm)': diff_eto}, index=datetime_df)
+                                 'ETr (mm)': diff_etr, 'ETo (mm)': diff_eto,
+                                 'Soil Temperature 1 (C)': diff_tsoil_one,
+                                 'Soil Temperature 2 (C)': diff_tsoil_two,
+                                 'Soil Temperature 3 (C)': diff_tsoil_three,
+                                 'Soil Moisture 1 (%)': diff_tmoisture_one,
+                                 'Soil Moisture 2 (%)': diff_tmoisture_two,
+                                 'Soil Moisture 3 (%)': diff_tmoisture_three,
+                                 }, index=datetime_df)
 
         # Creating a fill dataframe that tracks where missing data was filled in
         fill_df = pd.DataFrame({'year': self.data_year, 'month': self.data_month,

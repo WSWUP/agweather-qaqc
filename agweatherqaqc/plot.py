@@ -44,7 +44,7 @@ def histogram_plot(data, title, color, units):
     return h_plot
 
 
-def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot=None):
+def line_plot(x_size, y_size, dt_array, var_one, var_two, var_three, code, usage, link_plot=None):
     """
         Creates a bokeh line plot for provided variables and links them if appropriate, relies on
         the information stored within utils.FEATURES_DICT to generate correct features for plots
@@ -54,7 +54,8 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
             :y_size: (int) y-axis size for plot
             :dt_array: (ndarray) values for x-axis to label timestep, either daily or mean monthly
             :var_one: (ndarray) 1D numpy array of first variable
-            :var_two: (ndarray)  1D numpy array of second variable
+            :var_two: (ndarray)  1D numpy array of second variable, may be entirely nan's
+            :var_three: (ndarray)  1D numpy array of third variable, may be entirely nan's
             :code: (int) indicates what variables were passed
             :usage: (str) additional info used in plot title
             :link_plot: (bokeh.figure) either nothing or the plot we want to link x-axis with
@@ -65,18 +66,18 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
 
     date_list = dt_array.tolist()
     source = ColumnDataSource(data=dict(date=date_list, v_one=var_one))
-    empty_array = np.zeros(len(date_list))
-    empty_array[:] = np.nan
+    source.add(var_two, name='v_two')
+    source.add(var_three, name='v_three')
 
-    if var_two is None:
-        source.add(empty_array, name='v_two')
+    if FEATURES_DICT[code]['var_three_name'] is not None:
+        title = (f'{usage} {FEATURES_DICT[code]["var_one_name"]},'
+                 f' {FEATURES_DICT[code]["var_two_name"]},'
+                 f' and {FEATURES_DICT[code]["var_three_name"]}')
+    elif FEATURES_DICT[code]['var_two_name'] is not None:
+        title = (f'{usage} {FEATURES_DICT[code]["var_one_name"]}'
+                 f' and {FEATURES_DICT[code]["var_two_name"]}')
     else:
-        source.add(var_two, name='v_two')
-
-    if FEATURES_DICT[code]['var_two_name'] is None:
         title = f'{usage} {FEATURES_DICT[code]["var_one_name"]}'
-    else:
-        title = f'{usage} {FEATURES_DICT[code]["var_one_name"]} and {FEATURES_DICT[code]["var_two_name"]}'
 
     tooltips = [
         ('Index', '$index'),
@@ -105,12 +106,20 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
 
     # Plot first variable
     subplot.line(x='date', y='v_one', alpha=0.75, line_width=2, source=source,
-                 line_color=FEATURES_DICT[code]['var_one_color'], legend_label=FEATURES_DICT[code]['var_one_name'])
+                 line_color=FEATURES_DICT[code]['var_one_color'],
+                 legend_label=FEATURES_DICT[code]['var_one_name'])
 
     # Plot second variable if provided
     if FEATURES_DICT[code]['var_two_name'] is not None:
         subplot.line(x='date', y='v_two', alpha=0.75, line_width=2, source=source,
-                     line_color=FEATURES_DICT[code]['var_two_color'], legend_label=FEATURES_DICT[code]['var_two_name'])
+                     line_color=FEATURES_DICT[code]['var_two_color'],
+                     legend_label=FEATURES_DICT[code]['var_two_name'])
+
+    # Plot third variable if provided
+    if FEATURES_DICT[code]['var_three_name'] is not None:
+        subplot.line(x='date', y='v_three', alpha=0.75, line_width=2, source=source,
+                     line_color=FEATURES_DICT[code]['var_three_color'],
+                     legend_label=FEATURES_DICT[code]['var_three_name'])
 
     # Add legend and tools
     subplot.legend.location = 'bottom_left'
@@ -124,7 +133,8 @@ def line_plot(x_size, y_size, dt_array, var_one, var_two, code, usage, link_plot
     return subplot
 
 
-def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two, corr_var_two, code, folder_path):
+def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two, corr_var_two,
+                              var_three, corr_var_three, code, folder_path):
     """
     Generates a gridplot that showcases how a variable has changes from whatever correction methodology has been applied
 
@@ -135,6 +145,8 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
         :corr_var_one: (ndarray) 1-D array of variable one data AFTER correction
         :var_two: (ndarray) 1-D array of variable two data BEFORE correction
         :corr_var_two: (ndarray) 1-D array of variable two data AFTER correction
+        :var_three: (ndarray) 1-D array of variable three data BEFORE correction
+        :corr_var_three: (ndarray) 1-D array of variable three data AFTER correction
         :code: (int) provides additional information as to what variable is being corrected
         :folder_path: (str) path to output folder to save figures
 
@@ -147,26 +159,29 @@ def variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
 
     delta_var_one = corr_var_one - var_one
     delta_var_two = corr_var_two - var_two
+    delta_var_three = corr_var_three - var_three
 
     with np.errstate(divide='ignore', invalid='ignore'):  # Silencing all errors when we divide by a nan
         prct_var_one = ((corr_var_one - var_one) / var_one) * 100.0
         prct_var_two = ((corr_var_two - var_two) / var_two) * 100.0
+        prct_var_three = ((corr_var_three - var_three) / var_three) * 100.0
 
     # check if output folder exists and create if necessary
     directory_path = f'{folder_path}/correction_files/var_qc_plots/'
     Path(directory_path).mkdir(parents=True, exist_ok=True)
     output_file(f'{directory_path}{station}_{FEATURES_DICT[code]["qc_filename"]}_qc_plots.html')
 
-    original_plot = line_plot(x_size, y_size, dt_array, var_one, var_two, code, f'{station} Original', link_plot=None)
+    original_plot = line_plot(x_size, y_size, dt_array, var_one, var_two, var_three,
+                              code, f'{station} Original', link_plot=None)
 
-    corrected_plot = line_plot(x_size, y_size, dt_array, corr_var_one, corr_var_two, code, 'Corrected',
-                               link_plot=original_plot)
+    corrected_plot = line_plot(x_size, y_size, dt_array, corr_var_one, corr_var_two, corr_var_three,
+                               code, 'Corrected', link_plot=original_plot)
 
-    delta_plot = line_plot(x_size, y_size, dt_array, delta_var_one, delta_var_two, code, 'Δ of',
-                           link_plot=original_plot)
+    delta_plot = line_plot(x_size, y_size, dt_array, delta_var_one, delta_var_two, delta_var_three,
+                           code, 'Δ of', link_plot=original_plot)
 
-    percent_plot = line_plot(x_size, y_size, dt_array, prct_var_one, prct_var_two, code, '% Difference of',
-                             link_plot=original_plot)
+    percent_plot = line_plot(x_size, y_size, dt_array, prct_var_one, prct_var_two, prct_var_three,
+                             code, '% Difference of', link_plot=original_plot)
 
     corr_fig = gridplot([[original_plot], [corrected_plot], [delta_plot], [percent_plot]],
                         toolbar_location="left", sizing_mode='stretch_both')

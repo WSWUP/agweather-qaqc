@@ -64,6 +64,12 @@ def _read_config(config_file_path):
     config_dict['rhmax_col'] = config_reader['DATA'].getint('RELATIVE_HUMIDITY_MAX_COL')
     config_dict['rhavg_col'] = config_reader['DATA'].getint('RELATIVE_HUMIDITY_AVG_COL')
     config_dict['rhmin_col'] = config_reader['DATA'].getint('RELATIVE_HUMIDITY_MIN_COL')
+    config_dict['tsoil_one_col'] = config_reader['DATA'].getint('SOIL_TEMPERATURE_DEPTH_1_COL')
+    config_dict['tsoil_two_col'] = config_reader['DATA'].getint('SOIL_TEMPERATURE_DEPTH_2_COL')
+    config_dict['tsoil_three_col'] = config_reader['DATA'].getint('SOIL_TEMPERATURE_DEPTH_3_COL')
+    config_dict['tmoisture_one_col'] = config_reader['DATA'].getint('SOIL_MOISTURE_DEPTH_1_COL')
+    config_dict['tmoisture_two_col'] = config_reader['DATA'].getint('SOIL_MOISTURE_DEPTH_2_COL')
+    config_dict['tmoisture_three_col'] = config_reader['DATA'].getint('SOIL_MOISTURE_DEPTH_3_COL')
 
     # DATA Section - Unit Flags
     config_dict['temperature_units'] = config_reader['DATA'].getint('TEMPERATURE_UNITS')
@@ -72,6 +78,7 @@ def _read_config(config_file_path):
     config_dict['solar_radiation_units'] = config_reader['DATA'].getint('SOLAR_RADIATION_UNITS')
     config_dict['vapor_pressure_units'] = config_reader['DATA'].getint('VAPOR_PRESSURE_UNITS')
     config_dict['relative_humidity_units'] = config_reader['DATA'].getint('RELATIVE_HUMIDITY_UNITS')
+    config_dict['soil_moisture_units'] = config_reader['DATA'].getint('SOIL_MOISTURE_UNITS')
 
     # Check to see that all expected variables are provided, ConfigParser defaults to None if it can't find something.
     if None in config_dict.values():
@@ -198,6 +205,14 @@ def _convert_units(config_dict, original_data, var_type):
         else:
             raise ValueError('Incorrect parameters: RELATIVE_HUMIDITY_UNITS in config is not set up correctly.')
 
+    elif var_type == 'soil_moisture':
+        if config_dict['soil_moisture_units'] == 0:  # percentage
+            pass
+        elif config_dict['soil_moisture_units'] == 1:  # decimal
+            converted_data = np.array(original_data * 100.0)
+        else:
+            raise ValueError('Incorrect parameters: SOIL_MOISTURE_UNITS in config is not set up correctly.')
+
     else:
         # If an unsupported variable type is passed, raise a value error to point it out.
         raise ValueError('Unsupported variable type {} passed to convert_units function.'.format(var_type))
@@ -245,6 +260,9 @@ def _daily_realistic_limits(original_data, log_path, var_type):
     elif var_type == 'relative_humidity':
         limited_data[original_data < 2] = clip_value
         limited_data[original_data > 110] = clip_value  # avg relative humidity above 100% is unlikely even with drift
+    elif var_type == 'soil_moisture':
+        limited_data[original_data < 0] = clip_value
+        limited_data[original_data > 100] = clip_value  # avg relative humidity above 100% is unlikely even with drift
     else:
         # If an unsupported variable type is passed, raise a value error to point it out.
         raise ValueError('Unsupported variable type {} passed to daily_realistic_limits function.'.format(var_type))
@@ -363,6 +381,24 @@ def _process_variable(config_dict, raw_data, var_name):
     elif var_name == 'solar_radiation':
         var_col = config_dict['rs_col']
         var_type = 'solar_radiation'
+    elif var_name == 'soil_temperature_one':
+        var_col = config_dict['tsoil_one_col']
+        var_type = 'temperature'
+    elif var_name == 'soil_temperature_two':
+        var_col = config_dict['tsoil_two_col']
+        var_type = 'temperature'
+    elif var_name == 'soil_temperature_three':
+        var_col = config_dict['tsoil_three_col']
+        var_type = 'temperature'
+    elif var_name == 'soil_moisture_one':
+        var_col = config_dict['tmoisture_one_col']
+        var_type = 'soil_moisture'
+    elif var_name == 'soil_moisture_two':
+        var_col = config_dict['tmoisture_two_col']
+        var_type = 'soil_moisture'
+    elif var_name == 'soil_moisture_three':
+        var_col = config_dict['tmoisture_three_col']
+        var_type = 'soil_moisture'
     else:
         # If an unsupported variable type is passed, raise a value error to point it out.
         raise ValueError('Unsupported variable type {} passed to _process_variable function.'.format(var_name))
@@ -584,26 +620,12 @@ def _obtain_data(config_file_path, metadata_file_path=None):
     (data_rs, rs_col) = _process_variable(config_dict, raw_data, 'solar_radiation')
     (data_ws, ws_col) = _process_variable(config_dict, raw_data, 'wind_speed')
     (data_precip, precip_col) = _process_variable(config_dict, raw_data, 'precipitation')
-
-    # HPRCC data reports '0' for missing observations as well as a text column, but this script doesn't interpret text
-    # columns, so instead we see if both tmax and tmin have the same value (0, or -17.7778 depending on units) and if so
-    # mark that row as missing
-    # realistically tmax should never equal tmin, so this is an okay check to have in general
-    for i in range(len(data_tmax)):
-        if data_tmax[i] == data_tmin[i]:
-            data_tmax[i] = np.nan
-            data_tmin[i] = np.nan
-            data_tavg[i] = np.nan
-            data_tdew[i] = np.nan
-            data_ea[i] = np.nan
-            data_rhmax[i] = np.nan
-            data_rhmin[i] = np.nan
-            data_rhavg[i] = np.nan
-            data_rs[i] = np.nan
-            data_ws[i] = np.nan
-            data_precip[i] = np.nan
-        else:
-            pass
+    (data_tsoil_one, tsoil_one_col) = _process_variable(config_dict, raw_data, 'soil_temperature_one')
+    (data_tsoil_two, tsoil_two_col) = _process_variable(config_dict, raw_data, 'soil_temperature_two')
+    (data_tsoil_three, tsoil_three_col) = _process_variable(config_dict, raw_data, 'soil_temperature_three')
+    (data_tmoisture_one, tmoisture_one_col) = _process_variable(config_dict, raw_data, 'soil_moisture_one')
+    (data_tmoisture_two, tmoisture_two_col) = _process_variable(config_dict, raw_data, 'soil_moisture_two')
+    (data_tmoisture_three, tmoisture_three_col) = _process_variable(config_dict, raw_data, 'soil_moisture_three')
 
     #########################
     # Dataframe Construction
@@ -632,13 +654,18 @@ def _obtain_data(config_file_path, metadata_file_path=None):
     data_df = pd.DataFrame({'year': data_year, 'month': data_month,
                             'day': data_day, 'tavg': data_tavg, 'tmax': data_tmax, 'tmin': data_tmin,
                             'tdew': data_tdew, 'ea': data_ea, 'rhavg': data_rhavg, 'rhmax': data_rhmax,
-                            'rhmin': data_rhmin, 'rs': data_rs, 'ws': data_ws, 'precip': data_precip},
+                            'rhmin': data_rhmin, 'rs': data_rs, 'ws': data_ws, 'precip': data_precip,
+                            'tsoil_one': data_tsoil_one, 'tmoisture_one': data_tmoisture_one,
+                            'tsoil_two': data_tsoil_two, 'tmoisture_two': data_tmoisture_two,
+                            'tsoil_three': data_tsoil_three, 'tmoisture_three': data_tmoisture_three},
                            index=datetime_df)
 
     # Create dataframe of column indices for weather variable, to track which ones were provided vs calculated
     col_ser = pd.Series({'tmax': tmax_col, 'tmin': tmin_col, 'tavg': tavg_col, 'tdew': tdew_col, 'ea': ea_col,
-                        'rhmax': rhmax_col, 'rhmin': rhmin_col, 'rhavg': rhavg_col, 'rs': rs_col, 'ws': ws_col,
-                        'precip': precip_col})
+                         'rhmax': rhmax_col, 'rhmin': rhmin_col, 'rhavg': rhavg_col, 'rs': rs_col, 'ws': ws_col,
+                         'precip': precip_col, 'tsoil_one': tsoil_one_col, 'tmoisture_one': tmoisture_one_col,
+                         'tsoil_two': tsoil_two_col, 'tmoisture_two': tmoisture_two_col,
+                         'tsoil_three': tsoil_three_col, 'tmoisture_three': tmoisture_three_col})
 
     # Check for the existence of duplicate indexes
     # if found, since it cannot be determined which value is true, we default to first instance and remove all following
