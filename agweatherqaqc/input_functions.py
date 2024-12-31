@@ -67,9 +67,9 @@ def _read_config(config_file_path):
     config_dict['tsoil_one_col'] = config_reader['DATA'].getint('SOIL_TEMPERATURE_DEPTH_1_COL')
     config_dict['tsoil_two_col'] = config_reader['DATA'].getint('SOIL_TEMPERATURE_DEPTH_2_COL')
     config_dict['tsoil_three_col'] = config_reader['DATA'].getint('SOIL_TEMPERATURE_DEPTH_3_COL')
-    config_dict['tmoisture_one_col'] = config_reader['DATA'].getint('SOIL_MOISTURE_DEPTH_1_COL')
-    config_dict['tmoisture_two_col'] = config_reader['DATA'].getint('SOIL_MOISTURE_DEPTH_2_COL')
-    config_dict['tmoisture_three_col'] = config_reader['DATA'].getint('SOIL_MOISTURE_DEPTH_3_COL')
+    config_dict['msoil_one_col'] = config_reader['DATA'].getint('SOIL_MOISTURE_DEPTH_1_COL')
+    config_dict['msoil_two_col'] = config_reader['DATA'].getint('SOIL_MOISTURE_DEPTH_2_COL')
+    config_dict['msoil_three_col'] = config_reader['DATA'].getint('SOIL_MOISTURE_DEPTH_3_COL')
 
     # DATA Section - Unit Flags
     config_dict['temperature_units'] = config_reader['DATA'].getint('TEMPERATURE_UNITS')
@@ -391,13 +391,13 @@ def _process_variable(config_dict, raw_data, var_name):
         var_col = config_dict['tsoil_three_col']
         var_type = 'temperature'
     elif var_name == 'soil_moisture_one':
-        var_col = config_dict['tmoisture_one_col']
+        var_col = config_dict['msoil_one_col']
         var_type = 'soil_moisture'
     elif var_name == 'soil_moisture_two':
-        var_col = config_dict['tmoisture_two_col']
+        var_col = config_dict['msoil_two_col']
         var_type = 'soil_moisture'
     elif var_name == 'soil_moisture_three':
-        var_col = config_dict['tmoisture_three_col']
+        var_col = config_dict['msoil_three_col']
         var_type = 'soil_moisture'
     else:
         # If an unsupported variable type is passed, raise a value error to point it out.
@@ -623,9 +623,9 @@ def _obtain_data(config_file_path, metadata_file_path=None):
     (data_tsoil_one, tsoil_one_col) = _process_variable(config_dict, raw_data, 'soil_temperature_one')
     (data_tsoil_two, tsoil_two_col) = _process_variable(config_dict, raw_data, 'soil_temperature_two')
     (data_tsoil_three, tsoil_three_col) = _process_variable(config_dict, raw_data, 'soil_temperature_three')
-    (data_tmoisture_one, tmoisture_one_col) = _process_variable(config_dict, raw_data, 'soil_moisture_one')
-    (data_tmoisture_two, tmoisture_two_col) = _process_variable(config_dict, raw_data, 'soil_moisture_two')
-    (data_tmoisture_three, tmoisture_three_col) = _process_variable(config_dict, raw_data, 'soil_moisture_three')
+    (data_msoil_one, msoil_one_col) = _process_variable(config_dict, raw_data, 'soil_moisture_one')
+    (data_msoil_two, msoil_two_col) = _process_variable(config_dict, raw_data, 'soil_moisture_two')
+    (data_msoil_three, msoil_three_col) = _process_variable(config_dict, raw_data, 'soil_moisture_three')
 
     #########################
     # Dataframe Construction
@@ -655,17 +655,17 @@ def _obtain_data(config_file_path, metadata_file_path=None):
                             'day': data_day, 'tavg': data_tavg, 'tmax': data_tmax, 'tmin': data_tmin,
                             'tdew': data_tdew, 'ea': data_ea, 'rhavg': data_rhavg, 'rhmax': data_rhmax,
                             'rhmin': data_rhmin, 'rs': data_rs, 'ws': data_ws, 'precip': data_precip,
-                            'tsoil_one': data_tsoil_one, 'tmoisture_one': data_tmoisture_one,
-                            'tsoil_two': data_tsoil_two, 'tmoisture_two': data_tmoisture_two,
-                            'tsoil_three': data_tsoil_three, 'tmoisture_three': data_tmoisture_three},
+                            'tsoil_one': data_tsoil_one, 'msoil_one': data_msoil_one,
+                            'tsoil_two': data_tsoil_two, 'msoil_two': data_msoil_two,
+                            'tsoil_three': data_tsoil_three, 'msoil_three': data_msoil_three},
                            index=datetime_df)
 
     # Create dataframe of column indices for weather variable, to track which ones were provided vs calculated
     col_ser = pd.Series({'tmax': tmax_col, 'tmin': tmin_col, 'tavg': tavg_col, 'tdew': tdew_col, 'ea': ea_col,
                          'rhmax': rhmax_col, 'rhmin': rhmin_col, 'rhavg': rhavg_col, 'rs': rs_col, 'ws': ws_col,
-                         'precip': precip_col, 'tsoil_one': tsoil_one_col, 'tmoisture_one': tmoisture_one_col,
-                         'tsoil_two': tsoil_two_col, 'tmoisture_two': tmoisture_two_col,
-                         'tsoil_three': tsoil_three_col, 'tmoisture_three': tmoisture_three_col})
+                         'precip': precip_col, 'tsoil_one': tsoil_one_col, 'msoil_one': msoil_one_col,
+                         'tsoil_two': tsoil_two_col, 'msoil_two': msoil_two_col,
+                         'tsoil_three': tsoil_three_col, 'msoil_three': msoil_three_col})
 
     # Check for the existence of duplicate indexes
     # if found, since it cannot be determined which value is true, we default to first instance and remove all following

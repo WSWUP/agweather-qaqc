@@ -81,9 +81,9 @@ class WeatherQC:
         self.data_tsoil_one = np.array(self.data_df.tsoil_one)
         self.data_tsoil_two = np.array(self.data_df.tsoil_two)
         self.data_tsoil_three = np.array(self.data_df.tsoil_three)
-        self.data_tmoisture_one = np.array(self.data_df.tmoisture_one)
-        self.data_tmoisture_two = np.array(self.data_df.tmoisture_two)
-        self.data_tmoisture_three = np.array(self.data_df.tmoisture_three)
+        self.data_msoil_one = np.array(self.data_df.msoil_one)
+        self.data_msoil_two = np.array(self.data_df.msoil_two)
+        self.data_msoil_three = np.array(self.data_df.msoil_three)
 
         self.output_file_path = (self.folder_path +
                                  "/correction_files/output_data/" + self.station_name + "_output" + ".xlsx")
@@ -257,7 +257,7 @@ class WeatherQC:
                     print('\nRHAvg was not provided by the file, please choose a different option.')
                 elif user == 10 and self.column_ser.tsoil_one == -1:
                     print('\nSoil temperature was not provided by the file, please choose a different option.')
-                elif user == 11 and self.column_ser.tmoisture_one == -1:
+                elif user == 11 and self.column_ser.msoil_one == -1:
                     print('\nSoil moisture was not provided by the file, please choose a different option.')
                 elif user == 5 and not self.humidity_adjusted:
                     print('\n\nBefore correcting solar radiation, did you want to adjust compiled humidity?.')
@@ -338,9 +338,9 @@ class WeatherQC:
                                self.data_month, self.data_year, 10, self.auto_mode)
 
             elif user == 11:
-                (self.data_tmoisture_one, self.data_tmoisture_two, self.data_tmoisture_three) = qaqc_functions. \
+                (self.data_msoil_one, self.data_msoil_two, self.data_msoil_three) = qaqc_functions. \
                     correction(self.station_name, self.log_file, self.folder_path,
-                               self.data_tmoisture_one, self.data_tmoisture_two, self.data_tmoisture_three, self.dt_array,
+                               self.data_msoil_one, self.data_msoil_two, self.data_msoil_three, self.dt_array,
                                self.data_month, self.data_year, 11, self.auto_mode)
             else:
                 # user quits, exit out of loop
@@ -855,9 +855,9 @@ class WeatherQC:
         diff_tsoil_one = np.array(self.data_tsoil_one - self.original_df.tsoil_one)
         diff_tsoil_two = np.array(self.data_tsoil_two - self.original_df.tsoil_two)
         diff_tsoil_three = np.array(self.data_tsoil_three - self.original_df.tsoil_three)
-        diff_tmoisture_one = np.array(self.data_tmoisture_one - self.original_df.tmoisture_one)
-        diff_tmoisture_two = np.array(self.data_tmoisture_two - self.original_df.tmoisture_two)
-        diff_tmoisture_three = np.array(self.data_tmoisture_three - self.original_df.tmoisture_three)
+        diff_msoil_one = np.array(self.data_msoil_one - self.original_df.msoil_one)
+        diff_msoil_two = np.array(self.data_msoil_two - self.original_df.msoil_two)
+        diff_msoil_three = np.array(self.data_msoil_three - self.original_df.msoil_three)
 
         # Create k0 array to output values
         k_not_vals = np.zeros(self.data_length)
@@ -880,9 +880,9 @@ class WeatherQC:
                                   'Soil Temperature 1 (C)': self.data_tsoil_one,
                                   'Soil Temperature 2 (C)': self.data_tsoil_two,
                                   'Soil Temperature 3 (C)': self.data_tsoil_three,
-                                  'Soil Moisture 1 (%)': self.data_tmoisture_one,
-                                  'Soil Moisture 2 (%)': self.data_tmoisture_two,
-                                  'Soil Moisture 3 (%)': self.data_tmoisture_three,
+                                  'Soil Moisture 1 (%)': self.data_msoil_one,
+                                  'Soil Moisture 2 (%)': self.data_msoil_two,
+                                  'Soil Moisture 3 (%)': self.data_msoil_three,
                                   },
                                  index=datetime_df)
 
@@ -897,9 +897,9 @@ class WeatherQC:
                                  'Soil Temperature 1 (C)': diff_tsoil_one,
                                  'Soil Temperature 2 (C)': diff_tsoil_two,
                                  'Soil Temperature 3 (C)': diff_tsoil_three,
-                                 'Soil Moisture 1 (%)': diff_tmoisture_one,
-                                 'Soil Moisture 2 (%)': diff_tmoisture_two,
-                                 'Soil Moisture 3 (%)': diff_tmoisture_three,
+                                 'Soil Moisture 1 (%)': diff_msoil_one,
+                                 'Soil Moisture 2 (%)': diff_msoil_two,
+                                 'Soil Moisture 3 (%)': diff_msoil_three,
                                  }, index=datetime_df)
 
         # Creating a fill dataframe that tracks where missing data was filled in
