@@ -262,14 +262,15 @@ def temp_find_outliers(log_writer, var_one, var_one_name, var_two, var_two_name,
         (corrected_var_one[t_index], var_one_outlier_count) = _modified_z_score_outlier_detection(var_one[t_index])
         (corrected_var_two[t_index], var_two_outlier_count) = _modified_z_score_outlier_detection(var_two[t_index])
 
+        var_one_total_outliers = var_one_total_outliers + var_one_outlier_count
+        var_two_total_outliers = var_two_total_outliers + var_two_outlier_count
+
         # var_three may be empty if it's not soil temperature data
         if var_three_name is not None:
             (corrected_var_three[t_index], var_three_outlier_count) = (
                 _modified_z_score_outlier_detection(var_three[t_index]))
+            var_three_total_outliers = var_three_total_outliers + var_three_outlier_count
 
-        var_one_total_outliers = var_one_total_outliers + var_one_outlier_count
-        var_two_total_outliers = var_two_total_outliers + var_two_outlier_count
-        var_three_total_outliers = var_three_total_outliers + var_three_outlier_count
         k += 1
 
     # check to make sure TMin isn't getting double-corrected
