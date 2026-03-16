@@ -772,7 +772,7 @@ class WeatherQC:
             # file is already created, so we need to read it in, append our new information to the bottom of it
             # and then save the info
             metadata_info = pd.read_excel('correction_metadata.xlsx', sheet_name=0, index_col=None,
-                                          engine='openpyxl', keep_default_na=False, verbose=True)
+                                          engine='openpyxl', keep_default_na=False)
 
             new_meta_info = pd.DataFrame({'Station': self.station_name, 'Latitude': self.station_lat,
                                           'Longitude': self.station_lon, 'station_elev_m': self.station_elev,
@@ -788,11 +788,15 @@ class WeatherQC:
 
         # if we are using a network-specific metadata file, update that another file has been processed
         if self.metadata_path is not None:
-            current_row = self.metadata_df.processed.ne(1).idxmax() - 1
-            self.metadata_df.processed.iloc[current_row] = 1
-            self.metadata_df.record_start.iloc[current_row] = record_start
-            self.metadata_df.record_end.iloc[current_row] = record_end
-            self.metadata_df.output_path.iloc[current_row] = self.output_file_path
+            # Recast datatypes of object columns as objects just in case pandas read them in as floats
+            self.metadata_df = self.metadata_df.astype(
+                {'record_start': object, 'record_end': object, 'output_path': str})
+
+            current_row = self.metadata_df.processed.ne(1).idxmax()
+            self.metadata_df.loc[current_row, 'processed'] = 1
+            self.metadata_df.loc[current_row, 'record_start'] = record_start
+            self.metadata_df.loc[current_row, 'record_end'] = record_end
+            self.metadata_df.loc[current_row, 'output_path'] = self.output_file_path
 
             with pd.ExcelWriter(self.metadata_path, date_format='YYYY-MM-DD',
                                 datetime_format='YYYY-MM-DD', engine='openpyxl', mode='w') as writer:

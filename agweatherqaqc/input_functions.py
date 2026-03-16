@@ -410,7 +410,7 @@ def _obtain_data(config_file_path, metadata_file_path=None):
 
         validate_file(metadata_file_path, 'xlsx')  # Validate file to make sure it exists and is the right type
         metadata_df = pd.read_excel(metadata_file_path, sheet_name=0, index_col=0, engine='openpyxl',
-                                    keep_default_na=True, na_filter=True, verbose=True)
+                                    keep_default_na=True, na_filter=True)
         print('\nSystem: Successfully opened metadata file at %s' % metadata_file_path)
 
         # Pull out the metadata for the next file to process
@@ -479,26 +479,26 @@ def _obtain_data(config_file_path, metadata_file_path=None):
         raw_data = pd.read_csv(config_dict['data_file_path'], delimiter=',', header=config_dict['lines_of_header'],
                                index_col=None, engine='python', skipfooter=config_dict['lines_of_footer'],
                                na_values=config_dict['missing_input_value'], keep_default_na=True,
-                               na_filter=True, verbose=True, skip_blank_lines=True)
+                               na_filter=True, skip_blank_lines=True)
 
     elif station_extension == '.xlsx':
         raw_data = pd.read_excel(config_dict['data_file_path'], sheet_name=0, header=config_dict['lines_of_header'],
                                  index_col=None, engine='openpyxl', skipfooter=config_dict['lines_of_footer'],
                                  na_values=config_dict['missing_input_value'], keep_default_na=True,
-                                 na_filter=True, verbose=True)
+                                 na_filter=True)
 
     elif station_extension == '.xls':
         raw_data = pd.read_excel(config_dict['data_file_path'], sheet_name=0, header=config_dict['lines_of_header'],
                                  index_col=None, engine='xlrd', skipfooter=config_dict['lines_of_footer'],
                                  na_values=config_dict['missing_input_value'], keep_default_na=True,
-                                 na_filter=True, verbose=True)
+                                 na_filter=True)
     else:
         # a delimited file of some kind was passed, attempt to parse it
         file_delim = determine_delimiter(config_dict['data_file_path'])
         raw_data = pd.read_csv(config_dict['data_file_path'], delimiter=file_delim,
                                header=config_dict['lines_of_header'], index_col=None, engine='python',
                                skipfooter=config_dict['lines_of_footer'], na_values=config_dict['missing_input_value'],
-                               keep_default_na=True, na_filter=True, verbose=True, skip_blank_lines=True)
+                               keep_default_na=True, na_filter=True, skip_blank_lines=True)
 
 
     print('\nSystem: Successfully opened data file at %s' % config_dict['data_file_path'])
