@@ -2,6 +2,12 @@
 
 agweather-qaqc (Weather Data QAQC Script)
 ==============================================
+
+> **Version note:** ``agweather-qaqc`` **v0.7.0** was used to generate the
+> [CONUS-AgWeather dataset](https://doi.org/10.5281/zenodo.18122156). This branch
+> preserves that workflow for reproducibility. For general use, please always
+> refer to the [latest release](https://github.com/WSWUP/agweather-qaqc/releases).
+
 ``agweather-qaqc`` provides a flexible workflow for the visualization, review, and QAQC of daily weather data. This script is intended to be used as an early step in any analysis that might use daily sources of agricultural weather data, particularly for projects with an interest in reference evapotranspiration (ET) data, or where observational data are considered to be 'truth' when evaluating model predictions. ``agweather-qaqc`` is command-line interface driven, and provides reminders, prompts, and recommendations to assist users who may not be overly proficient with Python.
 
 Functionalities include:
@@ -21,6 +27,29 @@ Documentation
 
 Installation
 ------------
+
+> **Python version:** This branch (used for CONUS-AgWeather v0.7.0) was developed
+> and tested on **Python 3.7**, with package versions pinned in
+> ``requirements.txt`` to those current as of March 2020. Newer Python releases
+> may require dependency upgrades; please refer to the
+> [latest release](https://github.com/WSWUP/agweather-qaqc/releases) for current
+> Python compatibility.
+
+> **Apple Silicon (M1/M2/M3) macOS:** the 2020 package pins do not have native
+> ``osx-arm64`` wheels (numpy 1.18.2, pandas 1.0.3, bokeh 2.0.0 all predate
+> Apple Silicon). Create the conda environment under x86_64 / Rosetta instead:
+>
+> ```
+> CONDA_SUBDIR=osx-64 conda create -n agweatherqaqc python=3.8 -y
+> conda activate agweatherqaqc
+> conda config --env --set subdir osx-64
+> pip install -r requirements.txt
+> ```
+>
+> The ``conda config --env --set subdir osx-64`` line pins the env to Intel
+> builds so future ``conda install`` calls also pull x86_64 wheels. Python 3.8
+> is used here because no ``osx-arm64`` Python 3.7 build exists on conda-forge;
+> the package pins are compatible with both 3.7 and 3.8.
 
 1. Clone the repository:
 

@@ -3,6 +3,8 @@
 __pycache__/
 venv/
 *.pyc
-
-
-*.pyc
+settings.json
+*.zip
+tests/test_files/correction_files
+.DS_Store
+config_files

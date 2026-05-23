@@ -2,7 +2,7 @@ import numpy as np
 import math
 import datetime as dt
 import logging as log
-from . import plotting_functions
+from . import plot
 
 from bokeh.plotting import save, show
 
@@ -725,7 +725,7 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
     corr_var_two = np.array(var_two)
 
     (units, title, var_one_name, var_one_color, var_two_name, var_two_color) = \
-        plotting_functions.generate_line_plot_features(code, '')
+        plot.generate_line_plot_features(code, '')
 
     ####################
     # Logging
@@ -741,7 +741,7 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
     if first_pass == 1 and auto_corr != 0:  # first automatic pass, skip plotting variables for now
         pass
     else:
-        corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
+        corr_fig = plot.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
                                                                 corr_var_two, code, folder_path)
         show(corr_fig)
 
@@ -800,7 +800,7 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
 
         ####################
         # Generate After-Corrections Graph
-        corr_fig = plotting_functions.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
+        corr_fig = plot.variable_correction_plots(station, dt_array, var_one, corr_var_one, var_two,
                                                                 corr_var_two, code, folder_path)
         show(corr_fig)
 
@@ -847,7 +847,7 @@ def correction(station, log_path, folder_path, var_one, var_two, dt_array, month
     # Generate Final Graph
     # All previous graphs were either entirely before corrections, or showed differences between iterations
     # This graph is between completely original values and final corrected product
-    corr_fig = plotting_functions.variable_correction_plots(station, dt_array, backup_var_one, corr_var_one,
+    corr_fig = plot.variable_correction_plots(station, dt_array, backup_var_one, corr_var_one,
                                                             backup_var_two, corr_var_two, code, folder_path)
     save(corr_fig)
 
@@ -908,7 +908,7 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
     humidity_log.write('\n------------------------------------------------------------------------------------------\n')
     humidity_log.write('Now beginning humidity record adjustment. \n')
 
-    humidity_fig = plotting_functions.humidity_adjustment_plots\
+    humidity_fig = plot.humidity_adjustment_plots\
         (station, dt_array, edited_compiled_ea, ea, ea_col, tmin, tdew, tdew_col, rhmax, rhmax_col, rhmin, rhmin_col,
          rhavg, rhavg_col, tdew_ko, folder_path)
 
@@ -1014,7 +1014,7 @@ def compiled_humidity_adjustment(station, log_path, folder_path, dt_array, tmax,
             raise ValueError('Incorrect parameters: CHOICE in humidity adjustment was an unexpected value.')
 
         # Now that the section has been overwritten, replot the variables
-        humidity_fig = plotting_functions.humidity_adjustment_plots\
+        humidity_fig = plot.humidity_adjustment_plots\
             (station, dt_array, edited_compiled_ea, ea, ea_col, tmin, tdew, tdew_col, rhmax, rhmax_col,
              rhmin, rhmin_col, rhavg, rhavg_col, tdew_ko, folder_path)
 

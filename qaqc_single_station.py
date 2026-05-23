@@ -1,4 +1,4 @@
-from qaqc_modules.py_weather_qaqc import WeatherQAQC
+from agweatherqaqc.agweatherqaqc import WeatherQAQC
 import sys
 
 
