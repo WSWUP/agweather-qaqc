@@ -16,7 +16,7 @@ if __name__ == "__main__":
         config_path = sys.argv[1]
         metadata_path = sys.argv[2]
     else:
-        config_path = 'config.ini'
+        config_path = 'tests/test_files/test_config.ini'
         metadata_path = None
 
     station_qaqc = WeatherQAQC(config_path, metadata_path, gridplot_columns=1)

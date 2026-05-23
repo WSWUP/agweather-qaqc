@@ -11,7 +11,7 @@ from refet.calcs import _wind_height_adjust
 
 class WeatherQAQC:
 
-    def __init__(self, config_file_path='config.ini', metadata_file_path=None, gridplot_columns=1):
+    def __init__(self, config_file_path='tests/test_files/test_config.ini', metadata_file_path=None, gridplot_columns=1):
         self.config_path = config_file_path
         self.metadata_path = metadata_file_path
         self.gridplot_columns = gridplot_columns
