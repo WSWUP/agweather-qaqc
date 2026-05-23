@@ -1,0 +1,54 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Dunkerly
+  given-names: Christian
+  orcid: "https://orcid.org/0000-0003-3592-4118"
+- family-names: Huntington
+  given-names: Justin L.
+  orcid: "https://orcid.org/0009-0008-2006-2969"
+- family-names: McEvoy
+  given-names: Daniel
+  orcid: "https://orcid.org/0000-0003-3800-718X"
+- family-names: Morway
+  given-names: Asa
+- family-names: Allen
+  given-names: Richard G.
+contact:
+- family-names: Dunkerly
+  given-names: Christian
+  orcid: "https://orcid.org/0000-0003-3592-4118"
+doi: 10.5281/zenodo.11122799
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Dunkerly
+    given-names: Christian
+    orcid: "https://orcid.org/0000-0003-3592-4118"
+  - family-names: Huntington
+    given-names: Justin L.
+    orcid: "https://orcid.org/0009-0008-2006-2969"
+  - family-names: McEvoy
+    given-names: Daniel
+    orcid: "https://orcid.org/0000-0003-3800-718X"
+  - family-names: Morway
+    given-names: Asa
+  - family-names: Allen
+    given-names: Richard G.
+  date-published: 2024-05-24
+  doi: 10.21105/joss.06368
+  issn: 2475-9066
+  issue: 97
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6368
+  title: "agweather-qaqc: An Interactive Python Package for Quality
+    Assurance and Quality Control of Daily Agricultural Weather Data and
+    Calculation of Reference Evapotranspiration"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06368"
+  volume: 9
+title: "agweather-qaqc: An Interactive Python Package for Quality
+  Assurance and Quality Control of Daily Agricultural Weather Data and
+  Calculation of Reference Evapotranspiration"
